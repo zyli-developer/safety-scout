@@ -41,6 +41,8 @@ async def test_L3_reprompt_recovers():
 
     async def fake_reprompt(original: str) -> str:
         call_count["n"] += 1
+        assert "你上一次的输出不是合法的 JSON 对象" in original
+        assert raw in original  # 确保 reprompt template 把原响应嵌进去了
         return MINIMAL_VALID_JSON
 
     raw = "I cannot analyze this image."
