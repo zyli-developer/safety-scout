@@ -1,0 +1,42 @@
+# ===== Python / FastAPI =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ===== Node / Taro =====
+node_modules/
+dist/
+.temp/
+.cache/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== 环境变量 / 密钥 =====
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# ===== 编辑器 / 系统 =====
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ===== 项目特定 =====
+# 上传的工地照片与本地分析结果，不入库
+uploads/
+local_data/
