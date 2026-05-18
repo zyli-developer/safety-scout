@@ -1,7 +1,9 @@
 """ReportPayload Pydantic 模型对齐 docs/specs/report-schema.md。"""
+
 import pytest
 from pydantic import ValidationError
-from app.schemas.report import ReportPayload, Hazard, Severity, ModelMeta
+
+from app.schemas.report import Hazard, ModelMeta, ReportPayload
 
 
 def test_minimal_valid_report():

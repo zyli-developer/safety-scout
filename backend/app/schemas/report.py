@@ -2,7 +2,9 @@
 
 对齐 docs/specs/report-schema.md。任何字段变更必须同 PR 改 spec 文档。
 """
+
 from typing import Literal
+
 from pydantic import BaseModel, Field
 
 Severity = Literal["high", "medium", "low"]
