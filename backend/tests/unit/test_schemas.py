@@ -1,5 +1,9 @@
 """ReportPayload Pydantic 模型对齐 docs/specs/report-schema.md。"""
 
+import json
+import re
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -69,3 +73,24 @@ def test_empty_hazards_list_allowed():
         model_meta=ModelMeta(provider="doubao", model="x", latency_ms=100),
     )
     assert p.hazards == []
+
+
+SPEC_PATH = Path(__file__).resolve().parents[3] / "docs" / "specs" / "report-schema.md"
+
+
+def _extract_first_json_block(md: str) -> dict:
+    """从 markdown 中抽第一个 ```json 代码块并解析。"""
+    m = re.search(r"```json\s*\n(.*?)\n```", md, re.DOTALL)
+    if not m:
+        raise AssertionError("report-schema.md 中找不到 ```json 代码块")
+    return json.loads(m.group(1))
+
+
+def test_spec_example_validates_against_pydantic():
+    """报告 schema spec 里的示例 JSON 必须通过 Pydantic 校验。
+
+    spec 改了但 Pydantic 没跟，这个测试会挂。
+    """
+    spec_md = SPEC_PATH.read_text(encoding="utf-8")
+    example = _extract_first_json_block(spec_md)
+    ReportPayload(**example)  # 不抛 = 通过
