@@ -13,10 +13,21 @@ from pathlib import Path
 
 
 def connect(db_path: str | Path) -> sqlite3.Connection:
-    """打开连接 + 启 WAL + row_factory。每请求一个连接，由调用方负责 close。"""
+    """打开连接 + 启 WAL + row_factory。每请求一个连接，由调用方负责 close。
+
+    `check_same_thread=False`：FastAPI 把同步依赖 `get_db` 放到 threadpool 跑（连接
+    在 worker 线程创建），随后路由协程在 event-loop 线程使用同一连接 —— 默认的
+    sqlite3 跨线程检查会抛 ProgrammingError。我们的约束是"每请求一个连接、连接
+    不跨请求共享、连接生命周期由 yield 控制"，关掉 check_same_thread 不会引入
+    真正的并发风险（WAL 又保证多连接读写不互相阻塞）。
+    """
     # 父目录不存在则建（local_data/ 等）
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES)
+    conn = sqlite3.connect(
+        db_path,
+        detect_types=sqlite3.PARSE_DECLTYPES,
+        check_same_thread=False,
+    )
     conn.row_factory = sqlite3.Row
     # WAL 模式：写不阻塞读，对多请求/单写的 FastAPI + BackgroundTasks 场景友好
     conn.execute("PRAGMA journal_mode = WAL")
