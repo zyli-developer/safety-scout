@@ -58,3 +58,16 @@ class LLMTimeoutError(SafetyScoutError):
     code = "LLM_TIMEOUT"
     http_status = 504
     user_message = "AI 分析超时，请稍后重试"
+
+
+class RateLimitedError(SafetyScoutError):
+    """触发 slowapi 速率限制（10/min POST）。
+
+    实际 429 响应由 main.py 里的 RateLimitExceeded handler 直接发，不经过本类
+    实例化。这里保留 code/http_status/user_message 作为单一真相源 ——
+    /api/v1 错误码字典化，方便前端 errorMessage.ts 映射。
+    """
+
+    code = "RATE_LIMITED"
+    http_status = 429
+    user_message = "请求过于频繁，请稍后再试"

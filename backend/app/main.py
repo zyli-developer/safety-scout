@@ -14,10 +14,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 
 from app.config import get_settings
-from app.errors import SafetyScoutError
+from app.errors import RateLimitedError, SafetyScoutError
 from app.logging_config import setup_logging
+from app.rate_limit import limiter
 from app.routes import health, inspections
 from app.storage import inspection_repo
 from app.storage.db import connect, init_schema
@@ -67,6 +69,9 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # slowapi 需要找到 limiter 实例；同时 routes 用同一个实例做装饰器。
+    app.state.limiter = limiter
+
     @app.exception_handler(SafetyScoutError)
     async def _safety_handler(
         request: Request, exc: SafetyScoutError
@@ -80,6 +85,24 @@ def create_app() -> FastAPI:
                     "code": exc.code,
                     "message": str(exc),
                     "user_message": exc.user_message,
+                }
+            },
+        )
+
+    @app.exception_handler(RateLimitExceeded)
+    async def _rate_limit_handler(
+        request: Request, exc: RateLimitExceeded
+    ) -> JSONResponse:
+        # slowapi 抛 RateLimitExceeded —— 强制套上和 SafetyScoutError 一致的
+        # error envelope，避免前端见到两种 4xx shape。code/user_message 与
+        # errors.RateLimitedError 同步。
+        return JSONResponse(
+            status_code=RateLimitedError.http_status,
+            content={
+                "error": {
+                    "code": RateLimitedError.code,
+                    "message": f"rate limit exceeded: {exc.detail}",
+                    "user_message": RateLimitedError.user_message,
                 }
             },
         )

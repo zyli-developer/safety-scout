@@ -17,11 +17,20 @@ from __future__ import annotations
 import json
 import sqlite3
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    HTTPException,
+    Request,
+    UploadFile,
+)
 
 from app.config import Settings, get_settings
 from app.dependencies import get_db, get_llm_provider
 from app.llm.base import LLMProvider
+from app.rate_limit import limiter
 from app.schemas.inspection import (
     CreateInspectionResponse,
     ErrorBody,
@@ -40,7 +49,12 @@ router = APIRouter(prefix="/api/v1", tags=["inspections"])
     response_model=CreateInspectionResponse,
     status_code=202,
 )
+# 限速值与 Settings.rate_limit_per_minute=10 对齐；slowapi 不接受 Settings 实例，
+# 这里用字面字符串；若 Settings 改了，记得同步本处 + .env.example。
+@limiter.limit("10/minute")
 async def create_inspection(
+    # slowapi 要求装饰器装的路由首参是 request: Request（它从 request 抽 IP 做 key）。
+    request: Request,
     background_tasks: BackgroundTasks,
     image: UploadFile = File(...),
     conn: sqlite3.Connection = Depends(get_db),

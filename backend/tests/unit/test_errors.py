@@ -8,6 +8,7 @@ from app.errors import (
     LLMCallError,
     LLMParseError,
     LLMTimeoutError,
+    RateLimitedError,
     SafetyScoutError,
 )
 
@@ -60,4 +61,12 @@ def test_llm_timeout_error():
     assert err.http_status == 504
     assert err.user_message
     assert "exceeded 120s" in str(err)
+    assert isinstance(err, SafetyScoutError)
+
+
+def test_rate_limited_error():
+    err = RateLimitedError("11th POST in a minute")
+    assert err.code == "RATE_LIMITED"
+    assert err.http_status == 429
+    assert err.user_message == "请求过于频繁，请稍后再试"
     assert isinstance(err, SafetyScoutError)
