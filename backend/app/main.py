@@ -13,6 +13,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import HTTPException as FastAPIHTTPException
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 
@@ -106,6 +107,27 @@ def create_app() -> FastAPI:
                 }
             },
         )
+
+    @app.exception_handler(FastAPIHTTPException)
+    async def _http_exception_handler(
+        request: Request, exc: FastAPIHTTPException
+    ) -> JSONResponse:
+        # 我们的路由约定：HTTPException 抛出时 detail = {"error": {...}}（见
+        # routes/inspections.py 的 404 路径）。把那个 detail 直接当响应 body，
+        # 让前端只解一种 shape {"error":{code,message,user_message}}，
+        # 不必再 fallback body.detail.error。
+        # 兼容 detail 是 str 的极端 fallback（FastAPI 默认 404 等），包成最小 error 包。
+        if isinstance(exc.detail, dict) and "error" in exc.detail:
+            body: dict[str, object] = exc.detail
+        else:
+            body = {
+                "error": {
+                    "code": "HTTP_ERROR",
+                    "message": str(exc.detail),
+                    "user_message": "请求出错，请稍后重试",
+                }
+            }
+        return JSONResponse(status_code=exc.status_code, content=body)
 
     app.include_router(health.router)
     app.include_router(inspections.router)

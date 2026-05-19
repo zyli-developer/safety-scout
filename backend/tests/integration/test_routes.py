@@ -185,11 +185,11 @@ def test_get_inspection_404(client: TestClient) -> None:
     resp = client.get("/api/v1/inspections/00000000-0000-0000-0000-000000000000")
     assert resp.status_code == 404, resp.text
     body = resp.json()
-    # HTTPException 的 detail 直接进 "detail" 字段，但我们把 detail 设成了
-    # {"error": {...}} 形态，前端看到的是 body["detail"]["error"]["code"]。
-    # 这一点必须固化 —— FE 现在解析的就是 detail.error。
-    assert body["detail"]["error"]["code"] == "NOT_FOUND"
-    assert "找不到" in body["detail"]["error"]["user_message"]
+    # Phase 3 T0 起：HTTPException 的 detail（约定为 {"error":{...}}）由
+    # _http_exception_handler 扁平化到 body 顶层，与 SafetyScoutError envelope
+    # 完全一致。前端只解一种 shape body.error.code。
+    assert body["error"]["code"] == "NOT_FOUND"
+    assert "找不到" in body["error"]["user_message"]
 
 
 def test_healthz(client: TestClient) -> None:
