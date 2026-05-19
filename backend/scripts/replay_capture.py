@@ -26,7 +26,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from app.llm.claude_cli import ClaudeCLIProvider
-from scripts.poc_claude import PROMPT_V1
+from app.llm.prompt import ANALYZE_PROMPT
 
 # 相对 backend/ 根的两个 fixture 目录。
 _BACKEND_ROOT = Path(__file__).resolve().parents[1]
@@ -47,7 +47,7 @@ async def _capture_one(
         flush=True,
     )
 
-    raw = await provider.analyze(image, PROMPT_V1)
+    raw = await provider.analyze(image, ANALYZE_PROMPT)
 
     # 路径用 POSIX 风格存进 fixture（跨平台一致；Path.as_posix 在 Windows 上把 \ 转 /）。
     image_rel = image_path.relative_to(_BACKEND_ROOT).as_posix()

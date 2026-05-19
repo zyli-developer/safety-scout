@@ -79,3 +79,17 @@
 | `claude-opus-4-5` | 2 | $0.178 | 194 s |
 
 CLI 帮助文档说 `sonnet` 是 alias to latest sonnet（按描述应当解析为 `claude-sonnet-4-6`），但实测从未路由到 4-6，只在 4-5 与 opus-4-5 之间漂。**怀疑**：(a) 当前 CLI 版本（2.1.144）的 alias 表里 sonnet 仍指向 4-5；(b) 高负载 / 配额触发时 fallback 到 Opus；(c) 用户订阅未开放 4-6。**v2 建议固定全名，明示该跑哪个**，让成本 / 延迟可预期。
+
+---
+
+## § Phase 1 冻结决策（2026-05-19）
+
+- **冻结版本**：v1（见 [`backend/app/llm/prompt.py`](../../backend/app/llm/prompt.py)）
+- **跳过的 task**：
+  - T12（Prompt 迭代到 v2/v3）— v1 已达 4/5 退出门，YAGNI 跳过
+  - T13（压缩 A/B 实验）— 用户已决定 v0.2 不引入压缩；实验视为 v0.2 prep 工作，按需补
+- **v2 改动方向**（v1 frozen，下列待 v0.2 / Phase 2 视需要处理）：
+  - `--model` 固定全名而非 alias（避免 fallback 路由）
+  - 同类别合并约束
+  - plain_warning 与 hazards[0] 对齐
+  - model_meta 字段说明"由后端覆盖"
