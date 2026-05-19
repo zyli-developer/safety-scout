@@ -59,6 +59,8 @@ async def run_inspection(
 
         report = await parse_report(raw.content, reprompt=reprompt)
 
+        # 用真实 provider / model / latency 覆盖模型自填的 model_meta（实测模型
+        # 会写出 latency_ms=3200 这种幻觉值；prompt-poc-notes 已记录，由后端覆盖）。
         meta = ModelMeta(
             provider=provider.name,  # type: ignore[arg-type]
             # provider.name 是 Protocol 的 str；ModelMeta.provider 是
@@ -66,6 +68,8 @@ async def run_inspection(
             model=raw.model,
             latency_ms=raw.latency_ms,
         )
+        report = report.model_copy(update={"model_meta": meta})
+
         repo.update_succeeded(conn, inspection_id, report, meta)
         elapsed = int((time.monotonic() - t0) * 1000)
         logger.info(
