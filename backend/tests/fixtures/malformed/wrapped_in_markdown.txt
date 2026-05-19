@@ -1,0 +1,7 @@
+这是 AI 分析的结果：
+
+```json
+{"plain_warning": "测试", "summary": "x", "overall_severity": "low", "inspection_id": "550e8400-e29b-41d4-a716-446655440000", "created_at": "2026-05-18T00:00:00Z", "hazards": [], "model_meta": {"provider": "claude_cli", "model": "x", "latency_ms": 100}}
+```
+
+希望对您有帮助。

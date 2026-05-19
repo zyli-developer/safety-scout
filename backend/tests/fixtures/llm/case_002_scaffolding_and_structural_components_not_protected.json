@@ -1,0 +1,20 @@
+{
+  "input": {
+    "image_sha256": "604ae06139d2f07db86492eed16fc78a1810a7ed5da7ebab8d184d27d2be082e",
+    "image_path": "tests/fixtures/images/case_002_scaffolding_and_structural_components_not_protected.jpg",
+    "prompt_version": "v1",
+    "provider": "claude_cli"
+  },
+  "output": {
+    "content": "```json\n{\n  \"inspection_id\": \"a1b2c3d4-0001-0000-0000-202605190001\",\n  \"created_at\": \"2026-05-19T00:00:00Z\",\n  \"plain_warning\": \"临边没护栏，安全网松了，随时能坠人！\",\n  \"summary\": \"脚手架外侧临边无防护栏杆、安全立网松弛失效，作业人员个人防护缺失，整体风险等级高。\",\n  \"overall_severity\": \"high\",\n  \"hazards\": [\n    {\n      \"category_code\": \"H1\",\n      \"category_name\": \"高处坠落\",\n      \"description\": \"脚手架外侧与结构楼板边缘存在约200mm临边缝隙，未设防护栏杆，高处坠落风险极高。\",\n      \"severity\": \"high\",\n      \"regulation\": \"JGJ80-2016 第4.1.3条、第4.2.1条（临边须设≥1.2m防护栏杆）\",\n      \"suggestion\": \"停止临边作业，补设双横杆栏杆（上1.2m、中0.6m）及≥180mm踢脚板，再恢复施工。\"\n    },\n    {\n      \"category_code\": \"H1\",\n      \"category_name\": \"高处坠落\",\n      \"description\": \"安全立网绳扣绑扎松弛，网体悬垂变形，与杆件间存在可穿越间隙，丧失兜接坠落功能。\",\n      \"severity\": \"high\",\n      \"regulation\": \"JGJ59-2011 第9.0.2条（安全网须张紧，固定点间距≤750mm）\",\n      \"suggestion\": \"逐点检查全段立网，拆除松弛绳扣，用直径≥6mm绳索重新绑扎，节点间距≤750mm。\"\n    },\n    {\n      \"category_code\": \"H2\",\n      \"category_name\": \"物体打击\",\n      \"description\": \"临边缝隙内裸露钢筋及混凝土碎块无防护，碎块有沿缝坠落击打下层人员的风险。\",\n      \"severity\": \"medium\",\n      \"regulation\": \"JGJ59-2011 第9.0.3条（各层须设安全平网防坠物）\",\n      \"suggestion\": \"清除缝隙内松散碎块并集中归堆；钢筋端头加防护帽；下方补设兜底安全平网。\"\n    },\n    {\n      \"category_code\": \"H9\",\n      \"category_name\": \"个人防护缺失\",\n      \"description\": \"临边作业人员未见安全帽，亦未见安全带挂钩连接固定点，个人防护严重不到位。\",\n      \"severity\": \"medium\",\n      \"regulation\": \"JGJ80-2016 第6.1.1条（高处作业必须正确佩戴安全帽和安全带）\",\n      \"suggestion\": \"要求作业人员立即佩戴安全帽、系双大钩安全带并挂至上方可靠固定点，方可继续作业。\"\n    }\n  ],\n  \"model_meta\": {\n    \"provider\": \"claude_cli\",\n    \"model\": \"claude-opus-4-5\",\n    \"latency_ms\": 0\n  }\n}\n```",
+    "model": "claude-opus-4-5",
+    "latency_ms": 122248,
+    "provider_payload": {
+      "total_cost_usd": 0.1561,
+      "_seeded_from_log": true,
+      "_note": "seeded from logs/poc_case_002.log; re-run scripts/replay_capture.py for full envelope"
+    }
+  },
+  "captured_at": "2026-05-19T05:12:13Z",
+  "captured_by": "manual seed from logs"
+}

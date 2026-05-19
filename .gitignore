@@ -40,3 +40,8 @@ Thumbs.db
 # 上传的工地照片与本地分析结果，不入库
 uploads/
 local_data/
+
+# ===== Phase 1 Backend =====
+backend/.venv/
+backend/local_data/
+backend/.env

@@ -1,0 +1,20 @@
+{
+  "input": {
+    "image_sha256": "2d23370e38a46976142bf3395764705c924f881275995b84958c7932aa222da6",
+    "image_path": "tests/fixtures/images/case_004_stair_guard_unreliable_there_no_protection_on_the_side_platform.jpg",
+    "prompt_version": "v1",
+    "provider": "claude_cli"
+  },
+  "output": {
+    "content": "{\"inspection_id\":\"a1b2c3d4-0001-0000-0000-20260519abcd\",\"created_at\":\"2026-05-19T00:00:00Z\",\"plain_warning\":\"安全网破了，楼梯边随时可能坠落！\",\"summary\":\"楼梯间临边防护严重失效：安全网大面积破损、窗洞口无刚性栏杆，综合风险等级为高。\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"楼梯侧竖向安全网大面积破损老化，网绳断裂、网眼迸裂，防坠落功能失效，固定节点松脱。\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第6.1.1条\",\"suggestion\":\"立即拆除破损安全网，增设高≥1.2m双横杆钢管栏杆，换装合格密目网，底设180mm踢脚板。\"},{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"休息平台临幕墙窗框侧无刚性防护栏杆，临边区域完全敞开，存在多层高度坠落风险。\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第4.1.1条\",\"suggestion\":\"窗洞内侧立即设高1.2m双横杆钢管防护栏杆，悬挂坠落警示牌，幕墙安装前不得拆除。\"},{\"category_code\":\"H10\",\"category_name\":\"其他/文明施工\",\"description\":\"楼梯平台及窗台周边散落大量砂浆块、碎石等建筑废料，通道杂乱，存在滑跌隐患。\",\"severity\":\"low\",\"regulation\":\"JGJ59-2011 第3.1.2条\",\"suggestion\":\"每日收工前清理楼梯通道垃圾，废料装袋运至指定区，保持通道宽度不小于1.2m。\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"claude-opus-4-5\",\"latency_ms\":0}}",
+    "model": "claude-opus-4-5",
+    "latency_ms": 265954,
+    "provider_payload": {
+      "total_cost_usd": 0.2005,
+      "_seeded_from_log": true,
+      "_note": "seeded from logs/poc_case_004.log; re-run scripts/replay_capture.py for full envelope"
+    }
+  },
+  "captured_at": "2026-05-19T05:12:13Z",
+  "captured_by": "manual seed from logs"
+}
