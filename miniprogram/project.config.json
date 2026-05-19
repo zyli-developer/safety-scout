@@ -2,7 +2,8 @@
   "miniprogramRoot": "dist/",
   "projectname": "safety-scout-miniprogram",
   "description": "Safety Scout 工地安全隐患识别小程序",
-  "appid": "touristappid",
+  "_comment_appid": "AppID 留空 —— 个人 AppID 放 project.private.config.json（gitignored）。在微信开发者工具用「测试号」模式打开会自动生成一个临时 AppID 并写进 private 文件。",
+  "appid": "",
   "setting": {
     "urlCheck": false,
     "es6": true,
