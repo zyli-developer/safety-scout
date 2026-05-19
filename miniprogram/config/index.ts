@@ -49,6 +49,10 @@ export default defineConfig(async (merge, { command, mode }) => {
     h5: {
       publicPath: '/',
       staticDirectory: 'static',
+      // 用项目自带 src/index.html 作 HTML 模板；不写这条 Taro 4 不会自动生成 dist/index.html
+      htmlPluginOption: {
+        template: 'src/index.html',
+      },
       output: {
         filename: 'js/[name].[hash:8].js',
         chunkFilename: 'js/[name].[chunkhash:8].js',
