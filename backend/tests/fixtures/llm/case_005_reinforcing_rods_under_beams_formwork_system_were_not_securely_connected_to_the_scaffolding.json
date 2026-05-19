@@ -1,0 +1,20 @@
+{
+  "input": {
+    "image_sha256": "b5c11877028ff25b69ecbc75684437f1bdbbf53bb13e82637c1a161f1bec53e5",
+    "image_path": "tests/fixtures/images/case_005_reinforcing_rods_under_beams_formwork_system_were_not_securely_connected_to_the_scaffolding.jpg",
+    "prompt_version": "v1",
+    "provider": "claude_cli"
+  },
+  "output": {
+    "content": "{\"inspection_id\":\"b3f2a1d0-4e58-7c91-ae23-0d5f8b6c3291\",\"created_at\":\"2026-05-19T08:00:00Z\",\"plain_warning\":\"顶部裸灯泡漏电风险极高，立即断电整改\",\"summary\":\"室内满堂支撑架作业区存在临时用电违规（裸露灯具/明敷导线）、架体剪刀撑不足、人员防护缺失及地面文明施工问题，综合风险等级为高。\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H3\",\"category_name\":\"触电\",\"description\":\"顶部临时照明使用裸露白炽灯泡，导线明敷于架体上方且无绝缘套管或线槽保护，灯具无防护罩，在潮湿施工环境下存在严重漏电触电风险。\",\"severity\":\"high\",\"regulation\":\"《施工现场临时用电安全技术规范》JGJ46-2005 第7.1.3条：灯具金属外壳必须接保护零线，室内灯具距地面高度不应小于2.5m，灯具需装设防护罩\",\"suggestion\":\"立即断开该区域临时照明电源；更换为带防护罩的防潮工矿灯或LED灯具；导线改穿阻燃绝缘管或走线槽，接线处做绝缘包扎，完成后经电工验收后方可送电。\"},{\"category_code\":\"H4\",\"category_name\":\"坍塌\",\"description\":\"满堂扣件式钢管支撑架纵横向水平杆步距目测偏大，架体内侧剪刀撑（斜撑）数量不足，连续斜撑覆盖面不完整，立杆底部可见未设置底座/垫板区域，地面局部积水，承载能力存疑。\",\"severity\":\"high\",\"regulation\":\"《建筑施工扣件式钢管脚手架安全技术规范》JGJ130-2011 第6.6.3条：满堂支撑架应在架体外侧四周及内部纵横向每隔4~5跨设置竖向剪刀撑\",\"suggestion\":\"按专项施工方案复核立杆间距、步距及剪刀撑设置；缺少剪刀撑处补设并用扣件紧固；在立杆底部铺设不小于200mm×200mm×50mm的木垫板并加设可调底座；由项目技术负责人组织验收后方可进行上部作业。\"},{\"category_code\":\"H9\",\"category_name\":\"个人防护缺失\",\"description\":\"画面左侧可见一名作业人员身着反光背心，但未能确认佩戴安全帽；支撑架作业区内人员在顶部荷载及可能坠物风险下头部防护存在缺失。\",\"severity\":\"medium\",\"regulation\":\"《建筑施工安全检查标准》JGJ59-2011 第3.0.5条：施工现场所有人员必须正确佩戴安全帽\",\"suggestion\":\"安全员现场督查，要求所有进入支撑架作业区人员必须正确佩戴安全帽（下颌带扣紧）；在入口处张贴强制佩戴警示标牌，班组长落实班前检查。\"},{\"category_code\":\"H10\",\"category_name\":\"其他/文明施工\",\"description\":\"支撑架立杆底部散落大量绳索、建筑垃圾及杂物，地面多处积水，通道不畅，存在人员绊倒及影响立杆底部承载稳定性的风险。\",\"severity\":\"low\",\"regulation\":\"《建筑施工安全检查标准》JGJ59-2011 文明施工检查评分表：施工现场应做到工完料清、地面无积水积料\",\"suggestion\":\"立即清理架体底部绳索及建筑垃圾，归类堆放至指定材料区；积水处做导流或抽排处理；每日收工前由班组长组织清场，保持作业通道畅通。\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"claude-sonnet-4-5\",\"latency_ms\":0}}",
+    "model": "claude-sonnet-4-5",
+    "latency_ms": 93245,
+    "provider_payload": {
+      "total_cost_usd": 0.1167,
+      "_seeded_from_log": true,
+      "_note": "seeded from logs/poc_case_005.log; re-run scripts/replay_capture.py for full envelope"
+    }
+  },
+  "captured_at": "2026-05-19T05:12:13Z",
+  "captured_by": "manual seed from logs"
+}

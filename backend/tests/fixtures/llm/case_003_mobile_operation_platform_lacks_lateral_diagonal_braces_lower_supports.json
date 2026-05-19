@@ -1,0 +1,20 @@
+{
+  "input": {
+    "image_sha256": "2d384385fab9eff2406def4878bd50e32a86233665c793d8035682eded1ac309",
+    "image_path": "tests/fixtures/images/case_003_mobile_operation_platform_lacks_lateral_diagonal_braces_lower_supports.jpg",
+    "prompt_version": "v1",
+    "provider": "claude_cli"
+  },
+  "output": {
+    "content": "{\"inspection_id\":\"f3a8c2d1-5b79-4e6f-a102-8d3c7e914b25\",\"created_at\":\"2026-05-19T08:00:00Z\",\"plain_warning\":\"脚手架无护栏快倒了，地上全是碎石，危险！\",\"summary\":\"室内移动式门式脚手架（约三层高）作业平台四周防护栏杆及挡脚板缺失，脚轮置于大量松散建筑垃圾上存在倾覆风险，地面碎石堆积严重，整体风险等级：高\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"多层移动式门式脚手架（目测高度约3～4m）各层作业平台均未设置防护栏杆及挡脚板，人员登高作业时无侧向防护，极易发生高处坠落事故\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第4.3.1条：脚手架作业层外侧应设置高度不低于1.2m的防护栏杆及不低于180mm的挡脚板\",\"suggestion\":\"立即停止高处作业，在每层作业平台四周安装不低于1.2m防护栏杆（上、中两道）及180mm高挡脚板，验收合格后方可恢复作业\"},{\"category_code\":\"H4\",\"category_name\":\"坍塌\",\"description\":\"移动式脚手架底部万向脚轮直接置于大量松散混凝土碎块和碎石堆积的不平整地面上，脚轮制动锁定状态不明，架体重心偏高，存在整体倾覆坍塌风险\",\"severity\":\"high\",\"regulation\":\"JGJ59-2011 第3.4.1条：移动式操作平台使用时应将脚轮制动器锁定，并置于坚实平整的地面上\",\"suggestion\":\"清除脚手架底部及周边全部建筑垃圾，确认地面承载力满足要求，将所有脚轮制动器完全锁定，并在四角加设防倾支撑\"},{\"category_code\":\"H2\",\"category_name\":\"物体打击\",\"description\":\"脚手架各层作业平台无挡脚板，上层存放或散落的工具、材料、混凝土碎块均可能坠落，直接威胁底部区域人员安全\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第4.3.2条：作业层应设置挡脚板，防止材料坠落伤人\",\"suggestion\":\"各作业层立即安装180mm高挡脚板，作业区域地面四周设置安全警戒线并挂警示牌，作业期间下方严禁站人\"},{\"category_code\":\"H10\",\"category_name\":\"其他/文明施工\",\"description\":\"作业区域地面大量建筑垃圾（混凝土碎块、碎石料等）堆积，未及时清理，通道受阻，紧急疏散路线不畅，存在绊倒和踩踏伤人隐患\",\"severity\":\"medium\",\"regulation\":\"JGJ59-2011 第3.1.4条：施工现场应做到工完场清，材料、废料应及时清理归堆\",\"suggestion\":\"立即组织专人清理地面全部建筑垃圾，分类堆放至指定区域，保持工作通道畅通，后续每日收工前完成清场\"},{\"category_code\":\"H9\",\"category_name\":\"个人防护缺失\",\"description\":\"现场脚手架外侧未张挂安全立网，高处作业安全防护体系不完整，无法为登高作业人员提供兜底防护\",\"severity\":\"medium\",\"regulation\":\"JGJ80-2016 第5.2.1条：高处作业应设置安全网；作业人员应正确佩戴安全帽、系挂安全带\",\"suggestion\":\"在脚手架外侧张挂密目式安全立网（目数≥2000目/100cm²），所有登高作业人员须佩戴安全帽并将安全带高挂低用，进场前做班前安全交底\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"claude-sonnet-4-5\",\"latency_ms\":3200}}",
+    "model": "claude-sonnet-4-5",
+    "latency_ms": 93722,
+    "provider_payload": {
+      "total_cost_usd": 0.1237,
+      "_seeded_from_log": true,
+      "_note": "seeded from logs/poc_case_003.log; re-run scripts/replay_capture.py for full envelope"
+    }
+  },
+  "captured_at": "2026-05-19T05:12:13Z",
+  "captured_by": "manual seed from logs"
+}
