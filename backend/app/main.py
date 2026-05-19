@@ -5,12 +5,24 @@
 - 挂 routers
 - 注册 SafetyScoutError → JSON envelope 全局 handler（架构 §2.4）
 - lifespan 顺序：setup_logging → init_schema → orphan recovery（架构 §2.6）
+- 顶部强制 Windows ProactorEventLoop（asyncio.create_subprocess_exec 需要它，
+  否则 uvicorn --reload 在 Windows 上默认 SelectorEventLoop，
+  ClaudeCLIProvider 跑子进程会 NotImplementedError）
 """
 from __future__ import annotations
 
+import asyncio
 import logging
+import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+
+# 必须在 FastAPI / 任何 await 之前设 policy。uvicorn --reload 在 Windows 上
+# 默认走 SelectorEventLoop，不支持 asyncio.create_subprocess_exec，导致
+# ClaudeCLIProvider.analyze() 抛 NotImplementedError。
+# 见 https://docs.python.org/3/library/asyncio-platforms.html#windows
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException as FastAPIHTTPException
