@@ -14,6 +14,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException as FastAPIHTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 
@@ -72,6 +73,19 @@ def create_app() -> FastAPI:
 
     # slowapi 需要找到 limiter 实例；同时 routes 用同一个实例做装饰器。
     app.state.limiter = limiter
+
+    # CORS：MVP 阶段 dev 跨源请求（H5 在 127.0.0.1:RANDOM、backend 在 localhost:8000）。
+    # Taro 4 H5 的 uploadFile / request polyfill 默认 withCredentials=true（fetch
+    # credentials:'include'），所以不能用 allow_origins=["*"]（CORS 规范禁止 *
+    # 与 credentials 共存）。改用 regex 匹配本地两个 host + 任意端口、放行 credentials。
+    # 生产上线前应把 regex 收紧到具体 web 前端域名 / 小程序 origin（小程序场景一般无 CORS）。
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     @app.exception_handler(SafetyScoutError)
     async def _safety_handler(

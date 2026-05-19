@@ -19,7 +19,14 @@ export default defineConfig(async (merge, { command, mode }) => {
     sourceRoot: 'src',
     outputRoot: 'dist',
     plugins: [],
-    defineConstants: {},
+    defineConstants: {
+      // 把 build 时的 shell env var TARO_API_BASE_URL 通过 DefinePlugin 注入到
+      // 客户端代码（src/config.ts 中的 process.env.API_BASE_URL 引用会被替换）。
+      // 见 src/config.ts 顶部说明为什么不用 NODE_ENV 切换。
+      'process.env.API_BASE_URL': JSON.stringify(
+        process.env.TARO_API_BASE_URL || 'https://api.example.com',
+      ),
+    },
     copy: {
       patterns: [],
       options: {},
