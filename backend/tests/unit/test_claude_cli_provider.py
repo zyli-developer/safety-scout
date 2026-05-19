@@ -204,15 +204,44 @@ async def test_stdout_not_json_raises_llm_call_error(provider: ClaudeCLIProvider
     assert "envelope" in str(exc_info.value)
 
 
-async def test_envelope_missing_result_field_raises_llm_call_error(
+async def test_envelope_structured_output_preferred_over_result(
     provider: ClaudeCLIProvider,
 ) -> None:
-    """envelope 合法但缺 `result` 字段（CLI 协议漂移） → LLMCallError，不让空串混进 parser。"""
+    """`--json-schema` 时 CLI 偶尔把结构化结果落在 envelope.structured_output（dict）
+    且 envelope.result 留空字符串（v2 实测 case_001 触发）。
+    provider 应当优先用 structured_output 序列化成字符串作为 content。
+    """
+    structured = {"plain_warning": "测试", "x": "y"}
     envelope = {
         "type": "result",
         "subtype": "success",
         "is_error": False,
-        # 故意没有 "result"
+        "result": "",  # 空 —— 真实场景里出现过
+        "structured_output": structured,
+        "duration_ms": 12345,
+    }
+    proc = _make_proc_mock(json.dumps(envelope).encode("utf-8"))
+
+    with patch(
+        "app.llm.claude_cli.asyncio.create_subprocess_exec",
+        new=AsyncMock(return_value=proc),
+    ):
+        raw = await provider.analyze(b"img", "prompt")
+
+    # content 应是 structured_output 的 JSON 序列化
+    assert json.loads(raw.content) == structured
+    assert raw.latency_ms == 12345
+
+
+async def test_envelope_missing_result_and_structured_output_raises_llm_call_error(
+    provider: ClaudeCLIProvider,
+) -> None:
+    """两个字段都缺 → LLMCallError，不让空串混进 parser。"""
+    envelope = {
+        "type": "result",
+        "subtype": "success",
+        "is_error": False,
+        # 故意没有 "result" 也没有 "structured_output"
         "duration_ms": 12,
         "session_id": "sess-x",
     }
@@ -227,6 +256,7 @@ async def test_envelope_missing_result_field_raises_llm_call_error(
 
     msg = str(exc_info.value)
     assert "result" in msg
+    assert "structured_output" in msg
     assert "keys" in msg
 
 

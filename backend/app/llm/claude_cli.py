@@ -110,14 +110,24 @@ class ClaudeCLIProvider:
                 detail = envelope.get("result", "")
                 raise LLMCallError(f"Claude CLI envelope 报错: {detail}")
 
-            if "result" not in envelope:
+            # 用 `--json-schema` 时 CLI 偶尔会把结构化结果落在 envelope.structured_output
+            # （dict）而 envelope.result 留空字符串（v2 实测 case_001 触发）。
+            # 优先用 structured_output（dict）→ 序列化回字符串喂 parser；
+            # 没有 structured_output 时回退到 result 字段。
+            structured_output = envelope.get("structured_output")
+            if isinstance(structured_output, dict):
+                result_text = json.dumps(structured_output, ensure_ascii=False)
+            elif "result" in envelope:
+                result_text = envelope["result"]
+                if not isinstance(result_text, str):
+                    raise LLMCallError(
+                        "Claude CLI envelope.result 不是字符串: "
+                        f"{type(result_text).__name__}"
+                    )
+            else:
                 raise LLMCallError(
-                    f"Claude CLI envelope 缺少 result 字段: keys={list(envelope.keys())}"
-                )
-            result_text = envelope["result"]
-            if not isinstance(result_text, str):
-                raise LLMCallError(
-                    f"Claude CLI envelope.result 不是字符串: {type(result_text).__name__}"
+                    "Claude CLI envelope 缺少 result 与 structured_output: "
+                    f"keys={list(envelope.keys())}"
                 )
 
             duration_ms = envelope.get("duration_ms", 0)

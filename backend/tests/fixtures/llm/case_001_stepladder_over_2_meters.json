@@ -2,19 +2,112 @@
   "input": {
     "image_sha256": "8b8e533b5ba528ea8cf2fa88e9dc0ab2a8d956d194f5d755822bef8ed4d459b3",
     "image_path": "tests/fixtures/images/case_001_stepladder_over_2_meters.jpg",
-    "prompt_version": "v1",
+    "prompt_version": "v2",
     "provider": "claude_cli"
   },
   "output": {
-    "content": "{\"inspection_id\":\"b3a7c201-4e8f-4d02-9f13-d6e85f0c1a44\",\"created_at\":\"2026-05-19T06:30:00Z\",\"plain_warning\":\"梯子快倒，立刻停用加固！\",\"summary\":\"现场铝合金直梯倾角过大（近乎垂直）、顶端无固定装置、底部基础不稳，高处作业人员未见安全带，整体风险等级高\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"铝合金伸缩梯靠墙架设，目测倾角超过80°（应为75°±5°），梯顶端未设任何防滑固定装置，梯脚落于破碎地面且周边有杂物，梯体存在侧向失稳滑移风险\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第5.1.1条、第5.1.3条（梯子工作角度宜为75°±5°，上端须固定）\",\"suggestion\":\"立即停止梯子使用，重新调整倾角至75°，顶端用绳索或钩扣固定于墙体预埋点，底部加设防滑垫并清除周边障碍物后方可恢复使用\"},{\"category_code\":\"H9\",\"category_name\":\"个人防护缺失\",\"description\":\"近景黑衣作业人员在梯子旁高处作业区域内活动，仅佩戴安全帽，未见安全带及挂钩，不满足高处作业个人防护要求\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第4.1.3条（高处作业人员应按规定配备并正确使用安全带等防护用品）\",\"suggestion\":\"所有在2m及以上高处作业人员须立即系挂安全带，挂点须在作业面上方可靠固定，安全员现场监督，未佩戴者不得上梯\"},{\"category_code\":\"H2\",\"category_name\":\"物体打击\",\"description\":\"梯子正上方为楼板外挑口，梯顶延伸至楼板边缘，上方区域堆有材料及工具，地面未设警戒线，下方人员随意通行，存在高空落物击打风险\",\"severity\":\"medium\",\"regulation\":\"JGJ59-2011 第3.0.5条（高处作业下方应设警戒区并专人监护）\",\"suggestion\":\"以醒目警戒带在梯子底部3m范围内设置禁止通行警戒区，悬挂警示标牌，派专人进行地面监护，梯上作业工具须用工具袋随身携带\"},{\"category_code\":\"H10\",\"category_name\":\"其他/文明施工\",\"description\":\"梯脚周边地面散落铝合金板材、灰袋、塑料管及铁钉等杂物，场地凌乱，梯脚无法稳固落地，材料未分类码放\",\"severity\":\"low\",\"regulation\":\"JGJ59-2011 第3章（施工现场应整洁有序，材料堆放整齐）\",\"suggestion\":\"作业前清理梯脚2m范围内所有杂物，材料按品类集中码放至规定堆场，保持通道畅通\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"claude-sonnet-4-5\",\"latency_ms\":3200}}",
-    "model": "claude-sonnet-4-5",
-    "latency_ms": 84646,
+    "content": "{\"inspection_id\": \"b3a1c7e2-44f8-4d09-91bc-6d28f0e53a01\", \"created_at\": \"2026-05-19T07:42:00Z\", \"plain_warning\": \"梯子未固定，随时可能倒塌！\", \"summary\": \"铝合金伸缩梯顶端无固定、底脚不稳、搭设角度过大，高处坠落风险极高；作业人员未系安全带；地面散料堆积，整体风险等级：高。\", \"overall_severity\": \"high\", \"hazards\": [{\"category_code\": \"H1\", \"category_name\": \"高处坠落\", \"description\": \"铝合金伸缩梯顶端未固定；梯面与地面夹角超80°；底脚周边堆有散料，防滑垫失效；无人扶梯。\", \"severity\": \"high\", \"regulation\": \"JGJ80-2016 第5.1.1条、第5.1.2条\", \"suggestion\": \"停止登梯；梯顶用绳索固定于可靠构件；调整角度至75°±5°；清除底脚散料并加装防滑垫；安排专人扶梯。\"}, {\"category_code\": \"H9\", \"category_name\": \"个人防护缺失\", \"description\": \"梯旁作业人员仅戴安全帽，未佩全身式安全带及安全绳，高处登梯作业无坠落防护。\", \"severity\": \"high\", \"regulation\": \"JGJ80-2016 第3.0.4条\", \"suggestion\": \"登梯2m以上须系全身式安全带，安全绳挂于上方可靠锚点；宜配备速差自锁器或导轨式防坠器。\"}, {\"category_code\": \"H10\", \"category_name\": \"其他/文明施工\", \"description\": \"梯脚附近堆放铝合金踏板、砂浆袋、管材等散料，作业通道不畅，存在绊倒及物体打击风险。\", \"severity\": \"medium\", \"regulation\": \"JGJ59-2011 第3.0.1条\", \"suggestion\": \"清理梯脚3m范围散料集中至堆料区；管材竖向绑扎码放；保持作业通道宽度不低于1m。\"}], \"model_meta\": {\"provider\": \"claude_cli\", \"model\": \"placeholder\", \"latency_ms\": 0}}",
+    "model": "sonnet",
+    "latency_ms": 91546,
     "provider_payload": {
-      "total_cost_usd": 0.1065,
-      "_seeded_from_log": true,
-      "_note": "seeded from logs/poc_case_001.log; re-run scripts/replay_capture.py for full envelope"
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "api_error_status": null,
+      "duration_ms": 91546,
+      "duration_api_ms": 84534,
+      "ttft_ms": 10229,
+      "num_turns": 4,
+      "result": "",
+      "stop_reason": "end_turn",
+      "session_id": "155bf51f-7370-44d6-87be-08f70f3622fc",
+      "total_cost_usd": 0.18994395000000003,
+      "usage": {
+        "input_tokens": 6,
+        "cache_creation_input_tokens": 26995,
+        "cache_read_input_tokens": 63699,
+        "output_tokens": 4639,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 26995,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "",
+        "iterations": [
+          {
+            "input_tokens": 1,
+            "output_tokens": 2,
+            "cache_read_input_tokens": 24812,
+            "cache_creation_input_tokens": 2183,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 2183
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard"
+      },
+      "modelUsage": {
+        "claude-sonnet-4-6": {
+          "inputTokens": 6,
+          "outputTokens": 4639,
+          "cacheReadInputTokens": 63699,
+          "cacheCreationInputTokens": 26995,
+          "webSearchRequests": 0,
+          "costUSD": 0.18994395000000003,
+          "contextWindow": 200000,
+          "maxOutputTokens": 32000
+        }
+      },
+      "permission_denials": [],
+      "structured_output": {
+        "inspection_id": "b3a1c7e2-44f8-4d09-91bc-6d28f0e53a01",
+        "created_at": "2026-05-19T07:42:00Z",
+        "plain_warning": "梯子未固定，随时可能倒塌！",
+        "summary": "铝合金伸缩梯顶端无固定、底脚不稳、搭设角度过大，高处坠落风险极高；作业人员未系安全带；地面散料堆积，整体风险等级：高。",
+        "overall_severity": "high",
+        "hazards": [
+          {
+            "category_code": "H1",
+            "category_name": "高处坠落",
+            "description": "铝合金伸缩梯顶端未固定；梯面与地面夹角超80°；底脚周边堆有散料，防滑垫失效；无人扶梯。",
+            "severity": "high",
+            "regulation": "JGJ80-2016 第5.1.1条、第5.1.2条",
+            "suggestion": "停止登梯；梯顶用绳索固定于可靠构件；调整角度至75°±5°；清除底脚散料并加装防滑垫；安排专人扶梯。"
+          },
+          {
+            "category_code": "H9",
+            "category_name": "个人防护缺失",
+            "description": "梯旁作业人员仅戴安全帽，未佩全身式安全带及安全绳，高处登梯作业无坠落防护。",
+            "severity": "high",
+            "regulation": "JGJ80-2016 第3.0.4条",
+            "suggestion": "登梯2m以上须系全身式安全带，安全绳挂于上方可靠锚点；宜配备速差自锁器或导轨式防坠器。"
+          },
+          {
+            "category_code": "H10",
+            "category_name": "其他/文明施工",
+            "description": "梯脚附近堆放铝合金踏板、砂浆袋、管材等散料，作业通道不畅，存在绊倒及物体打击风险。",
+            "severity": "medium",
+            "regulation": "JGJ59-2011 第3.0.1条",
+            "suggestion": "清理梯脚3m范围散料集中至堆料区；管材竖向绑扎码放；保持作业通道宽度不低于1m。"
+          }
+        ],
+        "model_meta": {
+          "provider": "claude_cli",
+          "model": "placeholder",
+          "latency_ms": 0
+        }
+      },
+      "terminal_reason": "completed",
+      "fast_mode_state": "off",
+      "uuid": "80c3af26-4422-429f-a6e0-94b8ee995a92"
     }
   },
-  "captured_at": "2026-05-19T05:12:13Z",
-  "captured_by": "manual seed from logs"
+  "captured_at": "2026-05-19T06:43:40Z",
+  "captured_by": "scripts/replay_capture.py"
 }
