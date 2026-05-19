@@ -35,6 +35,40 @@ async def test_L2_json_wrapped_in_markdown():
     assert payload.plain_warning == "测试"
 
 
+async def test_L2_markdown_wrapped_with_nested_hazard_objects():
+    """L2 关键回归：markdown 包裹 + hazards 数组里有多个 {...} 子对象。
+
+    case_002 实测暴露的 bug：旧 parser 非贪心优先，finditer 优先返回了
+    hazards[0] 这个 dict（它本身也是合法 JSON），把不完整 hazard 当报告
+    抛给 Pydantic 校验。修复：候选 dict 必须能通过 ReportPayload 校验
+    才算命中；贪心整体抓优先。
+    """
+    raw = '''```json
+{
+  "inspection_id": "550e8400-e29b-41d4-a716-446655440000",
+  "created_at": "2026-05-19T00:00:00Z",
+  "plain_warning": "嵌套测试",
+  "summary": "包含嵌套对象的报告。",
+  "overall_severity": "high",
+  "hazards": [
+    {"category_code": "H1", "category_name": "高处坠落",
+     "description": "x", "severity": "high",
+     "regulation": "", "suggestion": "y"},
+    {"category_code": "H2", "category_name": "物体打击",
+     "description": "z", "severity": "medium",
+     "regulation": "", "suggestion": "w"}
+  ],
+  "model_meta": {"provider": "claude_cli", "model": "x", "latency_ms": 100}
+}
+```
+'''
+    payload = await parse_report(raw)
+    assert payload.plain_warning == "嵌套测试"
+    assert len(payload.hazards) == 2
+    assert payload.hazards[0].category_code == "H1"
+    assert payload.hazards[1].category_code == "H2"
+
+
 async def test_L3_reprompt_recovers():
     """L3：第一次响应是垃圾、reprompt 后返回合法 JSON。"""
     call_count = {"n": 0}

@@ -63,7 +63,7 @@ async def main(image_path: str) -> None:
     provider = ClaudeCLIProvider(
         cli_path=os.environ.get("CLAUDE_CLI_PATH", "claude"),
         model=os.environ.get("CLAUDE_MODEL", "sonnet"),
-        timeout_seconds=int(os.environ.get("CLAUDE_TIMEOUT_SECONDS", "120")),
+        timeout_seconds=int(os.environ.get("CLAUDE_TIMEOUT_SECONDS", "180")),
     )
     image_bytes = Path(image_path).read_bytes()
     print(
