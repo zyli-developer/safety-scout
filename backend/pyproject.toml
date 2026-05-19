@@ -5,6 +5,7 @@ description = "Construction site safety hazard identification backend"
 requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.6",
+    "pydantic-settings>=2.0",
     "python-dotenv>=1.0",
 ]
 
