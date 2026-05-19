@@ -35,6 +35,7 @@
     "@babel/preset-env": "^7.24.0",
     "@babel/preset-react": "^7.24.0",
     "@babel/preset-typescript": "^7.24.0",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.6.2",
     "@tarojs/cli": "^4.0.0",
     "@tarojs/taro-loader": "^4.0.0",
     "@tarojs/webpack5-runner": "^4.0.0",
