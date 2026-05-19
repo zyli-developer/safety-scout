@@ -2,50 +2,50 @@
   "input": {
     "image_sha256": "8b8e533b5ba528ea8cf2fa88e9dc0ab2a8d956d194f5d755822bef8ed4d459b3",
     "image_path": "tests/fixtures/images/case_001_stepladder_over_2_meters.jpg",
-    "prompt_version": "v2",
+    "prompt_version": "v3",
     "provider": "claude_cli"
   },
   "output": {
-    "content": "{\"inspection_id\": \"b3a1c7e2-44f8-4d09-91bc-6d28f0e53a01\", \"created_at\": \"2026-05-19T07:42:00Z\", \"plain_warning\": \"梯子未固定，随时可能倒塌！\", \"summary\": \"铝合金伸缩梯顶端无固定、底脚不稳、搭设角度过大，高处坠落风险极高；作业人员未系安全带；地面散料堆积，整体风险等级：高。\", \"overall_severity\": \"high\", \"hazards\": [{\"category_code\": \"H1\", \"category_name\": \"高处坠落\", \"description\": \"铝合金伸缩梯顶端未固定；梯面与地面夹角超80°；底脚周边堆有散料，防滑垫失效；无人扶梯。\", \"severity\": \"high\", \"regulation\": \"JGJ80-2016 第5.1.1条、第5.1.2条\", \"suggestion\": \"停止登梯；梯顶用绳索固定于可靠构件；调整角度至75°±5°；清除底脚散料并加装防滑垫；安排专人扶梯。\"}, {\"category_code\": \"H9\", \"category_name\": \"个人防护缺失\", \"description\": \"梯旁作业人员仅戴安全帽，未佩全身式安全带及安全绳，高处登梯作业无坠落防护。\", \"severity\": \"high\", \"regulation\": \"JGJ80-2016 第3.0.4条\", \"suggestion\": \"登梯2m以上须系全身式安全带，安全绳挂于上方可靠锚点；宜配备速差自锁器或导轨式防坠器。\"}, {\"category_code\": \"H10\", \"category_name\": \"其他/文明施工\", \"description\": \"梯脚附近堆放铝合金踏板、砂浆袋、管材等散料，作业通道不畅，存在绊倒及物体打击风险。\", \"severity\": \"medium\", \"regulation\": \"JGJ59-2011 第3.0.1条\", \"suggestion\": \"清理梯脚3m范围散料集中至堆料区；管材竖向绑扎码放；保持作业通道宽度不低于1m。\"}], \"model_meta\": {\"provider\": \"claude_cli\", \"model\": \"placeholder\", \"latency_ms\": 0}}",
+    "content": "{\"inspection_id\": \"d4f8a3c1-2b5e-4d7a-9f01-8e6c3b2a5d4f\", \"created_at\": \"2026-05-19T00:00:00Z\", \"plain_warning\": \"人字梯超高靠墙放，随时倒塌压人！\", \"summary\": \"现场铝合金人字梯使用高度目测约4-5m，严重超出2m限值，且靠墙斜置未完全展开，顶部未固定，整体风险等级为高。\", \"overall_severity\": \"high\", \"hazards\": [{\"category_code\": \"H1\", \"category_name\": \"高处坠落\", \"description\": \"人字梯使用高度超过2m上限（目测约4-5m）；靠墙斜置未完全展开成A形自立，稳定性严重不足；梯顶未与结构固定，底部无防滑锁定\", \"severity\": \"high\", \"regulation\": \"JGJ80-2016第6.2条；GB 4053.2\", \"suggestion\": \"立即停用此梯；超2m作业须改用钢管脚手架；人字梯必须完全展开锁定，底部加防滑脚垫，顶部安全绳固定于结构锚固点\"}, {\"category_code\": \"H9\", \"category_name\": \"个人防护缺失\", \"description\": \"高处作业区域内作业人员未见配备安全带及防坠器，无有效防坠个人防护措施\", \"severity\": \"medium\", \"regulation\": \"JGJ80-2016第4.1条\", \"suggestion\": \"高处作业（≥2m）人员须配备GB 6095全身式安全带，系挂于可靠锚固点，安全员现场监督PPE佩戴合规性\"}, {\"category_code\": \"H10\", \"category_name\": \"其他/文明施工\", \"description\": \"作业面周边地面散置管材、砂浆袋、砖块等建材，通道杂乱，存在绊倒及行走受阻隐患\", \"severity\": \"low\", \"regulation\": \"\", \"suggestion\": \"划定材料堆放区，管材捆扎码放，袋装材料堆垛≤1.5m，清除通道障碍物保持消防通道畅通\"}], \"model_meta\": {\"provider\": \"claude_cli\", \"model\": \"placeholder\", \"latency_ms\": 0}}",
     "model": "sonnet",
-    "latency_ms": 91546,
+    "latency_ms": 100780,
     "provider_payload": {
       "type": "result",
       "subtype": "success",
       "is_error": false,
       "api_error_status": null,
-      "duration_ms": 91546,
-      "duration_api_ms": 84534,
-      "ttft_ms": 10229,
-      "num_turns": 4,
-      "result": "",
+      "duration_ms": 100780,
+      "duration_api_ms": 93476,
+      "ttft_ms": 4687,
+      "num_turns": 3,
+      "result": "{\"inspection_id\":\"d4f8a3c1-2b5e-4d7a-9f01-8e6c3b2a5d4f\",\"created_at\":\"2026-05-19T00:00:00Z\",\"plain_warning\":\"人字梯超高靠墙放，随时倒塌压人！\",\"summary\":\"现场铝合金人字梯使用高度目测约4-5m，严重超出2m限值，且靠墙斜置未完全展开，顶部未固定，整体风险等级为高。\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"人字梯使用高度超过2m上限（目测约4-5m）；靠墙斜置未完全展开成A形自立，稳定性严重不足；梯顶未与结构固定，底部无防滑锁定\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016第6.2条；GB 4053.2\",\"suggestion\":\"立即停用此梯；超2m作业须改用钢管脚手架；人字梯必须完全展开锁定，底部加防滑脚垫，顶部安全绳固定于结构锚固点\"},{\"category_code\":\"H9\",\"category_name\":\"个人防护缺失\",\"description\":\"高处作业区域内作业人员未见配备安全带及防坠器，无有效防坠个人防护措施\",\"severity\":\"medium\",\"regulation\":\"JGJ80-2016第4.1条\",\"suggestion\":\"高处作业（≥2m）人员须配备GB 6095全身式安全带，系挂于可靠锚固点，安全员现场监督PPE佩戴合规性\"},{\"category_code\":\"H10\",\"category_name\":\"其他/文明施工\",\"description\":\"作业面周边地面散置管材、砂浆袋、砖块等建材，通道杂乱，存在绊倒及行走受阻隐患\",\"severity\":\"low\",\"regulation\":\"\",\"suggestion\":\"划定材料堆放区，管材捆扎码放，袋装材料堆垛≤1.5m，清除通道障碍物保持消防通道畅通\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"placeholder\",\"latency_ms\":0}}",
       "stop_reason": "end_turn",
-      "session_id": "155bf51f-7370-44d6-87be-08f70f3622fc",
-      "total_cost_usd": 0.18994395000000003,
+      "session_id": "6612f3bd-5d87-4b51-97fa-01ccb92bfd7b",
+      "total_cost_usd": 0.162738,
       "usage": {
-        "input_tokens": 6,
-        "cache_creation_input_tokens": 26995,
-        "cache_read_input_tokens": 63699,
-        "output_tokens": 4639,
+        "input_tokens": 5,
+        "cache_creation_input_tokens": 13096,
+        "cache_read_input_tokens": 55810,
+        "output_tokens": 6458,
         "server_tool_use": {
           "web_search_requests": 0,
           "web_fetch_requests": 0
         },
         "service_tier": "standard",
         "cache_creation": {
-          "ephemeral_1h_input_tokens": 26995,
+          "ephemeral_1h_input_tokens": 13096,
           "ephemeral_5m_input_tokens": 0
         },
         "inference_geo": "",
         "iterations": [
           {
             "input_tokens": 1,
-            "output_tokens": 2,
-            "cache_read_input_tokens": 24812,
-            "cache_creation_input_tokens": 2183,
+            "output_tokens": 639,
+            "cache_read_input_tokens": 21138,
+            "cache_creation_input_tokens": 6678,
             "cache_creation": {
               "ephemeral_5m_input_tokens": 0,
-              "ephemeral_1h_input_tokens": 2183
+              "ephemeral_1h_input_tokens": 6678
             },
             "type": "message"
           }
@@ -54,47 +54,47 @@
       },
       "modelUsage": {
         "claude-sonnet-4-6": {
-          "inputTokens": 6,
-          "outputTokens": 4639,
-          "cacheReadInputTokens": 63699,
-          "cacheCreationInputTokens": 26995,
+          "inputTokens": 5,
+          "outputTokens": 6458,
+          "cacheReadInputTokens": 55810,
+          "cacheCreationInputTokens": 13096,
           "webSearchRequests": 0,
-          "costUSD": 0.18994395000000003,
+          "costUSD": 0.162738,
           "contextWindow": 200000,
           "maxOutputTokens": 32000
         }
       },
       "permission_denials": [],
       "structured_output": {
-        "inspection_id": "b3a1c7e2-44f8-4d09-91bc-6d28f0e53a01",
-        "created_at": "2026-05-19T07:42:00Z",
-        "plain_warning": "梯子未固定，随时可能倒塌！",
-        "summary": "铝合金伸缩梯顶端无固定、底脚不稳、搭设角度过大，高处坠落风险极高；作业人员未系安全带；地面散料堆积，整体风险等级：高。",
+        "inspection_id": "d4f8a3c1-2b5e-4d7a-9f01-8e6c3b2a5d4f",
+        "created_at": "2026-05-19T00:00:00Z",
+        "plain_warning": "人字梯超高靠墙放，随时倒塌压人！",
+        "summary": "现场铝合金人字梯使用高度目测约4-5m，严重超出2m限值，且靠墙斜置未完全展开，顶部未固定，整体风险等级为高。",
         "overall_severity": "high",
         "hazards": [
           {
             "category_code": "H1",
             "category_name": "高处坠落",
-            "description": "铝合金伸缩梯顶端未固定；梯面与地面夹角超80°；底脚周边堆有散料，防滑垫失效；无人扶梯。",
+            "description": "人字梯使用高度超过2m上限（目测约4-5m）；靠墙斜置未完全展开成A形自立，稳定性严重不足；梯顶未与结构固定，底部无防滑锁定",
             "severity": "high",
-            "regulation": "JGJ80-2016 第5.1.1条、第5.1.2条",
-            "suggestion": "停止登梯；梯顶用绳索固定于可靠构件；调整角度至75°±5°；清除底脚散料并加装防滑垫；安排专人扶梯。"
+            "regulation": "JGJ80-2016第6.2条；GB 4053.2",
+            "suggestion": "立即停用此梯；超2m作业须改用钢管脚手架；人字梯必须完全展开锁定，底部加防滑脚垫，顶部安全绳固定于结构锚固点"
           },
           {
             "category_code": "H9",
             "category_name": "个人防护缺失",
-            "description": "梯旁作业人员仅戴安全帽，未佩全身式安全带及安全绳，高处登梯作业无坠落防护。",
-            "severity": "high",
-            "regulation": "JGJ80-2016 第3.0.4条",
-            "suggestion": "登梯2m以上须系全身式安全带，安全绳挂于上方可靠锚点；宜配备速差自锁器或导轨式防坠器。"
+            "description": "高处作业区域内作业人员未见配备安全带及防坠器，无有效防坠个人防护措施",
+            "severity": "medium",
+            "regulation": "JGJ80-2016第4.1条",
+            "suggestion": "高处作业（≥2m）人员须配备GB 6095全身式安全带，系挂于可靠锚固点，安全员现场监督PPE佩戴合规性"
           },
           {
             "category_code": "H10",
             "category_name": "其他/文明施工",
-            "description": "梯脚附近堆放铝合金踏板、砂浆袋、管材等散料，作业通道不畅，存在绊倒及物体打击风险。",
-            "severity": "medium",
-            "regulation": "JGJ59-2011 第3.0.1条",
-            "suggestion": "清理梯脚3m范围散料集中至堆料区；管材竖向绑扎码放；保持作业通道宽度不低于1m。"
+            "description": "作业面周边地面散置管材、砂浆袋、砖块等建材，通道杂乱，存在绊倒及行走受阻隐患",
+            "severity": "low",
+            "regulation": "",
+            "suggestion": "划定材料堆放区，管材捆扎码放，袋装材料堆垛≤1.5m，清除通道障碍物保持消防通道畅通"
           }
         ],
         "model_meta": {
@@ -105,9 +105,9 @@
       },
       "terminal_reason": "completed",
       "fast_mode_state": "off",
-      "uuid": "80c3af26-4422-429f-a6e0-94b8ee995a92"
+      "uuid": "bc39ab66-465d-43da-a30c-1d4b4a6aaca2"
     }
   },
-  "captured_at": "2026-05-19T06:43:40Z",
+  "captured_at": "2026-05-19T08:56:40Z",
   "captured_by": "scripts/replay_capture.py"
 }

@@ -2,50 +2,50 @@
   "input": {
     "image_sha256": "2d23370e38a46976142bf3395764705c924f881275995b84958c7932aa222da6",
     "image_path": "tests/fixtures/images/case_004_stair_guard_unreliable_there_no_protection_on_the_side_platform.jpg",
-    "prompt_version": "v2",
+    "prompt_version": "v3",
     "provider": "claude_cli"
   },
   "output": {
-    "content": "{\"inspection_id\":\"a1b2c3d4-0001-0000-0000-000000000001\",\"created_at\":\"2026-05-19T00:00:00Z\",\"plain_warning\":\"楼梯无栏杆，随时可能坠落！\",\"summary\":\"楼梯临边防护严重缺失，仅以松弛破损安全网替代规范防护栏杆，综合风险等级：高\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"楼梯临边侧向临空，现场仅以一张松弛、局部破损的安全网代替规范防护栏杆，安全网上端固定点不明、网体多处松脱，无法有效拦截人员坠落；楼梯休息平台靠幕墙侧亦未见临边防护栏杆，洞口下方无兜底水平安全网\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第4.1.1条、第4.1.2条\",\"suggestion\":\"立即在楼梯临边及休息平台外侧设置高度不低于1.2m的双道横杆临时防护栏杆并加设踢脚板（≥180mm）；破损安全网须整体更换，重新按规范张挂并可靠固定上口，同时在楼梯洞口下方张挂水平兜底安全网\"},{\"category_code\":\"H2\",\"category_name\":\"物体打击\",\"description\":\"楼梯踏步及平台面散落大量建筑垃圾碎块，施工人员上下通行时踢落或震落碎石将造成坠物打击；楼梯洞口上方无水平防护棚或防护网兜底\",\"severity\":\"medium\",\"regulation\":\"JGJ59-2011 第3.13.1条\",\"suggestion\":\"立即清理楼梯踏步及平台上的建筑垃圾，保持通道畅通；在楼梯洞口适当位置补张水平安全网，防止高处坠物伤人\"},{\"category_code\":\"H9\",\"category_name\":\"个人防护缺失\",\"description\":\"现场楼梯入口及临边区域均未见安全警示标识、防护区域隔离围栏及高处坠落风险告知牌\",\"severity\":\"low\",\"regulation\":\"\",\"suggestion\":\"在楼梯入口及各层休息平台处张贴高处坠落安全警示标识，设置隔离警示带，告知进入该区域人员必须佩戴安全帽及安全带\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"placeholder\",\"latency_ms\":0}}",
+    "content": "{\"inspection_id\": \"00000000-0000-0000-0000-000000000000\", \"created_at\": \"2026-05-19T00:00:00Z\", \"plain_warning\": \"楼梯无扶手，临边随时能坠落\", \"summary\": \"楼梯侧边防护以松弛绳网替代刚性双扶手，转角平台外侧临边敞开无防护栏，现场综合风险等级高\", \"overall_severity\": \"high\", \"hazards\": [{\"category_code\": \"H1\", \"category_name\": \"高处坠落\", \"description\": \"楼梯防护可靠性不足：侧边仅以菱形绳网替代刚性双扶手，网体松弛未张紧；侧边平台无防护：转角平台外侧面向幕墙开口区域，临边敞开，无≥1.2m刚性防护栏杆\", \"severity\": \"high\", \"regulation\": \"JGJ80-2016 第6.2条\", \"suggestion\": \"楼梯两侧补装刚性双扶手（高度≥1.05m）并挂密目式安全立网；平台外侧临边设≥1.2m双横杆刚性栏杆，底部加180mm挡脚板\"}, {\"category_code\": \"H10\", \"category_name\": \"其他/文明施工\", \"description\": \"楼梯踏步及转角平台堆积建筑垃圾与施工碎屑，疏散通道不畅，踏步面存在绊倒及滑落风险\", \"severity\": \"low\", \"regulation\": \"\", \"suggestion\": \"立即清除踏步及平台碎屑，保持施工通道净宽≥1m，设置垃圾临时堆放区并安排专人定期清扫\"}], \"model_meta\": {\"provider\": \"claude_cli\", \"model\": \"placeholder\", \"latency_ms\": 0}}",
     "model": "sonnet",
-    "latency_ms": 107606,
+    "latency_ms": 114470,
     "provider_payload": {
       "type": "result",
       "subtype": "success",
       "is_error": false,
       "api_error_status": null,
-      "duration_ms": 107606,
-      "duration_api_ms": 102382,
-      "ttft_ms": 24248,
-      "num_turns": 4,
-      "result": "{\"inspection_id\":\"a1b2c3d4-0001-0000-0000-000000000001\",\"created_at\":\"2026-05-19T00:00:00Z\",\"plain_warning\":\"楼梯无栏杆，随时可能坠落！\",\"summary\":\"楼梯临边防护严重缺失，仅以松弛破损安全网替代规范防护栏杆，综合风险等级：高\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"楼梯临边侧向临空，现场仅以一张松弛、局部破损的安全网代替规范防护栏杆，安全网上端固定点不明、网体多处松脱，无法有效拦截人员坠落；楼梯休息平台靠幕墙侧亦未见临边防护栏杆，洞口下方无兜底水平安全网\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第4.1.1条、第4.1.2条\",\"suggestion\":\"立即在楼梯临边及休息平台外侧设置高度不低于1.2m的双道横杆临时防护栏杆并加设踢脚板（≥180mm）；破损安全网须整体更换，重新按规范张挂并可靠固定上口，同时在楼梯洞口下方张挂水平兜底安全网\"},{\"category_code\":\"H2\",\"category_name\":\"物体打击\",\"description\":\"楼梯踏步及平台面散落大量建筑垃圾碎块，施工人员上下通行时踢落或震落碎石将造成坠物打击；楼梯洞口上方无水平防护棚或防护网兜底\",\"severity\":\"medium\",\"regulation\":\"JGJ59-2011 第3.13.1条\",\"suggestion\":\"立即清理楼梯踏步及平台上的建筑垃圾，保持通道畅通；在楼梯洞口适当位置补张水平安全网，防止高处坠物伤人\"},{\"category_code\":\"H9\",\"category_name\":\"个人防护缺失\",\"description\":\"现场楼梯入口及临边区域均未见安全警示标识、防护区域隔离围栏及高处坠落风险告知牌\",\"severity\":\"low\",\"regulation\":\"\",\"suggestion\":\"在楼梯入口及各层休息平台处张贴高处坠落安全警示标识，设置隔离警示带，告知进入该区域人员必须佩戴安全帽及安全带\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"placeholder\",\"latency_ms\":0}}",
+      "duration_ms": 114470,
+      "duration_api_ms": 106788,
+      "ttft_ms": 27699,
+      "num_turns": 3,
+      "result": "{\"inspection_id\":\"00000000-0000-0000-0000-000000000000\",\"created_at\":\"2026-05-19T00:00:00Z\",\"plain_warning\":\"楼梯无扶手，临边随时能坠落\",\"summary\":\"楼梯侧边防护以松弛绳网替代刚性双扶手，转角平台外侧临边敞开无防护栏，现场综合风险等级高\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"楼梯防护可靠性不足：侧边仅以菱形绳网替代刚性双扶手，网体松弛未张紧；侧边平台无防护：转角平台外侧面向幕墙开口区域，临边敞开，无≥1.2m刚性防护栏杆\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第6.2条\",\"suggestion\":\"楼梯两侧补装刚性双扶手（高度≥1.05m）并挂设密目式安全立网；平台外侧临边设置≥1.2m双横杆刚性防护栏杆，底部加180mm挡脚板\"},{\"category_code\":\"H10\",\"category_name\":\"其他/文明施工\",\"description\":\"楼梯踏步及转角平台堆积建筑垃圾与施工碎屑，疏散通道不畅，踏步面存在绊倒及滑落风险\",\"severity\":\"low\",\"regulation\":\"\",\"suggestion\":\"立即清除踏步及平台碎屑，保持施工通道净宽≥1m，设置垃圾临时堆放区并安排专人定期清扫\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"placeholder\",\"latency_ms\":0}}",
       "stop_reason": "end_turn",
-      "session_id": "45665d2a-3df1-47b2-82bc-60d32e880768",
-      "total_cost_usd": 0.13147575,
+      "session_id": "a609c9b6-7b0b-418d-87ce-7463b5612604",
+      "total_cost_usd": 0.14880120000000002,
       "usage": {
-        "input_tokens": 6,
-        "cache_creation_input_tokens": 9631,
-        "cache_read_input_tokens": 75455,
-        "output_tokens": 4847,
+        "input_tokens": 5,
+        "cache_creation_input_tokens": 12344,
+        "cache_read_input_tokens": 55804,
+        "output_tokens": 5717,
         "server_tool_use": {
           "web_search_requests": 0,
           "web_fetch_requests": 0
         },
         "service_tier": "standard",
         "cache_creation": {
-          "ephemeral_1h_input_tokens": 9631,
+          "ephemeral_1h_input_tokens": 12344,
           "ephemeral_5m_input_tokens": 0
         },
         "inference_geo": "",
         "iterations": [
           {
             "input_tokens": 1,
-            "output_tokens": 755,
-            "cache_read_input_tokens": 22008,
-            "cache_creation_input_tokens": 2343,
+            "output_tokens": 510,
+            "cache_read_input_tokens": 21134,
+            "cache_creation_input_tokens": 5930,
             "cache_creation": {
               "ephemeral_5m_input_tokens": 0,
-              "ephemeral_1h_input_tokens": 2343
+              "ephemeral_1h_input_tokens": 5930
             },
             "type": "message"
           }
@@ -54,47 +54,39 @@
       },
       "modelUsage": {
         "claude-sonnet-4-6": {
-          "inputTokens": 6,
-          "outputTokens": 4847,
-          "cacheReadInputTokens": 75455,
-          "cacheCreationInputTokens": 9631,
+          "inputTokens": 5,
+          "outputTokens": 5717,
+          "cacheReadInputTokens": 55804,
+          "cacheCreationInputTokens": 12344,
           "webSearchRequests": 0,
-          "costUSD": 0.13147575,
+          "costUSD": 0.14880120000000002,
           "contextWindow": 200000,
           "maxOutputTokens": 32000
         }
       },
       "permission_denials": [],
       "structured_output": {
-        "inspection_id": "a1b2c3d4-0001-0000-0000-000000000001",
+        "inspection_id": "00000000-0000-0000-0000-000000000000",
         "created_at": "2026-05-19T00:00:00Z",
-        "plain_warning": "楼梯无栏杆，随时可能坠落！",
-        "summary": "楼梯临边防护严重缺失，仅以松弛破损安全网替代规范防护栏杆，综合风险等级：高",
+        "plain_warning": "楼梯无扶手，临边随时能坠落",
+        "summary": "楼梯侧边防护以松弛绳网替代刚性双扶手，转角平台外侧临边敞开无防护栏，现场综合风险等级高",
         "overall_severity": "high",
         "hazards": [
           {
             "category_code": "H1",
             "category_name": "高处坠落",
-            "description": "楼梯临边侧向临空，现场仅以一张松弛、局部破损的安全网代替规范防护栏杆，安全网上端固定点不明、网体多处松脱，无法有效拦截人员坠落；楼梯休息平台靠幕墙侧亦未见临边防护栏杆，洞口下方无兜底水平安全网",
+            "description": "楼梯防护可靠性不足：侧边仅以菱形绳网替代刚性双扶手，网体松弛未张紧；侧边平台无防护：转角平台外侧面向幕墙开口区域，临边敞开，无≥1.2m刚性防护栏杆",
             "severity": "high",
-            "regulation": "JGJ80-2016 第4.1.1条、第4.1.2条",
-            "suggestion": "立即在楼梯临边及休息平台外侧设置高度不低于1.2m的双道横杆临时防护栏杆并加设踢脚板（≥180mm）；破损安全网须整体更换，重新按规范张挂并可靠固定上口，同时在楼梯洞口下方张挂水平兜底安全网"
+            "regulation": "JGJ80-2016 第6.2条",
+            "suggestion": "楼梯两侧补装刚性双扶手（高度≥1.05m）并挂密目式安全立网；平台外侧临边设≥1.2m双横杆刚性栏杆，底部加180mm挡脚板"
           },
           {
-            "category_code": "H2",
-            "category_name": "物体打击",
-            "description": "楼梯踏步及平台面散落大量建筑垃圾碎块，施工人员上下通行时踢落或震落碎石将造成坠物打击；楼梯洞口上方无水平防护棚或防护网兜底",
-            "severity": "medium",
-            "regulation": "JGJ59-2011 第3.13.1条",
-            "suggestion": "立即清理楼梯踏步及平台上的建筑垃圾，保持通道畅通；在楼梯洞口适当位置补张水平安全网，防止高处坠物伤人"
-          },
-          {
-            "category_code": "H9",
-            "category_name": "个人防护缺失",
-            "description": "现场楼梯入口及临边区域均未见安全警示标识、防护区域隔离围栏及高处坠落风险告知牌",
+            "category_code": "H10",
+            "category_name": "其他/文明施工",
+            "description": "楼梯踏步及转角平台堆积建筑垃圾与施工碎屑，疏散通道不畅，踏步面存在绊倒及滑落风险",
             "severity": "low",
             "regulation": "",
-            "suggestion": "在楼梯入口及各层休息平台处张贴高处坠落安全警示标识，设置隔离警示带，告知进入该区域人员必须佩戴安全帽及安全带"
+            "suggestion": "立即清除踏步及平台碎屑，保持施工通道净宽≥1m，设置垃圾临时堆放区并安排专人定期清扫"
           }
         ],
         "model_meta": {
@@ -105,9 +97,9 @@
       },
       "terminal_reason": "completed",
       "fast_mode_state": "off",
-      "uuid": "375af603-86c0-4c16-b745-3bb86ffba096"
+      "uuid": "e159d67c-a09b-463c-bdc0-eaa501d48116"
     }
   },
-  "captured_at": "2026-05-19T06:49:51Z",
+  "captured_at": "2026-05-19T09:02:46Z",
   "captured_by": "scripts/replay_capture.py"
 }

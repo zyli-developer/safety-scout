@@ -2,50 +2,50 @@
   "input": {
     "image_sha256": "2d384385fab9eff2406def4878bd50e32a86233665c793d8035682eded1ac309",
     "image_path": "tests/fixtures/images/case_003_mobile_operation_platform_lacks_lateral_diagonal_braces_lower_supports.jpg",
-    "prompt_version": "v2",
+    "prompt_version": "v3",
     "provider": "claude_cli"
   },
   "output": {
-    "content": "{\"inspection_id\":\"f2b4a7c3-9d5e-4b28-a1f6-8c2e3d047b19\",\"created_at\":\"2026-05-19T08:30:00Z\",\"plain_warning\":\"脚手架随时倒，立即撤离！\",\"summary\":\"门式移动脚手架多层叠搭于垃圾地面，无稳定架，存在架体倾覆及高处坠落双重隐患，综合风险等级为高\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H4\",\"category_name\":\"坍塌\",\"description\":\"门式移动脚手架多层叠搭，底部脚轮坐于松散建筑垃圾上，地面不平整；无扩展稳定架（外撑脚），架体高宽比偏大，整体抗倾覆稳定性严重不足\",\"severity\":\"high\",\"regulation\":\"JGJ128-2010《建筑施工门式钢管脚手架安全技术规范》（地基基础及稳定性要求）\",\"suggestion\":\"立即停用并设警戒线；清除底部垃圾，脚轮置于平整硬地面并锁定；安装四角扩展稳定架；专业人员验收后方可恢复使用\"},{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"脚手架顶部作业层无防护栏杆及满铺脚手板，无临边防护；脚轮未锁定致架体可水平位移，高处坠落隐患突出\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016《建筑施工高处作业安全技术规范》第4章临边作业防护要求\",\"suggestion\":\"顶部作业层四周设高≥1.2m防护栏杆及180mm踢脚板，满铺固定脚手板；作业人员系安全带挂可靠锚固点；脚轮锁定后方可上架\"},{\"category_code\":\"H2\",\"category_name\":\"物体打击\",\"description\":\"脚手架各层无围护及踢脚板，周边地面建筑垃圾密集堆积；架体晃动或倾覆时高处构件及物料将打击下方人员\",\"severity\":\"high\",\"regulation\":\"JGJ59-2011《建筑施工安全检查标准》\",\"suggestion\":\"架体投影区拉警戒绳，严禁无关人员进入；作业层周边设≥180mm踢脚板；作业层上不堆放多余材料及工具\"},{\"category_code\":\"H10\",\"category_name\":\"其他/文明施工\",\"description\":\"地面大量水泥块及建筑碎渣堆积未清理，通道受阻，行走绊倒风险高，并恶化脚手架地基承载条件\",\"severity\":\"medium\",\"regulation\":\"\",\"suggestion\":\"每日安排专人清理作业面建筑垃圾，集中至指定堆放点并及时外运，保持通道畅通\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"placeholder\",\"latency_ms\":0}}",
+    "content": "{\"inspection_id\": \"b7e2a1c4-3f90-4d85-a6b2-0e5c8d1f9a32\", \"created_at\": \"2026-05-19T00:00:00Z\", \"plain_warning\": \"操作架无剪刀撑，随时会倒！\", \"summary\": \"现场移动式操作平台缺侧向剪刀撑与下支撑、脚轮制动不明，整体坍塌风险极高；顶部作业层临边无防护栏，高处坠落隐患并存；综合风险等级：高\", \"overall_severity\": \"high\", \"hazards\": [{\"category_code\": \"H4\", \"category_name\": \"坍塌\", \"description\": \"移动式操作平台缺侧向剪刀撑、下支撑；脚轮制动状态不明，架体侧向稳定性无保障，存在整体倾覆风险\", \"severity\": \"high\", \"regulation\": \"\", \"suggestion\": \"立即停止上人作业；在四角加设斜向剪刀撑，底部设置下支撑脚；锁定全部脚轮制动器；由专职安全员对架体稳定性验收合格后方可恢复使用\"}, {\"category_code\": \"H1\", \"category_name\": \"高处坠落\", \"description\": \"移动式操作平台顶部作业层四周未见防护栏杆及挡脚板，操作人员存在临边坠落风险\", \"severity\": \"high\", \"regulation\": \"JGJ80-2016\", \"suggestion\": \"在顶部作业平台四周设置高度不低于1.2m的防护栏杆，并加装不低于180mm高挡脚板；作业人员必须系挂安全带\"}, {\"category_code\": \"H10\", \"category_name\": \"其他/文明施工\", \"description\": \"移动式操作平台底部周边地面大量破碎混凝土块及建筑废料随意堆积，影响架体底脚稳定性及应急撤离通道畅通\", \"severity\": \"low\", \"regulation\": \"\", \"suggestion\": \"清除操作平台底部1m范围内建筑垃圾，确保地面平整坚实；废料及时清运至指定堆放区域，保持作业通道畅通\"}], \"model_meta\": {\"provider\": \"claude_cli\", \"model\": \"placeholder\", \"latency_ms\": 0}}",
     "model": "sonnet",
-    "latency_ms": 174634,
+    "latency_ms": 102461,
     "provider_payload": {
       "type": "result",
       "subtype": "success",
       "is_error": false,
       "api_error_status": null,
-      "duration_ms": 174634,
-      "duration_api_ms": 169148,
-      "ttft_ms": 12261,
+      "duration_ms": 102461,
+      "duration_api_ms": 94748,
+      "ttft_ms": 24096,
       "num_turns": 3,
-      "result": "{\"inspection_id\":\"f2b4a7c3-9d5e-4b28-a1f6-8c2e3d047b19\",\"created_at\":\"2026-05-19T08:30:00Z\",\"plain_warning\":\"脚手架随时倒，立即撤离！\",\"summary\":\"门式移动脚手架多层叠搭于垃圾地面，无稳定架，存在架体倾覆及高处坠落双重隐患，综合风险等级为高\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H4\",\"category_name\":\"坍塌\",\"description\":\"门式移动脚手架多层叠搭，底部脚轮坐于松散建筑垃圾上，地面不平整；无扩展稳定架（外撑脚），架体高宽比偏大，整体抗倾覆稳定性严重不足\",\"severity\":\"high\",\"regulation\":\"JGJ128-2010《建筑施工门式钢管脚手架安全技术规范》（地基基础及稳定性要求）\",\"suggestion\":\"立即停用并设警戒线；清除底部垃圾，脚轮置于平整硬地面并锁定；安装四角扩展稳定架；专业人员验收后方可恢复使用\"},{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"脚手架顶部作业层无防护栏杆及满铺脚手板，无临边防护；脚轮未锁定致架体可水平位移，高处坠落隐患突出\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016《建筑施工高处作业安全技术规范》第4章临边作业防护要求\",\"suggestion\":\"顶部作业层四周设高≥1.2m防护栏杆及180mm踢脚板，满铺固定脚手板；作业人员系安全带挂可靠锚固点；脚轮锁定后方可上架\"},{\"category_code\":\"H2\",\"category_name\":\"物体打击\",\"description\":\"脚手架各层无围护及踢脚板，周边地面建筑垃圾密集堆积；架体晃动或倾覆时高处构件及物料将打击下方人员\",\"severity\":\"high\",\"regulation\":\"JGJ59-2011《建筑施工安全检查标准》\",\"suggestion\":\"架体投影区拉警戒绳，严禁无关人员进入；作业层周边设≥180mm踢脚板；作业层上不堆放多余材料及工具\"},{\"category_code\":\"H10\",\"category_name\":\"其他/文明施工\",\"description\":\"地面大量水泥块及建筑碎渣堆积未清理，通道受阻，行走绊倒风险高，并恶化脚手架地基承载条件\",\"severity\":\"medium\",\"regulation\":\"\",\"suggestion\":\"每日安排专人清理作业面建筑垃圾，集中至指定堆放点并及时外运，保持通道畅通\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"placeholder\",\"latency_ms\":0}}",
+      "result": "{\"inspection_id\":\"b7e2a1c4-3f90-4d85-a6b2-0e5c8d1f9a32\",\"created_at\":\"2026-05-19T00:00:00Z\",\"plain_warning\":\"操作架无剪刀撑，随时会倒！\",\"summary\":\"现场移动式操作平台缺侧向剪刀撑与下支撑、脚轮制动不明，整体坍塌风险极高；顶部作业层临边无防护栏，高处坠落隐患并存；综合风险等级：高\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H4\",\"category_name\":\"坍塌\",\"description\":\"移动式操作平台缺侧向剪刀撑、下支撑；脚轮制动状态不明，架体侧向稳定性无保障，存在整体倾覆风险\",\"severity\":\"high\",\"regulation\":\"\",\"suggestion\":\"立即停止上人作业；在四角加设斜向剪刀撑，底部设置下支撑脚；锁定全部脚轮制动器；由专职安全员对架体稳定性验收合格后方可恢复使用\"},{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"移动式操作平台顶部作业层四周未见防护栏杆及挡脚板，操作人员存在临边坠落风险\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016\",\"suggestion\":\"在顶部作业平台四周设置高度不低于1.2m的防护栏杆，并加装不低于180mm高挡脚板；作业人员必须系挂安全带\"},{\"category_code\":\"H10\",\"category_name\":\"其他/文明施工\",\"description\":\"移动式操作平台底部周边地面大量破碎混凝土块及建筑废料随意堆积，影响架体底脚稳定性及应急撤离通道畅通\",\"severity\":\"low\",\"regulation\":\"\",\"suggestion\":\"清除操作平台底部1m范围内建筑垃圾，确保地面平整坚实；废料及时清运至指定堆放区域，保持作业通道畅通\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"placeholder\",\"latency_ms\":0}}",
       "stop_reason": "end_turn",
-      "session_id": "2900a01b-4b7b-4366-971d-5e6ba3fcf6ef",
-      "total_cost_usd": 0.22571985,
+      "session_id": "38d2e9ea-c9c4-4edd-91ca-4056123ac11a",
+      "total_cost_usd": 0.12813975,
       "usage": {
         "input_tokens": 5,
-        "cache_creation_input_tokens": 15385,
-        "cache_read_input_tokens": 52787,
-        "output_tokens": 10145,
+        "cache_creation_input_tokens": 10915,
+        "cache_read_input_tokens": 55145,
+        "output_tokens": 4710,
         "server_tool_use": {
           "web_search_requests": 0,
           "web_fetch_requests": 0
         },
         "service_tier": "standard",
         "cache_creation": {
-          "ephemeral_1h_input_tokens": 15385,
+          "ephemeral_1h_input_tokens": 10915,
           "ephemeral_5m_input_tokens": 0
         },
         "inference_geo": "",
         "iterations": [
           {
             "input_tokens": 1,
-            "output_tokens": 874,
-            "cache_read_input_tokens": 19295,
-            "cache_creation_input_tokens": 10810,
+            "output_tokens": 641,
+            "cache_read_input_tokens": 20474,
+            "cache_creation_input_tokens": 5161,
             "cache_creation": {
               "ephemeral_5m_input_tokens": 0,
-              "ephemeral_1h_input_tokens": 10810
+              "ephemeral_1h_input_tokens": 5161
             },
             "type": "message"
           }
@@ -55,54 +55,46 @@
       "modelUsage": {
         "claude-sonnet-4-6": {
           "inputTokens": 5,
-          "outputTokens": 10145,
-          "cacheReadInputTokens": 52787,
-          "cacheCreationInputTokens": 15385,
+          "outputTokens": 4710,
+          "cacheReadInputTokens": 55145,
+          "cacheCreationInputTokens": 10915,
           "webSearchRequests": 0,
-          "costUSD": 0.22571985,
+          "costUSD": 0.12813975,
           "contextWindow": 200000,
           "maxOutputTokens": 32000
         }
       },
       "permission_denials": [],
       "structured_output": {
-        "inspection_id": "f2b4a7c3-9d5e-4b28-a1f6-8c2e3d047b19",
-        "created_at": "2026-05-19T08:30:00Z",
-        "plain_warning": "脚手架随时倒，立即撤离！",
-        "summary": "门式移动脚手架多层叠搭于垃圾地面，无稳定架，存在架体倾覆及高处坠落双重隐患，综合风险等级为高",
+        "inspection_id": "b7e2a1c4-3f90-4d85-a6b2-0e5c8d1f9a32",
+        "created_at": "2026-05-19T00:00:00Z",
+        "plain_warning": "操作架无剪刀撑，随时会倒！",
+        "summary": "现场移动式操作平台缺侧向剪刀撑与下支撑、脚轮制动不明，整体坍塌风险极高；顶部作业层临边无防护栏，高处坠落隐患并存；综合风险等级：高",
         "overall_severity": "high",
         "hazards": [
           {
             "category_code": "H4",
             "category_name": "坍塌",
-            "description": "门式移动脚手架多层叠搭，底部脚轮坐于松散建筑垃圾上，地面不平整；无扩展稳定架（外撑脚），架体高宽比偏大，整体抗倾覆稳定性严重不足",
+            "description": "移动式操作平台缺侧向剪刀撑、下支撑；脚轮制动状态不明，架体侧向稳定性无保障，存在整体倾覆风险",
             "severity": "high",
-            "regulation": "JGJ128-2010《建筑施工门式钢管脚手架安全技术规范》（地基基础及稳定性要求）",
-            "suggestion": "立即停用并设警戒线；清除底部垃圾，脚轮置于平整硬地面并锁定；安装四角扩展稳定架；专业人员验收后方可恢复使用"
+            "regulation": "",
+            "suggestion": "立即停止上人作业；在四角加设斜向剪刀撑，底部设置下支撑脚；锁定全部脚轮制动器；由专职安全员对架体稳定性验收合格后方可恢复使用"
           },
           {
             "category_code": "H1",
             "category_name": "高处坠落",
-            "description": "脚手架顶部作业层无防护栏杆及满铺脚手板，无临边防护；脚轮未锁定致架体可水平位移，高处坠落隐患突出",
+            "description": "移动式操作平台顶部作业层四周未见防护栏杆及挡脚板，操作人员存在临边坠落风险",
             "severity": "high",
-            "regulation": "JGJ80-2016《建筑施工高处作业安全技术规范》第4章临边作业防护要求",
-            "suggestion": "顶部作业层四周设高≥1.2m防护栏杆及180mm踢脚板，满铺固定脚手板；作业人员系安全带挂可靠锚固点；脚轮锁定后方可上架"
-          },
-          {
-            "category_code": "H2",
-            "category_name": "物体打击",
-            "description": "脚手架各层无围护及踢脚板，周边地面建筑垃圾密集堆积；架体晃动或倾覆时高处构件及物料将打击下方人员",
-            "severity": "high",
-            "regulation": "JGJ59-2011《建筑施工安全检查标准》",
-            "suggestion": "架体投影区拉警戒绳，严禁无关人员进入；作业层周边设≥180mm踢脚板；作业层上不得堆放多余材料及工具"
+            "regulation": "JGJ80-2016",
+            "suggestion": "在顶部作业平台四周设置高度不低于1.2m的防护栏杆，并加装不低于180mm高挡脚板；作业人员必须系挂安全带"
           },
           {
             "category_code": "H10",
             "category_name": "其他/文明施工",
-            "description": "地面大量水泥块及建筑碎渣堆积未清理，通道受阻，行走绊倒风险高，并恶化脚手架地基承载条件",
-            "severity": "medium",
+            "description": "移动式操作平台底部周边地面大量破碎混凝土块及建筑废料随意堆积，影响架体底脚稳定性及应急撤离通道畅通",
+            "severity": "low",
             "regulation": "",
-            "suggestion": "每日安排专人清理作业面建筑垃圾，集中至指定堆放点并及时外运，保持通道畅通"
+            "suggestion": "清除操作平台底部1m范围内建筑垃圾，确保地面平整坚实；废料及时清运至指定堆放区域，保持作业通道畅通"
           }
         ],
         "model_meta": {
@@ -113,9 +105,9 @@
       },
       "terminal_reason": "completed",
       "fast_mode_state": "off",
-      "uuid": "b3be1c9d-cca1-4b82-8a30-090d4d43ef88"
+      "uuid": "042aceff-2f5f-4918-b347-09811630fb67"
     }
   },
-  "captured_at": "2026-05-19T06:48:00Z",
+  "captured_at": "2026-05-19T09:00:49Z",
   "captured_by": "scripts/replay_capture.py"
 }
