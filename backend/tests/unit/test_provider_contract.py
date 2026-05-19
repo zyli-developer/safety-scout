@@ -1,6 +1,6 @@
 """LLMProvider Protocol 的契约测试。
 
-保证未来实现（doubao / deepseek / fake）都符合签名。
+保证未来实现（claude_cli / fake）都符合签名。
 """
 
 import pytest

@@ -27,7 +27,7 @@ def test_minimal_valid_report():
                 suggestion="立即责令补齐安全帽",
             )
         ],
-        model_meta=ModelMeta(provider="doubao", model="doubao-vision-1.5-pro", latency_ms=12345),
+        model_meta=ModelMeta(provider="claude_cli", model="claude-sonnet-4-6", latency_ms=12345),
     )
     assert payload.overall_severity == "high"
     assert payload.hazards[0].category_code == "H9"
@@ -70,7 +70,7 @@ def test_empty_hazards_list_allowed():
         summary="现场未识别到明显隐患。",
         overall_severity="low",
         hazards=[],
-        model_meta=ModelMeta(provider="doubao", model="x", latency_ms=100),
+        model_meta=ModelMeta(provider="claude_cli", model="x", latency_ms=100),
     )
     assert p.hazards == []
 

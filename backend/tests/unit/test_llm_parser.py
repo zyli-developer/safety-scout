@@ -17,7 +17,7 @@ MINIMAL_VALID_JSON = """
   "summary": "现场无明显隐患。",
   "overall_severity": "low",
   "hazards": [],
-  "model_meta": {"provider": "doubao", "model": "x", "latency_ms": 100}
+  "model_meta": {"provider": "claude_cli", "model": "x", "latency_ms": 100}
 }
 """
 
@@ -88,7 +88,7 @@ async def test_pydantic_validation_failure_also_raises():
           "suggestion": "x"
         }
       ],
-      "model_meta": {"provider": "doubao", "model": "x", "latency_ms": 100}
+      "model_meta": {"provider": "claude_cli", "model": "x", "latency_ms": 100}
     }
     """
     with pytest.raises(LLMParseError):
