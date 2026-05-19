@@ -3,6 +3,7 @@
 import pytest
 
 from app.errors import (
+    ImageTooLargeError,
     InvalidImageError,
     LLMCallError,
     LLMParseError,
@@ -28,6 +29,20 @@ def test_invalid_image_error():
     err = InvalidImageError("png broken")
     assert err.code == "INVALID_IMAGE"
     assert err.http_status == 400
+
+
+def test_image_too_large_error_class_attrs():
+    assert ImageTooLargeError.code == "IMAGE_TOO_LARGE"
+    assert ImageTooLargeError.http_status == 413
+    assert ImageTooLargeError.user_message  # 非空
+
+
+def test_image_too_large_error_instantiates_with_dev_message():
+    err = ImageTooLargeError("image size 20971520 bytes exceeds limit 15728640 (15 MB)")
+    assert err.code == "IMAGE_TOO_LARGE"
+    assert err.http_status == 413
+    assert "20971520" in str(err)
+    assert isinstance(err, SafetyScoutError)
 
 
 def test_llm_call_error():

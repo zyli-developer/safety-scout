@@ -32,6 +32,14 @@ class InvalidImageError(SafetyScoutError):
     user_message = "图片格式不支持，请上传 jpg / png / webp"
 
 
+class ImageTooLargeError(SafetyScoutError):
+    """上传图片超过 Settings.max_image_mb 限制（架构 §4.4：默认 15 MB）。"""
+
+    code = "IMAGE_TOO_LARGE"
+    http_status = 413
+    user_message = "图片过大（超过 15MB），请重新拍摄或选择更小的图片"
+
+
 class LLMCallError(SafetyScoutError):
     """LLM 调用层故障：子进程非零退出、envelope `is_error=True`、stdout 不是合法 JSON。
 
