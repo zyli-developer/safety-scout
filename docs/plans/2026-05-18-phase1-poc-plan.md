@@ -126,7 +126,7 @@ warn_unused_configs = true
 # Claude CLI provider - 无需 API key（走本地 Claude 登录态）
 CLAUDE_CLI_PATH=claude
 CLAUDE_MODEL=sonnet
-CLAUDE_TIMEOUT_SECONDS=120
+CLAUDE_TIMEOUT_SECONDS=180
 ```
 
 **Step 3: 写 `backend/.python-version`**
@@ -836,7 +836,7 @@ claude login           # 浏览器打开 OAuth 授权（首次）
 ```
 CLAUDE_CLI_PATH=claude
 CLAUDE_MODEL=sonnet
-CLAUDE_TIMEOUT_SECONDS=120
+CLAUDE_TIMEOUT_SECONDS=180
 ```
 
 如果你的 `claude` 不在 `$PATH`，把 `CLAUDE_CLI_PATH` 改成绝对路径。
