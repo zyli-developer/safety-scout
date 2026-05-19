@@ -13,9 +13,23 @@ export const SEVERITY_ORDER: Record<Severity, number> = {
 };
 
 export const SEVERITY_COLOR: Record<Severity, string> = {
-  high: '#E63946', // 红
+  high: '#E63946', // 红 —— 主色，PlainWarningCard 全背景 / HazardCard 圆点指示
   medium: '#F4A261', // 橙
   low: '#2A9D8F', // 绿
+};
+
+/** 浅底色 tint，用于 HazardCard 严重度 pill 背景（搭配 SEVERITY_TEXT_ON_TINT 文字）。 */
+export const SEVERITY_BG_TINT: Record<Severity, string> = {
+  high: '#FEE2E2',
+  medium: '#FEF3C7',
+  low: '#D1FAE5',
+};
+
+/** SEVERITY_BG_TINT 之上的深色文字色，保证对比度 ≥ AA。 */
+export const SEVERITY_TEXT_ON_TINT: Record<Severity, string> = {
+  high: '#991B1B',
+  medium: '#92400E',
+  low: '#065F46',
 };
 
 export const SEVERITY_LABEL: Record<Severity, string> = {

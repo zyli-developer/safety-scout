@@ -1,31 +1,47 @@
 .button {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 80%;
-  height: 200px;
-  margin: 100px auto;
-  border-radius: 24px;
-  background-color: #E63946;       // 高风险红 —— 也是"拍隐患"主色
-  box-shadow: 0 4px 16px rgba(230, 57, 70, 0.3);
-  cursor: pointer;
-  transition: transform 0.1s, opacity 0.2s;
+  width: 88%;
+  height: 240px;
+  margin: 32px auto 24px;
+  border-radius: 32px;
+  background: linear-gradient(135deg, #ff6b35 0%, #f97316 50%, #ea580c 100%);
+  box-shadow:
+    0 8px 32px rgba(234, 88, 12, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.05),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease-out;
   user-select: none;
+  position: relative;
 
   &:active {
-    transform: scale(0.96);
+    transform: scale(0.96) translateY(2px);
+    box-shadow:
+      0 4px 16px rgba(234, 88, 12, 0.4),
+      0 1px 4px rgba(0, 0, 0, 0.05);
   }
 
   &.loading,
   &.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+    opacity: 0.55;
+    &:active {
+      transform: none;
+    }
   }
+}
+
+.iconWrapper {
+  font-size: 64px;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .label {
   color: #fff;
-  font-size: 36px;
-  font-weight: bold;
-  letter-spacing: 2px;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
 }

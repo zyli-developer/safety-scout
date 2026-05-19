@@ -228,6 +228,11 @@ async function main() {
     console.log(`[step 3/5] 等跳转到报告页（POST + navigateTo）...`);
     await page.waitForURL(/\/pages\/report\/index/i, { timeout: 30_000 });
     console.log(`[browser] 报告页 URL: ${page.url()}`);
+    // 等 ProgressIndicator React 节点渲染完再截图（不然时序竞争抓到空白页）
+    await page
+      .waitForSelector('text=/正在为你生成报告|AI 分析中|拍照成功/', { timeout: 5_000 })
+      .catch(() => console.log('[browser] 警告：未检测到 ProgressIndicator 标志文案'));
+    await sleep(300);
     await page.screenshot({
       path: join(SCREENSHOT_DIR, 'h5-real-02-polling.png'),
       fullPage: true,

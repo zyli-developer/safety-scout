@@ -2,52 +2,140 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 80px 24px;
+  padding: 100px 32px 60px;
+  min-height: 80vh;
+  background: linear-gradient(180deg, #fffbeb 0%, #f8fafc 50%);
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 22px;
+  color: #64748b;
+  margin-bottom: 60px;
 }
 
 .steps {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   width: 100%;
-  max-width: 500px;
-  margin-bottom: 24px;
+  max-width: 520px;
+  position: relative;
+  margin-bottom: 32px;
+  padding: 0 8px;
+}
+
+.connector {
+  position: absolute;
+  top: 24px;
+  left: 16%;
+  right: 16%;
+  height: 3px;
+  background-color: #e2e8f0;
+  z-index: 1;
 }
 
 .step {
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex: 1;
+  z-index: 2;
 
-  &[data-state='done'] .dot {
-    background-color: #2A9D8F;
+  &[data-state='done'] {
+    .dotOuter {
+      background-color: #2a9d8f;
+    }
+    .dot {
+      background-color: #fff;
+      width: 14px;
+      height: 14px;
+    }
+    .label {
+      color: #2a9d8f;
+      font-weight: 600;
+    }
   }
-  &[data-state='active'] .dot {
-    background-color: #F4A261;
-    animation: pulse 1.5s ease-in-out infinite;
+
+  &[data-state='active'] {
+    .dotOuter {
+      background-color: #f97316;
+      animation: pulse 1.6s ease-in-out infinite;
+      box-shadow:
+        0 0 0 6px rgba(249, 115, 22, 0.15),
+        0 4px 12px rgba(249, 115, 22, 0.4);
+    }
+    .dot {
+      background-color: #fff;
+      width: 14px;
+      height: 14px;
+    }
+    .label {
+      color: #ea580c;
+      font-weight: 700;
+    }
   }
-  &[data-state='pending'] .dot {
-    background-color: #e0e0e0;
+
+  &[data-state='pending'] {
+    .dotOuter {
+      background-color: #f1f5f9;
+      border: 2px solid #e2e8f0;
+    }
+    .dot {
+      background-color: #cbd5e1;
+    }
+    .label {
+      color: #94a3b8;
+    }
   }
 }
 
-.dot {
-  width: 24px;
-  height: 24px;
+.dotOuter {
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  transition: all 0.3s ease;
+}
+
+.dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
 }
 
 .label {
   font-size: 22px;
-  color: #555;
+  letter-spacing: 0.5px;
+  text-align: center;
 }
 
 .elapsed {
   font-size: 22px;
-  color: #888;
+  color: #94a3b8;
+  margin-top: 16px;
+  padding: 8px 18px;
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.6; }
-  50%      { opacity: 1; }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
 }

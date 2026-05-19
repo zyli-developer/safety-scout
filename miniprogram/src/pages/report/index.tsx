@@ -1,5 +1,6 @@
 import Taro from '@tarojs/taro';
 import { View, Text } from '@tarojs/components';
+
 import { usePolling } from '../../hooks/usePolling';
 import { getInspection } from '../../api/inspections';
 import { PlainWarningCard } from '../../components/PlainWarningCard';
@@ -14,6 +15,7 @@ import {
 } from '../../config';
 import type { GetInspectionResponse } from '../../types/inspection';
 import type { ReportPayload, Severity } from '../../types/report';
+
 import styles from './index.module.scss';
 
 export default function ReportPage() {
@@ -43,10 +45,7 @@ export default function ReportPage() {
 
   if (isTimedOut) {
     return (
-      <ErrorView
-        userMessage="AI 分析超时，请重试"
-        allowRetry={true}
-      />
+      <ErrorView userMessage="AI 分析超时，请重试" allowRetry={true} />
     );
   }
 
@@ -84,6 +83,7 @@ function ErrorView({
 }) {
   return (
     <View className={styles.errorView}>
+      <Text className={styles.errorIcon}>⚠️</Text>
       <Text className={styles.errorText}>{userMessage}</Text>
       {allowRetry && (
         <Text className={styles.retryHint}>请返回首页重新拍照</Text>
@@ -92,19 +92,60 @@ function ErrorView({
   );
 }
 
+function formatTimestamp(iso: string): string {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+  } catch {
+    return iso;
+  }
+}
+
 function SucceededReport({ report }: { report: ReportPayload }) {
   const sorted = sortBySeverity(report.hazards);
   return (
     <View className={styles.reportPage}>
+      <View className={styles.statusBar}>
+        <Text className={styles.statusIcon}>✅</Text>
+        <View className={styles.statusBody}>
+          <Text className={styles.statusTitle}>报告已生成</Text>
+          <Text className={styles.statusMeta}>
+            共识别 {sorted.length} 项隐患 · {formatTimestamp(report.created_at)}
+          </Text>
+        </View>
+      </View>
+
       <PlainWarningCard
         text={report.plain_warning}
         severity={report.overall_severity as Severity}
       />
-      <View className={styles.summary}>
-        <Text>{report.summary}</Text>
+
+      <View className={styles.summaryCard}>
+        <View className={styles.summaryHeader}>
+          <Text className={styles.summaryIcon}>📋</Text>
+          <Text className={styles.summaryLabel}>现场总览</Text>
+        </View>
+        <Text className={styles.summaryText}>{report.summary}</Text>
       </View>
+
+      <View className={styles.hazardListHeader}>
+        <Text className={styles.hazardListTitle}>隐患明细</Text>
+        <Text className={styles.hazardListCount}>{sorted.length} 项</Text>
+      </View>
+
       {sorted.map((h, idx) => (
-        <HazardCard hazard={h} key={`${h.category_code}-${idx}`} />
+        <HazardCard
+          hazard={h}
+          key={`${h.category_code}-${idx}`}
+          index={idx + 1}
+          total={sorted.length}
+        />
       ))}
     </View>
   );
