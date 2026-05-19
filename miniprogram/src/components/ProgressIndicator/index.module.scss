@@ -1,0 +1,53 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 24px;
+}
+
+.steps {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 24px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &[data-state='done'] .dot {
+    background-color: #2A9D8F;
+  }
+  &[data-state='active'] .dot {
+    background-color: #F4A261;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  &[data-state='pending'] .dot {
+    background-color: #e0e0e0;
+  }
+}
+
+.dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-bottom: 8px;
+}
+
+.label {
+  font-size: 22px;
+  color: #555;
+}
+
+.elapsed {
+  font-size: 22px;
+  color: #888;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}

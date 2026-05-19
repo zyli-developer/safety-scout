@@ -1,0 +1,31 @@
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80%;
+  height: 200px;
+  margin: 100px auto;
+  border-radius: 24px;
+  background-color: #E63946;       // 高风险红 —— 也是"拍隐患"主色
+  box-shadow: 0 4px 16px rgba(230, 57, 70, 0.3);
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s;
+  user-select: none;
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &.loading,
+  &.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.label {
+  color: #fff;
+  font-size: 36px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
