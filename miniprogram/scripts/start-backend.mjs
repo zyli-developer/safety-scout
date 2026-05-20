@@ -19,10 +19,24 @@ const BACKEND_DIR = resolve(REPO_ROOT, 'backend');
 const PY_EXE = resolve(BACKEND_DIR, '.venv', 'Scripts', 'python.exe');
 
 export const BACKEND_HOST = '127.0.0.1';
-export const BACKEND_PORT = 8000;
+// 8000 在本机被 zombie socket 占用（之前 --reload 时代留下的 ghost listener，
+// taskkill 找不到但 LISTENING 还在），换 8001 绕开。
+export const BACKEND_PORT = 8001;
 export const HEALTH_URL = `http://${BACKEND_HOST}:${BACKEND_PORT}/api/v1/healthz`;
 
-/** uvicorn args 单一真相源 —— dev / e2e 一致使用。 */
+/** uvicorn args 单一真相源 —— dev / e2e 一致使用。
+ *
+ * **不用 --reload**：Windows 上 uvicorn --reload 会强制 worker 走
+ * SelectorEventLoop（watchfiles ipc 限制），导致 asyncio.create_subprocess_exec
+ * 报 NotImplementedError，ClaudeCLIProvider 必挂。
+ * 见 https://github.com/encode/uvicorn/issues/1972
+ *
+ * Dev 模式想要"改文件自动重启"用外层 nodemon 包裹（pnpm dev:backend）：
+ * nodemon 监听 backend/app/*.py 变化 → kill+spawn uvicorn → 干净重启。
+ * 里层 uvicorn 不开 --reload，默认 ProactorEventLoop，subprocess 工作。
+ *
+ * e2e 模式直接 spawn 这个 uvicorn（无 nodemon 包裹），路径与 dev 一致。
+ */
 export const UVICORN_ARGS = [
   '-m',
   'uvicorn',
@@ -31,7 +45,6 @@ export const UVICORN_ARGS = [
   BACKEND_HOST,
   '--port',
   String(BACKEND_PORT),
-  '--reload',
 ];
 
 /**
