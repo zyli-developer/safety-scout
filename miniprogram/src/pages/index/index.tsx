@@ -3,7 +3,7 @@ import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 
 import { BigButton } from '../../components/BigButton';
-import { HeroBanner } from '../../components/HeroBanner';
+import { HeaderBand } from '../../components/HeaderBand';
 import { captureImage } from '../../hooks/useImageCapture';
 import { createInspection } from '../../api/inspections';
 import { mapApiError } from '../../utils/errorMessage';
@@ -39,12 +39,7 @@ export default function IndexPage() {
 
   return (
     <View className={styles.indexPage}>
-      <HeroBanner
-        mode="intro"
-        icon="document"
-        title="Safety Scout"
-        subtitle="拍一张，AI 30 秒出报告"
-      />
+      <HeaderBand subtitle="拍照即查 · AI 30s 出报告" />
 
       <View className={styles.header}>
         <Text className={styles.largeTitle}>工地隐患识别</Text>

@@ -7,7 +7,7 @@ import { PlainWarningCard } from '../../components/PlainWarningCard';
 import { HazardCard } from '../../components/HazardCard';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { Icon } from '../../components/Icon';
-import { HeroBanner } from '../../components/HeroBanner';
+import { HeaderBand } from '../../components/HeaderBand';
 import { sortBySeverity, SEVERITY_LABEL } from '../../utils/severity';
 import { mapApiError } from '../../utils/errorMessage';
 import { relativeTime } from '../../utils/relativeTime';
@@ -106,7 +106,7 @@ function SucceededReport({ report }: { report: ReportPayload }) {
   const meta = `${SEVERITY_LABEL[severity]} · ${relativeTime(report.created_at)}`;
   return (
     <View className={styles.reportPage}>
-      <HeroBanner mode="metric" severity={severity} count={sorted.length} meta={meta} />
+      <HeaderBand identifier={`NO.${formatIdentifier(report.created_at)}`} subtitle={meta} />
 
       <View className={styles.pageHeader}>
         <Text className={styles.pageEyebrow}>{formatTimestamp(report.created_at)}</Text>
@@ -137,4 +137,25 @@ function SucceededReport({ report }: { report: ReportPayload }) {
       ))}
     </View>
   );
+}
+
+function formatIdentifier(iso: string): string {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    // Production system would use a sequence number from the backend; for now,
+    // a short hash of the ISO string is good enough to look like an identifier.
+    const seq = Math.abs(hash(iso)) % 10000;
+    return `${yyyy}-${mm}-${dd}-${String(seq).padStart(4, '0')}`;
+  } catch {
+    return iso;
+  }
+}
+function hash(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
+  return h;
 }
