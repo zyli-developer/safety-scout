@@ -37,8 +37,17 @@ export default function IndexPage() {
     }
   };
 
+  // 边距 CAD 刻度尺仅 H5 桌面 ≥1024px 显示。
+  // process.env.TARO_ENV 在 Taro webpack 构建时被替换为字面量字符串 ('h5' / 'weapp')，
+  // weapp 编译时 isH5 === false，下方两个 JSX 节点会被 tree-shake 掉，weapp 包零负担。
+  const isH5 = process.env.TARO_ENV === 'h5';
+
   return (
     <View className={styles.page}>
+      {/* H5-only 边距刻度尺（机制 1 演示：process.env.TARO_ENV 运行时分支） */}
+      {isH5 && <View className={styles.rulerLeft} />}
+      {isH5 && <View className={styles.rulerRight} />}
+
       <HeaderBand subtitle="拍照即查 · AI 30s 出报告" />
 
       <View className={styles.titleBlock}>

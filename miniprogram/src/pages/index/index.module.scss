@@ -95,3 +95,33 @@
     max-width: 720px;
   }
 }
+
+// 边距 CAD 刻度尺 —— 仅 H5 桌面 ≥1024px 显示。
+// JSX 已用 process.env.TARO_ENV === 'h5' 守住 (weapp 编译时整段消失)，
+// 这里再用 @media 守住 mobile H5 (≤1024px 时 display: none)。
+// 双 gate 设计：哪一端、什么宽度都不会乱出现。
+.rulerLeft, .rulerRight {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .rulerLeft, .rulerRight {
+    display: block;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.55;
+    // 1px tick 每 16px 一格、模仿 CAD 边距测量条
+    background-image: repeating-linear-gradient(
+      to bottom,
+      var(--color-caliper-grey) 0,
+      var(--color-caliper-grey) 1px,
+      transparent 1px,
+      transparent 16px
+    );
+  }
+  .rulerLeft { left: 18px; }
+  .rulerRight { right: 18px; }
+}
