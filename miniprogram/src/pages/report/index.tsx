@@ -7,8 +7,10 @@ import { PlainWarningCard } from '../../components/PlainWarningCard';
 import { HazardCard } from '../../components/HazardCard';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { Icon } from '../../components/Icon';
-import { sortBySeverity } from '../../utils/severity';
+import { HeroBanner } from '../../components/HeroBanner';
+import { sortBySeverity, SEVERITY_LABEL } from '../../utils/severity';
 import { mapApiError } from '../../utils/errorMessage';
+import { relativeTime } from '../../utils/relativeTime';
 import { ApiError } from '../../api/client';
 import {
   DEFAULT_POLL_INTERVAL_MS,
@@ -100,17 +102,20 @@ function formatTimestamp(iso: string): string {
 
 function SucceededReport({ report }: { report: ReportPayload }) {
   const sorted = sortBySeverity(report.hazards);
+  const severity = report.overall_severity as Severity;
+  const meta = `${SEVERITY_LABEL[severity]} · ${relativeTime(report.created_at)}`;
   return (
     <View className={styles.reportPage}>
+      <HeroBanner mode="metric" severity={severity} count={sorted.length} meta={meta} />
+
       <View className={styles.pageHeader}>
         <Text className={styles.pageEyebrow}>{formatTimestamp(report.created_at)}</Text>
         <Text className={styles.pageTitle}>隐患报告</Text>
-        <Text className={styles.pageMeta}>共识别 {sorted.length} 项</Text>
       </View>
 
       <PlainWarningCard
         text={report.plain_warning}
-        severity={report.overall_severity as Severity}
+        severity={severity}
       />
 
       <View className={styles.summaryCard}>
