@@ -39,4 +39,9 @@ describe('relativeTime', () => {
     const iso = new Date('2026-05-15T09:00:00').toISOString();
     expect(relativeTime(iso, NOW)).toBe('2026-05-15 09:00');
   });
+
+  // 守护：后端理论上保证 ISO 合法，但不该 crash —— 原样返回，让肉眼可见出错。
+  it('returns the raw input when the ISO string is unparseable', () => {
+    expect(relativeTime('not-a-date', NOW)).toBe('not-a-date');
+  });
 });
