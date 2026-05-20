@@ -37,6 +37,16 @@
   color: var(--color-eng-red);
 }
 
+// readout band 下方的预期耗时小字 —— 第一次用的用户看到也安心，知道 60-180s 不是卡了。
+.readoutHint {
+  display: block;
+  margin-top: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--color-caliper-grey);
+}
+
 .steps {
   display: flex;
   flex-direction: column;

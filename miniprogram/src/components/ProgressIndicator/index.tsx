@@ -25,6 +25,7 @@ export function ProgressIndicator({ currentStep, elapsedMs }: ProgressIndicatorP
         <Text className={styles.readoutDots}>{'·'.repeat(dotsCount)}</Text>
         {currentStep === 2 && <Text className={styles.readoutTime}>{secs}s</Text>}
       </View>
+      <Text className={styles.readoutHint}>预计 60–180s · Claude Vision 推理中</Text>
 
       <View className={styles.steps}>
         {STEPS.map((s) => {
