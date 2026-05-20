@@ -1,82 +1,92 @@
-import { useState } from 'react';
+/**
+ * HazardCard (dossier) —— 编号 + severity 条带 + 三栏标签。
+ *
+ * 形态：
+ *   ┌──────────────────────────────────────┐
+ *   │ 01 ·  HIGH  ·····················     │   ← header rule，编号 + severity tag
+ *   │ 现象  |  高处作业未挂安全带          │
+ *   │ 依据  |  GB 50656-2011 §3.2          │
+ *   │ 整改  |  立即停工配发安全带          │
+ *   │ ╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲╲ │   ← bottom hazard-tape on severity color
+ *   └──────────────────────────────────────┘
+ *
+ * 没有 expand toggle —— 直接展开。规范条款为空就省略整行。
+ */
 import { View, Text } from '@tarojs/components';
 
-import {
-  SEVERITY_BG_TINT,
-  SEVERITY_COLOR,
-  SEVERITY_LABEL,
-  SEVERITY_TEXT_ON_TINT,
-} from '../../utils/severity';
+import { SEVERITY_COLOR, SEVERITY_LABEL, SEVERITY_TEXT_ON_TINT } from '../../utils/severity';
 import type { Hazard } from '../../types/report';
-import { Icon } from '../Icon';
 
 import styles from './index.module.scss';
 
 export interface HazardCardProps {
   hazard: Hazard;
-  /** 1-based 编号（可选）；与 total 一起显示为 "01 / 03"。 */
   index?: number;
-  /** 总数；与 index 一起显示。 */
   total?: number;
 }
 
-export function HazardCard({ hazard, index, total }: HazardCardProps) {
-  const [expanded, setExpanded] = useState(false);
-  const hasRegulation = hazard.regulation.length > 0;
-  const showIndex = typeof index === 'number';
+const SEVERITY_TAG: Record<Hazard['severity'], string> = {
+  high: 'HIGH',
+  medium: 'MEDIUM',
+  low: 'LOW',
+};
 
+export function HazardCard({ hazard, index, total }: HazardCardProps) {
+  const hasIndex = typeof index === 'number';
+  const hasRegulation = hazard.regulation.length > 0;
   return (
     <View className={styles.card} data-category={hazard.category_code}>
       <View className={styles.header}>
-        <View className={styles.headerLeft}>
-          {showIndex && (
-            <Text className={styles.indexBadge}>
-              {String(index).padStart(2, '0')}
-              {typeof total === 'number' ? ` / ${String(total).padStart(2, '0')}` : ''}
-            </Text>
-          )}
-          <Text className={styles.categoryName}>{hazard.category_name}</Text>
-        </View>
-        <View
-          className={styles.severityBadge}
-          style={{
-            backgroundColor: SEVERITY_BG_TINT[hazard.severity],
-            color: SEVERITY_TEXT_ON_TINT[hazard.severity],
-          }}
+        {hasIndex && (
+          <Text className={styles.index}>{String(index).padStart(2, '0')}</Text>
+        )}
+        <Text className={styles.dot}>·</Text>
+        <Text
+          className={styles.tag}
+          data-severity-tag={hazard.severity}
+          style={{ color: SEVERITY_TEXT_ON_TINT[hazard.severity] }}
         >
-          <View
-            className={styles.severityDot}
-            style={{ backgroundColor: SEVERITY_COLOR[hazard.severity] }}
-          />
-          <Text>{SEVERITY_LABEL[hazard.severity]}</Text>
-        </View>
+          {SEVERITY_TAG[hazard.severity]}
+        </Text>
+        <Text className={styles.headerRule}>
+          {'·'.repeat(40)}
+        </Text>
+        {hasIndex && typeof total === 'number' && (
+          <Text className={styles.indexOfTotal}>{`/ ${String(total).padStart(2, '0')}`}</Text>
+        )}
       </View>
 
-      <Text className={styles.description}>{hazard.description}</Text>
+      <View className={styles.field}>
+        <Text className={styles.fieldLabel}>现象</Text>
+        <Text className={styles.fieldDivider}>|</Text>
+        <Text className={styles.fieldValue}>{hazard.description}</Text>
+      </View>
 
       {hasRegulation && (
-        <View
-          className={styles.regulationToggle}
-          onClick={() => setExpanded((v) => !v)}
-          role="button"
-        >
-          <Text className={styles.regulationToggleLabel}>
-            {expanded ? '收起规范条款' : '展开规范条款'}
-          </Text>
-          <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color="#007AFF" />
-        </View>
-      )}
-      {hasRegulation && expanded && (
-        <View className={styles.regulation}>
-          <Text>{hazard.regulation}</Text>
+        <View className={styles.field}>
+          <Text className={styles.fieldLabel}>依据</Text>
+          <Text className={styles.fieldDivider}>|</Text>
+          <Text className={styles.fieldValue}>{hazard.regulation}</Text>
         </View>
       )}
 
-      <View className={styles.suggestionDivider} />
-      <View className={styles.suggestion}>
-        <Text className={styles.suggestionLabel}>整改建议</Text>
-        <Text className={styles.suggestionText}>{hazard.suggestion}</Text>
+      <View className={styles.field}>
+        <Text className={styles.fieldLabel}>整改</Text>
+        <Text className={styles.fieldDivider}>|</Text>
+        <Text className={styles.fieldValue}>{hazard.suggestion}</Text>
       </View>
+
+      <View
+        className={styles.stripe}
+        data-severity-stripe={hazard.severity}
+        style={{ backgroundColor: SEVERITY_COLOR[hazard.severity] }}
+      />
+      <Text
+        className={styles.metaTag}
+        style={{ color: SEVERITY_TEXT_ON_TINT[hazard.severity] }}
+      >
+        {SEVERITY_LABEL[hazard.severity]} · {hazard.category_name}
+      </Text>
     </View>
   );
 }

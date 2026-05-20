@@ -3,7 +3,6 @@ import { View, Text } from '@tarojs/components';
 
 import { usePolling } from '../../hooks/usePolling';
 import { getInspection } from '../../api/inspections';
-import { PlainWarningCard } from '../../components/PlainWarningCard';
 import { HazardCard } from '../../components/HazardCard';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { Icon } from '../../components/Icon';
@@ -112,11 +111,6 @@ function SucceededReport({ report }: { report: ReportPayload }) {
         <Text className={styles.pageEyebrow}>{formatTimestamp(report.created_at)}</Text>
         <Text className={styles.pageTitle}>隐患报告</Text>
       </View>
-
-      <PlainWarningCard
-        text={report.plain_warning}
-        severity={severity}
-      />
 
       <View className={styles.summaryCard}>
         <Text className={styles.summaryLabel}>现场总览</Text>
