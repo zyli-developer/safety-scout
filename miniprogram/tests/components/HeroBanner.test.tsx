@@ -22,7 +22,7 @@ describe('HeroBanner', () => {
     const { container } = render(
       <HeroBanner
         mode="intro"
-        icon="helmet"
+        icon="document"
         title="工地隐患识别"
         subtitle="拍一张，AI 30 秒出报告"
       />,

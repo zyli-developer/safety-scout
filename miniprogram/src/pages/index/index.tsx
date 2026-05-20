@@ -41,7 +41,7 @@ export default function IndexPage() {
     <View className={styles.indexPage}>
       <HeroBanner
         mode="intro"
-        icon="helmet"
+        icon="document"
         title="Safety Scout"
         subtitle="拍一张，AI 30 秒出报告"
       />
