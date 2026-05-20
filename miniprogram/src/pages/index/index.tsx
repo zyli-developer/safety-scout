@@ -42,12 +42,11 @@ export default function IndexPage() {
       <HeroBanner
         mode="intro"
         icon="helmet"
-        title="工地隐患识别"
+        title="Safety Scout"
         subtitle="拍一张，AI 30 秒出报告"
       />
 
       <View className={styles.header}>
-        <Text className={styles.eyebrow}>Safety Scout</Text>
         <Text className={styles.largeTitle}>工地隐患识别</Text>
       </View>
 

@@ -133,9 +133,9 @@ async function main() {
     await page.waitForSelector('text=拍照检查', { timeout: 5_000 }).catch(() => {
       failures.push('找不到 "拍照检查" 按钮 —— BigButton 没渲染');
     });
-    await page.waitForSelector('text=AI 隐患识别', { timeout: 3_000 }).catch(() => {
-      // 子标题，缺了不算严重，只是 warning
-      console.log(`  [warn] 副标题 "拍一张照片..." 没找到（可能 hint 文案位置变了）`);
+    await page.waitForSelector('text=工地隐患识别', { timeout: 3_000 }).catch(() => {
+      // 大标题，缺了不算严重，只是 warning
+      console.log(`  [warn] 大标题 "工地隐患识别" 没找到（可能页面结构变了）`);
     });
 
     // 截图存档
