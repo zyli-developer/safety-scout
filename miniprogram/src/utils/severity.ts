@@ -12,27 +12,26 @@ export const SEVERITY_ORDER: Record<Severity, number> = {
   low: 1,
 };
 
-/** iOS HIG systemRed / systemOrange / systemGreen。
- *  用于：左侧 accent bar 主色 / HazardCard 严重度文字 / 状态指示圆点。
- */
+/** Dossier engineering palette — sharper than iOS HIG, matches paper-document context.
+ *  See docs/plans/2026-05-20-miniprogram-ui-dossier-design.md. */
 export const SEVERITY_COLOR: Record<Severity, string> = {
-  high: '#FF3B30',
-  medium: '#FF9500',
-  low: '#34C759',
+  high: '#C8281C',    // engineering red (stamps, critical)
+  medium: '#E07B1F',  // warning amber
+  low: '#3D7C3D',     // pass green
 };
 
-/** 浅底色 tint —— iOS HIG fillTertiary 风格，用于 severity pill 背景。 */
+/** Paper-tinted pill background — sits on the #F4EFE5 body. */
 export const SEVERITY_BG_TINT: Record<Severity, string> = {
-  high: '#FFE5E3',
-  medium: '#FFF0DB',
-  low: '#DFF5E5',
+  high: '#F5DDD9',
+  medium: '#F6E2CB',
+  low: '#DDE8DD',
 };
 
-/** SEVERITY_BG_TINT 之上的深色文字色，保证对比度 ≥ AA。 */
+/** AA-contrast text on the tint background. */
 export const SEVERITY_TEXT_ON_TINT: Record<Severity, string> = {
-  high: '#C41E1A',
-  medium: '#B25E00',
-  low: '#1E7E37',
+  high: '#7A1812',
+  medium: '#7C4214',
+  low: '#1F4A1F',
 };
 
 export const SEVERITY_LABEL: Record<Severity, string> = {

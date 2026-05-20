@@ -1,14 +1,17 @@
-// 全局样式 / NutUI 主题变量预留
+// 全局样式：dossier 调子，paper 背景 + 默认 charcoal 文字 + 桌面 backdrop。
+@import './styles/tokens.scss';
+
 page {
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-  background-color: #f5f5f5;
+  font-family: var(--font-body);
+  background-color: var(--color-paper);
+  color: var(--color-charcoal);
 }
 
-// 平板 / 桌面 H5：手机宽度以外露出灯灰 backdrop。
+// 平板 / 桌面 H5：手机宽度以外露出 paper-darker backdrop。
 // weapp 永远是单一手机视口，media query 不会触发，noop 安全。
 @media (min-width: 768px) {
   body {
-    background-color: #e5e5ea;
+    background-color: var(--color-paper-backdrop);
     margin: 0;
   }
 }
