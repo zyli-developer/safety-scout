@@ -21,11 +21,17 @@ import { join, extname, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
+import {
+  BACKEND_HOST,
+  BACKEND_PORT,
+  HEALTH_URL,
+  spawnBackend,
+} from '../../scripts/start-backend.mjs';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..', '..', '..');
 const DIST_DIR = resolve(__dirname, '..', '..', 'dist');
 const BACKEND_DIR = resolve(REPO_ROOT, 'backend');
-const PY_EXE = resolve(BACKEND_DIR, '.venv', 'Scripts', 'python.exe');
 const SAMPLE_IMG = resolve(
   BACKEND_DIR,
   'tests',
@@ -34,10 +40,6 @@ const SAMPLE_IMG = resolve(
   'case_001_stepladder_over_2_meters.jpg',
 );
 const SCREENSHOT_DIR = __dirname;
-
-const BACKEND_HOST = '127.0.0.1';
-const BACKEND_PORT = 8000;
-const HEALTH_URL = `http://${BACKEND_HOST}:${BACKEND_PORT}/api/v1/healthz`;
 
 const CHROME_PATH =
   process.env.CHROME_PATH ||
@@ -54,21 +56,11 @@ const MIME = {
 };
 
 // —— 后端 uvicorn 启停 —— //
+// 用 scripts/start-backend.mjs 里的 spawnBackend 作为单一真相源，
+// 保证 e2e 跑的 uvicorn args 跟 dev 模式（pnpm dev:backend）一字不差。
 
 async function startBackend() {
-  console.log(`[backend] spawning uvicorn at ${BACKEND_HOST}:${BACKEND_PORT}...`);
-  console.log(`[backend] cwd:    ${BACKEND_DIR}`);
-  console.log(`[backend] python: ${PY_EXE}`);
-
-  const proc = spawn(
-    PY_EXE,
-    ['-m', 'uvicorn', 'app.main:app', '--host', BACKEND_HOST, '--port', String(BACKEND_PORT)],
-    {
-      cwd: BACKEND_DIR,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      detached: false,
-    },
-  );
+  const proc = spawnBackend({ stdio: 'pipe' });
 
   proc.stdout.on('data', (b) => process.stdout.write(`[backend] ${b}`));
   proc.stderr.on('data', (b) => process.stderr.write(`[backend] ${b}`));
@@ -76,8 +68,8 @@ async function startBackend() {
     console.log(`[backend] exited code=${code} sig=${sig}`);
   });
 
-  // poll /healthz with backoff up to 30s
-  const deadline = Date.now() + 30_000;
+  // poll /healthz with backoff up to 45s（--reload 启动时 WatchFiles 多花点）
+  const deadline = Date.now() + 45_000;
   while (Date.now() < deadline) {
     try {
       const r = await fetch(HEALTH_URL);
@@ -93,7 +85,7 @@ async function startBackend() {
     }
     await sleep(500);
   }
-  throw new Error('backend /healthz 未在 30s 内就绪');
+  throw new Error('backend /healthz 未在 45s 内就绪');
 }
 
 function stopBackend(proc) {
