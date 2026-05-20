@@ -1,5 +1,7 @@
 import { View, Text } from '@tarojs/components';
 
+import { Icon } from '../Icon';
+
 import styles from './index.module.scss';
 
 export interface BigButtonProps {
@@ -31,7 +33,7 @@ export function BigButton({
       role="button"
       aria-disabled={!isInteractive}
     >
-      <Text className={styles.iconWrapper}>📷</Text>
+      <Icon name="camera" size={36} color="#FFFFFF" />
       <Text className={styles.label}>{loading ? '上传中...' : text}</Text>
     </View>
   );

@@ -8,6 +8,7 @@ import {
   SEVERITY_TEXT_ON_TINT,
 } from '../../utils/severity';
 import type { Hazard } from '../../types/report';
+import { Icon } from '../Icon';
 
 import styles from './index.module.scss';
 
@@ -59,8 +60,10 @@ export function HazardCard({ hazard, index, total }: HazardCardProps) {
           onClick={() => setExpanded((v) => !v)}
           role="button"
         >
-          <Text className={styles.regulationToggleIcon}>{expanded ? '▴' : '▾'}</Text>
-          <Text>{expanded ? '收起规范条款' : '展开规范条款'}</Text>
+          <Text className={styles.regulationToggleLabel}>
+            {expanded ? '收起规范条款' : '展开规范条款'}
+          </Text>
+          <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color="#007AFF" />
         </View>
       )}
       {hasRegulation && expanded && (
@@ -69,12 +72,10 @@ export function HazardCard({ hazard, index, total }: HazardCardProps) {
         </View>
       )}
 
+      <View className={styles.suggestionDivider} />
       <View className={styles.suggestion}>
-        <Text className={styles.suggestionIcon}>💡</Text>
-        <View className={styles.suggestionBody}>
-          <Text className={styles.suggestionLabel}>整改建议</Text>
-          <Text className={styles.suggestionText}>{hazard.suggestion}</Text>
-        </View>
+        <Text className={styles.suggestionLabel}>整改建议</Text>
+        <Text className={styles.suggestionText}>{hazard.suggestion}</Text>
       </View>
     </View>
   );

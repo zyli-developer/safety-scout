@@ -12,17 +12,21 @@ export interface PlainWarningCardProps {
 
 export function PlainWarningCard({ text, severity }: PlainWarningCardProps) {
   return (
-    <View
-      className={styles.card}
-      style={{ backgroundColor: SEVERITY_COLOR[severity] }}
-      data-severity={severity}
-    >
-      <View className={styles.decorCircle} />
-      <View className={styles.header}>
-        <Text className={styles.icon}>⚠️</Text>
-        <Text className={styles.severityLabel}>{SEVERITY_LABEL[severity]}</Text>
+    <View className={styles.card}>
+      <View
+        className={styles.accentBar}
+        style={{ backgroundColor: SEVERITY_COLOR[severity] }}
+        data-severity={severity}
+      />
+      <View className={styles.body}>
+        <Text
+          className={styles.severityLabel}
+          style={{ color: SEVERITY_COLOR[severity] }}
+        >
+          {SEVERITY_LABEL[severity]}
+        </Text>
+        <Text className={styles.text}>{text}</Text>
       </View>
-      <Text className={styles.text}>{text}</Text>
     </View>
   );
 }

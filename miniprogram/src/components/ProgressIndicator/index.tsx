@@ -18,30 +18,35 @@ const STEPS = [
 export function ProgressIndicator({ currentStep, elapsedMs }: ProgressIndicatorProps) {
   return (
     <View className={styles.container}>
+      <View className={styles.spinner} />
       <Text className={styles.title}>正在为你生成报告</Text>
-      <Text className={styles.subtitle}>AI 正在分析每一处隐患，请稍候</Text>
+      <Text className={styles.subtitle}>请稍候，AI 通常需要 60–180 秒</Text>
+
       <View className={styles.steps}>
-        <View className={styles.connector} />
-        {STEPS.map((s) => {
+        {STEPS.map((s, i) => {
           const isDone = s.key < currentStep;
           const isActive = s.key === currentStep;
           return (
-            <View
-              key={s.key}
-              className={styles.step}
-              data-state={isDone ? 'done' : isActive ? 'active' : 'pending'}
-            >
-              <View className={styles.dotOuter}>
-                <View className={styles.dot} />
-              </View>
-              <Text className={styles.label}>{s.label}</Text>
+            <View key={s.key} className={styles.step}>
+              <View
+                className={styles.dot}
+                data-state={isDone ? 'done' : isActive ? 'active' : 'pending'}
+              />
+              <Text
+                className={styles.label}
+                data-state={isDone ? 'done' : isActive ? 'active' : 'pending'}
+              >
+                {s.label}
+              </Text>
+              {i < STEPS.length - 1 && <View className={styles.connector} />}
             </View>
           );
         })}
       </View>
+
       {currentStep === 2 && typeof elapsedMs === 'number' && (
         <Text className={styles.elapsed}>
-          已耗时 {(elapsedMs / 1000).toFixed(0)}s（通常需 60–180s）
+          已耗时 {(elapsedMs / 1000).toFixed(0)}s
         </Text>
       )}
     </View>

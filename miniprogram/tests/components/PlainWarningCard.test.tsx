@@ -3,12 +3,19 @@
  *
  * 验收要点：
  * - 渲染传入文案 + 对应 severity 的中文标签
- * - inline style 应用 severity 颜色（high → #E63946）
+ * - 卡片上能找到带 severity 颜色的 inline background（accent bar / 主体卡 / 任何 data-severity 元素）
  *
- * 颜色断言走 inline style，因为 SCSS module className 在测试里是 undefined。
+ * 不写死 hex —— SEVERITY_COLOR 改动（如 iOS 风调色）时测试自动跟随。
  */
 import { render, screen } from '@testing-library/react';
 import { PlainWarningCard } from '../../src/components/PlainWarningCard';
+import { SEVERITY_COLOR } from '../../src/utils/severity';
+
+function hexToRgb(hex: string): string {
+  const m = hex.replace('#', '').match(/.{2}/g);
+  if (!m) return hex;
+  return `rgb(${parseInt(m[0], 16)}, ${parseInt(m[1], 16)}, ${parseInt(m[2], 16)})`;
+}
 
 describe('PlainWarningCard', () => {
   it('renders text + severity label', () => {
@@ -17,14 +24,16 @@ describe('PlainWarningCard', () => {
     expect(screen.getByText('高风险')).toBeInTheDocument();
   });
 
-  it('applies severity color as inline background', () => {
+  it('applies severity color as inline background on data-severity element', () => {
     const { container } = render(
       <PlainWarningCard text="工地很危险" severity="high" />,
     );
-    const card = container.querySelector('[data-severity="high"]') as HTMLElement;
-    expect(card).not.toBeNull();
-    // jsdom 会把 #E63946 规范化为 rgb()，所以只断言其中之一
-    const bg = card.style.backgroundColor.toLowerCase();
-    expect(bg === '#e63946' || bg === 'rgb(230, 57, 70)').toBe(true);
+    const el = container.querySelector('[data-severity="high"]') as HTMLElement;
+    expect(el).not.toBeNull();
+    const bg = el.style.backgroundColor.toLowerCase();
+    const expectedHex = SEVERITY_COLOR.high.toLowerCase();
+    const expectedRgb = hexToRgb(expectedHex);
+    // jsdom 会把 hex 规范化为 rgb()，两种形式都接
+    expect([expectedHex, expectedRgb]).toContain(bg);
   });
 });
