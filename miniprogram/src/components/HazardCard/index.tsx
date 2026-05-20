@@ -49,7 +49,7 @@ export function HazardCard({ hazard, index, total }: HazardCardProps) {
           {SEVERITY_TAG[hazard.severity]}
         </Text>
         <Text className={styles.headerRule}>
-          {'·'.repeat(40)}
+          {'·'.repeat(80)}
         </Text>
         {hasIndex && typeof total === 'number' && (
           <Text className={styles.indexOfTotal}>{`/ ${String(total).padStart(2, '0')}`}</Text>
