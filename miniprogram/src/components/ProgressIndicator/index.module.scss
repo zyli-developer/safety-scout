@@ -1,100 +1,75 @@
-// iOS HIG：systemActivityIndicator 风格 spinner + 居中文案，
-// 三段步骤改为水平 mini stepper（无连接渐变 / 无 pulse / 无 emoji）。
+// Dossier readout：等宽字 + 滴答 dots + numbered step rows.
 .container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 120px 32px 60px;
-  min-height: 80vh;
-  background-color: #f2f2f7;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-3);
+  background-color: var(--color-paper);
+  min-height: 100vh;
 }
 
-.spinner {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 3px solid rgba(0, 122, 255, 0.18);
-  border-top-color: #007aff;
-  animation: rotate 0.9s linear infinite;
-  margin-bottom: 24px;
+.readout {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-mono);
+  border-top: var(--border-charcoal);
+  border-bottom: var(--border-charcoal);
+  padding: var(--space-2) 0;
 }
 
-.title {
-  font-size: 30px;
-  font-weight: 600;
-  color: #000000;
-  margin-bottom: 4px;
-  letter-spacing: -0.3px;
+.readoutLabel {
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: var(--color-charcoal);
 }
 
-.subtitle {
-  font-size: 22px;
-  color: #8e8e93;
-  margin-bottom: 48px;
+.readoutDots {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-caliper-grey);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.readoutTime {
+  font-size: 14px;
+  color: var(--color-eng-red);
 }
 
 .steps {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .step {
   display: flex;
-  align-items: center;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  margin-right: 8px;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  font-family: var(--font-mono);
 
   &[data-state='done'] {
-    background-color: #34c759;
+    color: var(--color-caliper-grey);
   }
   &[data-state='active'] {
-    background-color: #007aff;
+    color: var(--color-eng-red);
   }
   &[data-state='pending'] {
-    background-color: #d1d1d6;
+    color: var(--color-caliper-grey);
+    opacity: 0.5;
   }
 }
 
-.label {
-  font-size: 22px;
-  letter-spacing: 0.2px;
-
-  &[data-state='done'] {
-    color: #34c759;
-    font-weight: 500;
-  }
-  &[data-state='active'] {
-    color: #007aff;
-    font-weight: 600;
-  }
-  &[data-state='pending'] {
-    color: #8e8e93;
-    font-weight: 400;
-  }
+.stepIndex {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 500;
 }
 
-.connector {
-  width: 32px;
-  height: 1px;
-  background-color: #d1d1d6;
-  margin: 0 12px;
-}
-
-.elapsed {
-  font-size: 22px;
-  color: #8e8e93;
-  margin-top: 32px;
-}
-
-@keyframes rotate {
-  to {
-    transform: rotate(360deg);
-  }
+.stepLabel {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  letter-spacing: 1px;
 }
