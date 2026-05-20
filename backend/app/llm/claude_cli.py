@@ -13,6 +13,10 @@
 
 import asyncio
 import json
+import logging
+import os
+import shutil
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -20,6 +24,19 @@ from typing import Any
 from app.errors import LLMCallError, LLMTimeoutError
 from app.llm.base import RawLLMResponse
 from app.schemas.report import ReportPayload
+
+logger = logging.getLogger(__name__)
+
+
+def _format_rc(rc: int) -> str:
+    """Windows process exit codes can be huge unsigned numbers; render decimal + hex.
+
+    rc=3221225794 → "3221225794 (0xC0000142)" — much easier to google.
+    """
+    if rc < 0:
+        # POSIX signal death (rc = -SIGNUM); leave as-is.
+        return str(rc)
+    return f"{rc} (0x{rc:08X})"
 
 SAFETY_OFFICER_SYSTEM_PROMPT = (
     "你是中国工地安全员，熟悉《建筑施工安全检查标准》(JGJ59-2011) 与"
@@ -43,6 +60,40 @@ class ClaudeCLIProvider:
         self._model = model
         self._timeout_seconds = timeout_seconds
         self.model_id: str = model
+
+        # 一次性诊断日志 —— provider 实例化时打印 Python 对 cli_path 的解析结果。
+        # Windows 上 `claude` 通常是 .cmd shim，shutil.which 会通过 PATHEXT 找到；
+        # 但 asyncio.create_subprocess_exec 走 CreateProcessW、不做 PATHEXT 解析，
+        # 解析结果如果是 .cmd / .bat，subprocess_exec 直接跑会失败 (FileNotFoundError
+        # 或 STATUS_DLL_INIT_FAILED rc=0xC0000142)。
+        resolved = shutil.which(cli_path)
+        logger.info(
+            "ClaudeCLIProvider initialized",
+            extra={
+                "cli_path_raw": cli_path,
+                "cli_path_resolved": resolved,
+                "cli_path_resolved_ext": (
+                    os.path.splitext(resolved)[1].lower() if resolved else None
+                ),
+                "model": model,
+                "timeout_seconds": timeout_seconds,
+                "sys_platform": sys.platform,
+                "python_executable": sys.executable,
+            },
+        )
+        if resolved is None:
+            logger.error(
+                "claude CLI not found on PATH at provider init —— "
+                "subprocess_exec will FileNotFoundError on first call",
+                extra={"cli_path_raw": cli_path},
+            )
+        elif sys.platform == "win32" and resolved.lower().endswith((".cmd", ".bat", ".ps1")):
+            logger.warning(
+                "claude CLI resolved to .cmd/.bat/.ps1 shim on Windows —— "
+                "asyncio.create_subprocess_exec does NOT do PATHEXT resolution; "
+                "this is the most likely cause of STATUS_DLL_INIT_FAILED / FileNotFoundError",
+                extra={"cli_path_resolved": resolved},
+            )
 
     async def analyze(self, image_bytes: bytes, prompt: str) -> RawLLMResponse:
         """跑一次 `claude -p` 子进程拿结构化报告。
@@ -71,10 +122,46 @@ class ClaudeCLIProvider:
                 "--json-schema", _REPORT_JSON_SCHEMA_STR,
             )
 
-            proc = await asyncio.create_subprocess_exec(
-                *args,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+            logger.info(
+                "spawning claude CLI",
+                extra={
+                    "cli_path": self._cli_path,
+                    "argc": len(args),
+                    "model": self._model,
+                    "image_bytes": len(image_bytes),
+                    "image_tmp": str(tmp_path),
+                    "prompt_chars": len(composed_prompt),
+                    "system_prompt_chars": len(SAFETY_OFFICER_SYSTEM_PROMPT),
+                    "timeout_seconds": self._timeout_seconds,
+                },
+            )
+
+            try:
+                proc = await asyncio.create_subprocess_exec(
+                    *args,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+            except FileNotFoundError as exc:
+                # Windows: CreateProcessW 找不到 .exe 时抛 WinError 2。
+                # 通常是 cli_path 解析到 .cmd shim、被 create_subprocess_exec 拒掉。
+                logger.error(
+                    "create_subprocess_exec FileNotFoundError —— "
+                    "cli_path 不是可直接 spawn 的可执行文件（多半是 .cmd shim）",
+                    extra={
+                        "cli_path_raw": self._cli_path,
+                        "cli_path_resolved": shutil.which(self._cli_path),
+                        "winerror": getattr(exc, "winerror", None),
+                    },
+                    exc_info=True,
+                )
+                raise LLMCallError(
+                    f"Claude CLI 无法启动 (FileNotFoundError): {exc}"
+                ) from exc
+
+            logger.info(
+                "claude CLI process spawned",
+                extra={"pid": proc.pid, "cli_path": self._cli_path},
             )
 
             try:
@@ -88,14 +175,38 @@ class ClaudeCLIProvider:
                     # 子进程在 wait_for 超时与 kill 之间自己退出了，跨平台容错。
                     pass
                 await proc.wait()
+                logger.error(
+                    "claude CLI timed out",
+                    extra={
+                        "pid": proc.pid,
+                        "timeout_seconds": self._timeout_seconds,
+                    },
+                )
                 raise LLMTimeoutError(
                     f"Claude CLI 调用超时 (>{self._timeout_seconds}s)"
                 ) from exc
 
             if proc.returncode != 0:
-                err_text = stderr.decode("utf-8", errors="replace").strip()
+                err_text = stderr.decode("utf-8", errors="replace")
+                out_text = stdout.decode("utf-8", errors="replace")
+                logger.error(
+                    "claude CLI exited non-zero",
+                    extra={
+                        "rc": proc.returncode,
+                        "rc_formatted": _format_rc(proc.returncode),
+                        "stderr_len": len(stderr),
+                        "stdout_len": len(stdout),
+                        # 完整内容入 log（不截断）；exception message 截断给前端。
+                        "stderr": err_text,
+                        "stdout": out_text,
+                        "cli_path_raw": self._cli_path,
+                        "cli_path_resolved": shutil.which(self._cli_path),
+                        "pid": proc.pid,
+                    },
+                )
                 raise LLMCallError(
-                    f"Claude CLI 非零退出 (rc={proc.returncode}): {err_text[:500]}"
+                    f"Claude CLI 非零退出 (rc={_format_rc(proc.returncode)}): "
+                    f"{err_text.strip()[:500]}"
                 )
 
             try:
