@@ -1,6 +1,9 @@
 // 全局样式：dossier 调子，paper 背景 + 默认 charcoal 文字 + 桌面 backdrop。
-@import './styles/fonts.scss';
-@import './styles/tokens.scss';
+// 用 @use 而不是 @import —— Sass 2.0 已废弃 @import；webpack-dev-server 默认把
+// deprecation warning 渲染成黄色全屏 overlay 盖在页面上、看上去像页面没出来。
+// fonts.scss / tokens.scss 都是纯 CSS 规则（无 Sass 变量），换 @use CSS 输出一致。
+@use './styles/fonts';
+@use './styles/tokens';
 
 page {
   font-family: var(--font-body);
