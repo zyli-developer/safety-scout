@@ -130,8 +130,8 @@ async function main() {
     await page.waitForSelector('text=Safety Scout', { timeout: 10_000 }).catch(() => {
       failures.push('首页找不到 "Safety Scout" 标题文案 —— React 可能没挂载');
     });
-    await page.waitForSelector('text=拍照检查', { timeout: 5_000 }).catch(() => {
-      failures.push('找不到 "拍照检查" 按钮 —— BigButton 没渲染');
+    await page.waitForSelector('text=拍摄现场照片', { timeout: 5_000 }).catch(() => {
+      failures.push('找不到 "拍摄现场照片" 按钮 —— BigButton 没渲染');
     });
     await page.waitForSelector('text=工地隐患识别', { timeout: 3_000 }).catch(() => {
       // 大标题，缺了不算严重，只是 warning
@@ -142,6 +142,13 @@ async function main() {
     await mkdir(dirname(SCREENSHOT_PATH), { recursive: true });
     await page.screenshot({ path: SCREENSHOT_PATH, fullPage: true });
     console.log(`  screenshot saved: ${SCREENSHOT_PATH}`);
+
+    // Second screenshot at desktop viewport — verifies dossier desktop chrome
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.waitForTimeout(200);  // let media query reflow settle
+    const DESKTOP_SHOT = SCREENSHOT_PATH.replace('.png', '-desktop.png');
+    await page.screenshot({ path: DESKTOP_SHOT, fullPage: true });
+    console.log(`  screenshot saved: ${DESKTOP_SHOT}`);
 
     // console / page error 都视为失败
     if (consoleErrors.length > 0) {
@@ -157,7 +164,7 @@ async function main() {
 
     // 输出 DOM 关键内容简报
     const titleText = await page.locator('text=Safety Scout').first().textContent().catch(() => null);
-    const buttonText = await page.locator('text=拍照检查').first().textContent().catch(() => null);
+    const buttonText = await page.locator('text=拍摄现场照片').first().textContent().catch(() => null);
     console.log(`\n  rendered title:  ${JSON.stringify(titleText)}`);
     console.log(`  rendered button: ${JSON.stringify(buttonText)}`);
   } catch (e) {
@@ -173,7 +180,7 @@ async function main() {
     console.log(`   - dist/index.html 加载成功`);
     console.log(`   - React 挂载 + 首页文案渲染 + 大按钮就位`);
     console.log(`   - 浏览器 console 无 error，页面无 JS 异常`);
-    console.log(`   - 截图: tests/e2e/h5-smoke.png`);
+    console.log(`   - 截图: tests/e2e/h5-smoke.png + h5-smoke-desktop.png`);
     process.exit(0);
   } else {
     console.log(`❌ H5 smoke test FAILED (${failures.length} 个问题):`);
