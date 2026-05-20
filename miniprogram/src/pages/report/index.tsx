@@ -17,7 +17,7 @@ import {
   DEFAULT_TIMEOUT_MS,
 } from '../../config';
 import type { GetInspectionResponse } from '../../types/inspection';
-import type { ReportPayload, Severity } from '../../types/report';
+import type { ReportPayload } from '../../types/report';
 
 import styles from './index.module.scss';
 
@@ -102,7 +102,7 @@ function formatTimestamp(iso: string): string {
 
 function SucceededReport({ report }: { report: ReportPayload }) {
   const sorted = sortBySeverity(report.hazards);
-  const severity = report.overall_severity as Severity;
+  const severity = report.overall_severity;
   const meta = `${SEVERITY_LABEL[severity]} · ${relativeTime(report.created_at)}`;
   return (
     <View className={styles.reportPage}>
