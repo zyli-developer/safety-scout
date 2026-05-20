@@ -5,13 +5,16 @@
  *
  * 设计意图：信息密度 + 视觉锚点；不引入新色板、新交互。
  * 不接受 children —— 该组件是定型 pattern，不是通用 slot。
- *
- * NOTE: metric 分支 + 对应的 severity 工具导入由 Task 4 加 ——
- * tsconfig 启用 noUnusedLocals，预先 stage 会编不过。
  */
 import { View, Text } from '@tarojs/components';
 
 import { Icon, type IconName } from '../Icon';
+import {
+  SEVERITY_COLOR,
+  SEVERITY_BG_TINT,
+  SEVERITY_TEXT_ON_TINT,
+  SEVERITY_LABEL,
+} from '../../utils/severity';
 import type { Severity } from '../../types/report';
 
 import styles from './index.module.scss';
@@ -44,6 +47,25 @@ export function HeroBanner(props: HeroBannerProps) {
       </View>
     );
   }
-  // metric mode — implemented in Task 4
-  return null;
+  const { severity, count, meta } = props;
+  return (
+    <View className={styles.banner}>
+      <View
+        className={styles.ring}
+        data-severity={severity}
+        style={{
+          borderColor: SEVERITY_COLOR[severity],
+          backgroundColor: SEVERITY_BG_TINT[severity],
+        }}
+      >
+        <Text className={styles.ringLabel} style={{ color: SEVERITY_TEXT_ON_TINT[severity] }}>
+          {SEVERITY_LABEL[severity].charAt(0)}
+        </Text>
+      </View>
+      <View className={styles.textCol}>
+        <Text className={styles.count}>{count} 项隐患</Text>
+        <Text className={styles.subtitle}>{meta}</Text>
+      </View>
+    </View>
+  );
 }

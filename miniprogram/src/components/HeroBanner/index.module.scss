@@ -44,3 +44,29 @@
 }
 
 // metric mode 样式 —— Task 4 加
+.ring {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
+  border-width: 6px;
+  border-style: solid;
+  // border-color + background-color come from inline style (severity-driven)
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ringLabel {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.count {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1c1c1e;
+  letter-spacing: -0.4px;
+  line-height: 1.15;
+}
