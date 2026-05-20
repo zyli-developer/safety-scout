@@ -1,21 +1,21 @@
-// iOS HIG 首页：systemGroupedBackground + large title + 单 action + 脚注 tip。
-// 无 hero emoji / 无装饰渐变 / 无 stepper 预览。
+// iOS HIG 首页：systemGroupedBackground + HeroBanner + large title + 单 action + 脚注 tip。
 .indexPage {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 80px 0 40px;
+  padding: 60px 0 40px;
   background-color: #f2f2f7;
 }
 
 .header {
   padding: 0 24px;
-  margin-bottom: 48px;
+  margin-top: 32px;
+  margin-bottom: 32px;
 }
 
 .eyebrow {
   display: block;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 500;
   color: #8e8e93;
   letter-spacing: 0.5px;
@@ -23,7 +23,7 @@
 }
 
 .largeTitle {
-  font-size: 56px;
+  font-size: 50px;
   font-weight: 700;
   color: #000000;
   letter-spacing: -1px;

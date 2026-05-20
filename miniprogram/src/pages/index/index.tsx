@@ -3,6 +3,7 @@ import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 
 import { BigButton } from '../../components/BigButton';
+import { HeroBanner } from '../../components/HeroBanner';
 import { captureImage } from '../../hooks/useImageCapture';
 import { createInspection } from '../../api/inspections';
 import { mapApiError } from '../../utils/errorMessage';
@@ -14,14 +15,12 @@ export default function IndexPage() {
 
   const handleTap = async () => {
     if (uploading) return;
-
     let image;
     try {
       image = await captureImage();
     } catch (_e) {
       return;
     }
-
     setUploading(true);
     try {
       const resp = await createInspection(image.tempFilePath);
@@ -40,6 +39,13 @@ export default function IndexPage() {
 
   return (
     <View className={styles.indexPage}>
+      <HeroBanner
+        mode="intro"
+        icon="helmet"
+        title="工地隐患识别"
+        subtitle="拍一张，AI 30 秒出报告"
+      />
+
       <View className={styles.header}>
         <Text className={styles.eyebrow}>Safety Scout</Text>
         <Text className={styles.largeTitle}>工地隐患识别</Text>
