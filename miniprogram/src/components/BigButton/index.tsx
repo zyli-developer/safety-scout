@@ -1,11 +1,13 @@
 import { View, Text } from '@tarojs/components';
 
-import { Icon } from '../Icon';
+import { Icon, type IconName } from '../Icon';
 
 import styles from './index.module.scss';
 
 export interface BigButtonProps {
-  text: string;
+  text: string;                  // 中文 label (e.g. "拍摄现场照片")
+  subtitle?: string;             // Latin uppercase subtitle (e.g. "CAPTURE INSPECTION PHOTO")
+  prefixGlyph?: IconName;        // Optional engineering glyph (e.g. 'plus-square')
   onTap: () => void;
   loading?: boolean;
   disabled?: boolean;
@@ -13,6 +15,8 @@ export interface BigButtonProps {
 
 export function BigButton({
   text,
+  subtitle,
+  prefixGlyph,
   onTap,
   loading = false,
   disabled = false,
@@ -33,8 +37,15 @@ export function BigButton({
       role="button"
       aria-disabled={!isInteractive}
     >
-      <Icon name="camera" size={36} color="#FFFFFF" />
-      <Text className={styles.label}>{loading ? '上传中...' : text}</Text>
+      {prefixGlyph && (
+        <View className={styles.glyphSlot}>
+          <Icon name={prefixGlyph} size={28} color="#F4EFE5" />
+        </View>
+      )}
+      <View className={styles.labels}>
+        <Text className={styles.labelZh}>{loading ? '处理中' : text}</Text>
+        {subtitle && <Text className={styles.labelEn}>{loading ? 'PROCESSING' : subtitle}</Text>}
+      </View>
     </View>
   );
 }
