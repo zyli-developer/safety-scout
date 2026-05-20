@@ -18,7 +18,8 @@ export type IconName =
   | 'x-circle'
   | 'document'
   | 'lightbulb'
-  | 'arrow-right';
+  | 'arrow-right'
+  | 'helmet';
 
 interface IconProps {
   name: IconName;
@@ -42,6 +43,8 @@ const PATHS: Record<IconName, string> = {
   lightbulb:
     'M12 2a7 7 0 0 0-4 12.71V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.29A7 7 0 0 0 12 2zM9 21h6',
   'arrow-right': 'M5 12h14m-7-7 7 7-7 7',
+  helmet:
+    'M4 14a8 8 0 0 1 16 0 M3 14h18 M9 14v-3a3 3 0 0 1 6 0v3',
 };
 
 // camera / document / alert-triangle / lightbulb 用 fill="none" + stroke + 部分填充
