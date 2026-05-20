@@ -1,44 +1,97 @@
-// iOS HIG 首页：systemGroupedBackground + HeroBanner + large title + 单 action + 脚注 tip。
-.indexPage {
+// 首页 dossier 布局：HeaderBand + 大标题 + 按钮 + 编号 tips + footer。
+.page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 60px 0 40px;
-  background-color: #f2f2f7;
+  background-color: var(--color-paper);
 }
 
-.header {
-  padding: 0 24px;
-  margin-top: 32px;
-  margin-bottom: 32px;
+.titleBlock {
+  padding: var(--space-4) var(--space-3) var(--space-2);
 }
 
-.largeTitle {
-  font-size: 50px;
+.h1 {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--fs-h1);
   font-weight: 700;
-  color: #000000;
-  letter-spacing: -1px;
-  line-height: 1.15;
+  letter-spacing: 4px;
+  color: var(--color-charcoal);
+  line-height: 1.1;
 }
 
-.tipBlock {
-  padding: 0 28px;
-  margin-top: 16px;
+.h1Latin {
+  display: block;
+  margin-top: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  font-weight: 400;
+  letter-spacing: 3px;
+  color: var(--color-caliper-grey);
+}
+
+.section {
+  padding: var(--space-3);
+}
+
+.sectionRule {
+  border-top: var(--border-charcoal);
+  padding-top: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.sectionLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: 3px;
+  color: var(--color-charcoal);
+}
+
+.tipRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  font-family: var(--font-body);
+}
+
+.tipIndex {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-eng-red);
 }
 
 .tipText {
-  font-size: 22px;
-  color: #8e8e93;
-  line-height: 1.5;
-  letter-spacing: 0.1px;
+  font-size: var(--fs-body);
+  color: var(--color-charcoal);
+  line-height: 1.4;
 }
 
-// 平板 / 桌面 H5：内容居中 + max-width 480 + 轻阴影。
-// body backdrop 由 app.scss 配合提供。
+.footer {
+  margin-top: auto;
+  padding: var(--space-3);
+  border-top: var(--border-charcoal);
+}
+
+.footerText {
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: 2px;
+  color: var(--color-caliper-grey);
+}
+
+// Tablet / desktop H5：容器居中 + 1px charcoal 边框（取代 prior box-shadow chrome）。
 @media (min-width: 768px) {
-  .indexPage {
-    max-width: 480px;
+  .page {
+    max-width: 640px;
     margin: 0 auto;
-    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.08);
+    border-left: var(--border-charcoal);
+    border-right: var(--border-charcoal);
+  }
+}
+@media (min-width: 1024px) {
+  .page {
+    max-width: 720px;
   }
 }

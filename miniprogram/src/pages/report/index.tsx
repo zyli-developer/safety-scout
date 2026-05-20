@@ -7,7 +7,7 @@ import { HazardCard } from '../../components/HazardCard';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { Icon } from '../../components/Icon';
 import { HeaderBand } from '../../components/HeaderBand';
-import { sortBySeverity, SEVERITY_LABEL } from '../../utils/severity';
+import { sortBySeverity, SEVERITY_LABEL, SEVERITY_COLOR } from '../../utils/severity';
 import { mapApiError } from '../../utils/errorMessage';
 import { relativeTime } from '../../utils/relativeTime';
 import { ApiError } from '../../api/client';
@@ -75,7 +75,7 @@ function ErrorView({
 }) {
   return (
     <View className={styles.errorView}>
-      <Icon name="x-circle" size={48} color="#FF3B30" />
+      <Icon name="x-circle" size={48} color="#C8281C" />
       <Text className={styles.errorText}>{userMessage}</Text>
       {allowRetry && (
         <Text className={styles.retryHint}>请返回首页重新拍照</Text>
@@ -84,40 +84,49 @@ function ErrorView({
   );
 }
 
-function formatTimestamp(iso: string): string {
-  try {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return iso;
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mi = String(d.getMinutes()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
-  } catch {
-    return iso;
-  }
-}
-
 function SucceededReport({ report }: { report: ReportPayload }) {
   const sorted = sortBySeverity(report.hazards);
   const severity = report.overall_severity;
   const meta = `${SEVERITY_LABEL[severity]} · ${relativeTime(report.created_at)}`;
   return (
-    <View className={styles.reportPage}>
-      <HeaderBand identifier={`NO.${formatIdentifier(report.created_at)}`} subtitle={meta} />
+    <View className={styles.page}>
+      <HeaderBand
+        identifier={`NO.${formatIdentifier(report.created_at)}`}
+        subtitle={meta}
+      />
 
-      <View className={styles.pageHeader}>
-        <Text className={styles.pageEyebrow}>{formatTimestamp(report.created_at)}</Text>
-        <Text className={styles.pageTitle}>隐患报告</Text>
+      <View className={styles.titleBlock}>
+        <Text className={styles.eyebrow}>INSPECTION REPORT</Text>
+        <Text className={styles.h1}>现场巡检报告</Text>
       </View>
 
-      <View className={styles.summaryCard}>
-        <Text className={styles.summaryLabel}>现场总览</Text>
+      <View className={styles.hero}>
+        <View className={styles.heroLeft}>
+          <Text className={styles.heroCount} style={{ color: SEVERITY_COLOR[severity] }}>
+            {sorted.length}
+          </Text>
+          <Text className={styles.heroCountLabel}>项隐患待整改</Text>
+        </View>
+        <View className={styles.heroRight}>
+          <Text className={styles.heroSeverity} style={{ color: SEVERITY_COLOR[severity] }}>
+            {SEVERITY_LABEL[severity]}
+          </Text>
+          <Text className={styles.heroSeverityLabel}>风险等级判定</Text>
+        </View>
+      </View>
+
+      <View className={styles.summarySection}>
+        <View className={styles.summaryLabel}>
+          <Text className={styles.summaryLabelBar}>▎</Text>
+          <Text className={styles.summaryLabelText}>现场总览</Text>
+        </View>
         <Text className={styles.summaryText}>{report.summary}</Text>
+        {report.plain_warning && (
+          <Text className={styles.warning}>{report.plain_warning}</Text>
+        )}
       </View>
 
-      <View className={styles.sectionHeader}>
+      <View className={styles.sectionRule}>
         <Text className={styles.sectionLabel}>隐患明细</Text>
       </View>
 
@@ -129,6 +138,10 @@ function SucceededReport({ report }: { report: ReportPayload }) {
           total={sorted.length}
         />
       ))}
+
+      <View className={styles.footer}>
+        <Text className={styles.footerText}>⌖ AI ENGINE v3 · Claude Vision</Text>
+      </View>
     </View>
   );
 }

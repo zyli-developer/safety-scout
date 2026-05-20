@@ -1,69 +1,140 @@
-// iOS HIG 报告页：systemGroupedBackground + HeroBanner (metric) + large title header + section grouped lists。
-.reportPage {
-  padding: 24px 0 60px 0;
-  background-color: #f2f2f7;
+.page {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
+  background-color: var(--color-paper);
+  padding-bottom: var(--space-5);
 }
 
-.pageHeader {
-  padding: 24px 24px 16px;
+.titleBlock {
+  padding: var(--space-4) var(--space-3) var(--space-2);
 }
 
-.pageEyebrow {
+.eyebrow {
   display: block;
-  font-size: 20px;
-  color: #8e8e93;
-  font-weight: 500;
-  letter-spacing: 0.3px;
-  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: 3px;
+  color: var(--color-caliper-grey);
 }
 
-.pageTitle {
+.h1 {
   display: block;
-  font-size: 50px;
+  margin-top: var(--space-1);
+  font-family: var(--font-display);
+  font-size: var(--fs-h1);
   font-weight: 700;
-  color: #000000;
-  letter-spacing: -0.8px;
-  line-height: 1.15;
-  margin-bottom: 6px;
+  letter-spacing: 3px;
+  color: var(--color-charcoal);
+  line-height: 1.1;
 }
 
-.summaryCard {
-  padding: 16px 20px 18px;
-  margin: 8px 16px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.04);
+.hero {
+  display: flex;
+  border-top: var(--border-charcoal);
+  border-bottom: var(--border-charcoal);
+  margin: var(--space-3) var(--space-3) 0;
+  padding: var(--space-3) 0;
+  gap: var(--space-3);
+}
+
+.heroLeft, .heroRight {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.heroCount {
+  font-family: var(--font-condensed);
+  font-size: var(--fs-display);
+  font-weight: 700;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+.heroCountLabel,
+.heroSeverityLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: 2px;
+  color: var(--color-caliper-grey);
+}
+
+.heroSeverity {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.summarySection {
+  padding: var(--space-3);
 }
 
 .summaryLabel {
-  display: block;
-  font-size: 22px;
-  font-weight: 600;
-  color: #8e8e93;
-  letter-spacing: 0.3px;
-  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
+}
+
+.summaryLabelBar {
+  color: var(--color-charcoal);
+  font-family: var(--font-mono);
+}
+
+.summaryLabelText {
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: 3px;
+  color: var(--color-charcoal);
 }
 
 .summaryText {
   display: block;
-  font-size: 26px;
-  color: #1c1c1e;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
   line-height: 1.5;
+  color: var(--color-charcoal);
 }
 
-.sectionHeader {
-  padding: 28px 28px 8px;
+.warning {
+  display: block;
+  margin-top: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--color-eng-red);
+}
+
+.sectionRule {
+  padding: var(--space-3);
+  border-top: var(--border-charcoal);
+  margin-top: var(--space-2);
 }
 
 .sectionLabel {
-  font-size: 22px;
-  font-weight: 600;
-  color: #8e8e93;
-  letter-spacing: 0.8px;
-  text-transform: none;
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: 3px;
+  color: var(--color-charcoal);
 }
 
+.footer {
+  margin-top: auto;
+  padding: var(--space-3);
+  border-top: var(--border-charcoal);
+}
+
+.footerText {
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: 2px;
+  color: var(--color-caliper-grey);
+}
+
+// Error states (preserved from prior file)
 .errorView {
   display: flex;
   flex-direction: column;
@@ -71,30 +142,34 @@
   justify-content: center;
   min-height: 100vh;
   padding: 40px;
-  background-color: #f2f2f7;
-  gap: 16px;
+  background-color: var(--color-paper);
+  gap: var(--space-2);
 }
-
 .errorText {
+  font-family: var(--font-display);
   font-size: 30px;
-  color: #000000;
+  color: var(--color-charcoal);
   text-align: center;
   line-height: 1.35;
-  font-weight: 600;
-  letter-spacing: -0.2px;
+  font-weight: 700;
 }
-
 .retryHint {
-  font-size: 22px;
-  color: #8e8e93;
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  color: var(--color-caliper-grey);
+  letter-spacing: 2px;
 }
 
-// 平板 / 桌面 H5：内容居中 + max-width 480 + 轻阴影。
-// body backdrop 由 app.scss 配合提供。
 @media (min-width: 768px) {
-  .reportPage {
-    max-width: 480px;
+  .page {
+    max-width: 640px;
     margin: 0 auto;
-    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.08);
+    border-left: var(--border-charcoal);
+    border-right: var(--border-charcoal);
+  }
+}
+@media (min-width: 1024px) {
+  .page {
+    max-width: 720px;
   }
 }
