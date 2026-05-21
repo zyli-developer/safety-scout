@@ -1,12 +1,5 @@
 // DesktopIndex 桌面布局：左右分栏 60/40，整页 max-width 1200px 居中。
-// 字号用 *-desktop 变量，不污染 tokens.scss。
-
-:root {
-  --fs-body-desktop: 16px;
-  --fs-h1-desktop: 48px;
-  --fs-eyebrow-desktop: 11px;
-  --space-desktop-gutter: 48px;
-}
+// 字号用 --*-desktop tokens（定义在 src/styles/tokens.scss）。
 
 .page {
   display: flex;

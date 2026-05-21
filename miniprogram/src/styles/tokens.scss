@@ -42,4 +42,14 @@
   --radius-card: 0;
   --border-charcoal: 1px solid var(--color-charcoal);
   --border-hairline: 1px solid var(--color-caliper-grey);
+
+  // Desktop-only type scale + spacing (consumed by pages/*/desktop.module.scss)
+  // Defined here (single source of truth) rather than in each desktop SCSS module:
+  // :root inside a CSS module is :global, so per-module declarations would race in
+  // the global cascade under MiniCssExtractPluginOption.ignoreOrder=true.
+  --fs-body-desktop: 16px;
+  --fs-h1-desktop: 48px;
+  --fs-eyebrow-desktop: 11px;
+  --fs-meta-desktop: 13px;
+  --space-desktop-gutter: 48px;
 }
