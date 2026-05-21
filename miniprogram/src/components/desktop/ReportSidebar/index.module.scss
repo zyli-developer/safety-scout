@@ -1,8 +1,8 @@
 .card {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 28px;
+  gap: 18px;
+  padding: 32px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
@@ -11,7 +11,7 @@
 
 .eyebrow {
   font-family: var(--f-mono);
-  font-size: 11px;
+  font-size: clamp(11px, 0.9vw, 13px);
   font-weight: 500;
   letter-spacing: 1.5px;
   color: var(--ink-3);
@@ -21,20 +21,20 @@
 .countRow {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 12px;
 }
 
 .count {
-  font-size: 72px;
+  font-size: clamp(64px, 5.5vw, 88px);
   font-weight: 600;
   line-height: 0.95;
-  letter-spacing: -2px;
+  letter-spacing: -2.5px;
   color: var(--ink);
   font-feature-settings: 'tnum' on;
 }
 
 .countUnit {
-  font-size: 15px;
+  font-size: clamp(15px, 1.2vw, 17px);
   color: var(--ink-3);
 }
 
@@ -45,8 +45,8 @@
 }
 
 .summary {
-  font-size: 13.5px;
-  line-height: 1.55;
+  font-size: clamp(13.5px, 1.05vw, 15px);
+  line-height: 1.6;
   color: var(--ink-2);
 }
 
@@ -54,23 +54,23 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  padding-top: 20px;
+  padding-top: 22px;
   border-top: 1px solid var(--line);
 }
 
 .metaCell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .metaLabel {
-  font-size: 12px;
+  font-size: clamp(12px, 0.95vw, 13px);
   color: var(--ink-3);
 }
 
 .metaValue {
   font-family: var(--f-mono);
-  font-size: 14px;
+  font-size: clamp(14px, 1.1vw, 16px);
   color: var(--ink);
 }

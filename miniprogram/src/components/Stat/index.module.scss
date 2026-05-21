@@ -5,7 +5,7 @@
 }
 
 .num {
-  font-size: 44px;
+  font-size: clamp(40px, 3.2vw, 52px);
   font-weight: 600;
   line-height: 1;
   letter-spacing: -1.5px;
@@ -26,6 +26,6 @@
 }
 
 .lbl {
-  font-size: 12.5px;
+  font-size: clamp(12.5px, 1vw, 14px);
   color: var(--ink-3);
 }

@@ -3,14 +3,14 @@
   align-items: center;
   gap: 10px;
   font-weight: 600;
-  font-size: 15px;
+  font-size: clamp(15px, 1.15vw, 17px);
   color: var(--ink);
   letter-spacing: -0.2px;
 }
 
 .mark {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
   background: var(--accent);
   display: inline-flex;
@@ -21,7 +21,7 @@
 .markText {
   color: var(--on-accent);
   font-weight: 700;
-  font-size: 13px;
+  font-size: clamp(13px, 1vw, 15px);
   font-family: var(--f-mono);
   line-height: 1;
 }

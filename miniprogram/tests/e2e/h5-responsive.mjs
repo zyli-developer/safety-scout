@@ -30,6 +30,7 @@ const VIEWPORTS = [
   { name: 'tablet', width: 768, height: 1024 },
   { name: 'desktop-sm', width: 1100, height: 800 },
   { name: 'desktop', width: 1440, height: 900 },
+  { name: 'desktop-wide', width: 1920, height: 1080 },
 ];
 
 const MIME = {

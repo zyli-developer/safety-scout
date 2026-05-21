@@ -1,5 +1,6 @@
 // DesktopIndex (Clean & Minimal)：TopNav / 页头 / 1.5fr+1fr 两栏。
-// 整页 max-width 1280、左右 32px gutter。
+// 整页 max-width 1280、≥1600px 放宽到 1440，左右 32-48px gutter。
+// 字号用 clamp(min, vw, max) —— 视口 1024 接 min，到 1920 顶到 max，避免宽屏小字。
 
 .page {
   display: flex;
@@ -12,51 +13,51 @@
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
-  padding: 56px 32px 64px;
+  padding: 64px 32px 80px;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 24px;
-  margin-bottom: 40px;
+  gap: 32px;
+  margin-bottom: 48px;
 }
 
 .headerLeft {
   display: flex;
   flex-direction: column;
-  max-width: 640px;
+  max-width: 720px;
 }
 
 .eyebrow {
   font-family: var(--f-mono);
-  font-size: 11px;
   font-weight: 500;
+  font-size: clamp(11px, 0.85vw, 13px);
   letter-spacing: 1.5px;
   color: var(--ink-3);
   text-transform: uppercase;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .h1 {
-  font-size: 40px;
+  font-size: clamp(40px, 3.6vw, 56px);
   font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -1px;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
   color: var(--ink);
 }
 
 .lede {
-  margin-top: 10px;
-  font-size: 15px;
+  margin-top: 14px;
+  font-size: clamp(15px, 1.1vw, 17px);
   line-height: 1.55;
   color: var(--ink-2);
 }
 
 .headerActions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
@@ -67,7 +68,7 @@
 .grid {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
-  gap: 24px;
+  gap: 32px;
   align-items: start;
 }
 
@@ -81,7 +82,7 @@
 }
 
 .dropzoneHeader {
-  padding: 24px 28px;
+  padding: 28px 32px;
   border-bottom: 1px solid var(--line);
   display: flex;
   justify-content: space-between;
@@ -89,7 +90,7 @@
 }
 
 .dropzoneTitle {
-  font-size: 20px;
+  font-size: clamp(20px, 1.6vw, 24px);
   font-weight: 600;
   color: var(--ink);
   letter-spacing: -0.2px;
@@ -97,13 +98,13 @@
 
 .dropzoneSpec {
   font-family: var(--f-mono);
-  font-size: 12px;
+  font-size: clamp(12px, 0.95vw, 14px);
   color: var(--ink-3);
   letter-spacing: 0.5px;
 }
 
 .engineStrip {
-  padding: 16px 28px;
+  padding: 18px 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -126,26 +127,26 @@
 }
 
 .engineModel {
-  font-size: 13.5px;
+  font-size: clamp(14px, 1vw, 15px);
   font-weight: 500;
   color: var(--ink);
 }
 
 .engineMeta {
-  font-size: 13.5px;
+  font-size: clamp(14px, 1vw, 15px);
   color: var(--ink-3);
 }
 
 .engineVer {
   font-family: var(--f-mono);
-  font-size: 12px;
+  font-size: clamp(12px, 0.85vw, 13px);
   color: var(--ink-3);
 }
 
 .aside {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .todayCard,
@@ -156,14 +157,14 @@
 }
 
 .todayCard {
-  padding: 24px;
+  padding: 28px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .cardTitle {
-  font-size: 16px;
+  font-size: clamp(17px, 1.3vw, 20px);
   font-weight: 600;
   color: var(--ink);
   letter-spacing: -0.2px;
@@ -181,26 +182,26 @@
 }
 
 .recentHead {
-  padding: 20px 24px 12px;
+  padding: 24px 28px 14px;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
 }
 
 .recentLink {
-  font-size: 12px;
+  font-size: clamp(12px, 0.95vw, 14px);
   color: var(--accent);
   cursor: pointer;
 }
 
 .recentBody {
-  padding: 0 24px 24px;
+  padding: 0 28px 28px;
 }
 
 .recentEmpty {
-  font-size: 13.5px;
+  font-size: clamp(13.5px, 1.05vw, 15px);
   color: var(--ink-3);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 // §10.3 desktop-sm (1024–1279)：页头按钮组换到标题下方，gutter 收紧到 24px。
@@ -226,7 +227,15 @@
   }
 }
 
-// §10.4 流体大标题
-.h1 {
-  font-size: clamp(28px, 4vw, 40px);
+// 宽屏：≥1600 放宽 container 到 1440 + 加 gutter；≥1920 顶到 1520 + 视觉留白更大。
+@media (min-width: 1600px) {
+  .container {
+    max-width: 1440px;
+    padding: 80px 48px 96px;
+  }
+}
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1520px;
+  }
 }
