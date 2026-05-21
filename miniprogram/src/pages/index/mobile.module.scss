@@ -1,127 +1,119 @@
-// 首页 dossier 布局：HeaderBand + 大标题 + 按钮 + 编号 tips + footer。
+// 首页（Clean & Minimal）：品牌栏 / hero / CTA / 今日数据。
+// 旧 dossier 的刻度尺 / CAD 边距 / dossier section rule 全删。
+
 .page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: var(--color-paper);
+  background: var(--bg);
 }
 
-.titleBlock {
-  padding: var(--space-4) var(--space-3) var(--space-2);
+.brandBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 8px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.hero {
+  padding: 32px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  margin-bottom: 4px;
 }
 
 .h1 {
-  display: block;
-  font-family: var(--font-display);
-  font-size: var(--fs-h1);
-  font-weight: 700;
-  letter-spacing: 4px;
-  color: var(--color-charcoal);
-  line-height: 1.1;
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -1.2px;
+  color: var(--ink);
 }
 
-.h1Latin {
-  display: block;
-  margin-top: var(--space-1);
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow);
-  font-weight: 400;
-  letter-spacing: 3px;
-  color: var(--color-caliper-grey);
+.lede {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  margin-top: 8px;
 }
 
-.section {
-  padding: var(--space-3);
+.ctaBlock {
+  padding: 8px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.sectionRule {
-  border-top: var(--border-charcoal);
-  padding-top: var(--space-1);
-  margin-bottom: var(--space-2);
+.ghostWrap {
+  margin-top: 4px;
 }
 
-.sectionLabel {
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow);
-  letter-spacing: 3px;
-  color: var(--color-charcoal);
+.ghostText {
+  margin-left: 6px;
 }
 
-.tipRow {
+.today {
+  padding: 32px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.todayHead {
   display: flex;
   align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-1) 0;
-  font-family: var(--font-body);
+  justify-content: space-between;
 }
 
-.tipIndex {
-  font-family: var(--font-mono);
+.todayTitle {
   font-size: 16px;
-  font-weight: 500;
-  color: var(--color-eng-red);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.2px;
 }
 
-.tipText {
-  font-size: var(--fs-body);
-  color: var(--color-charcoal);
-  line-height: 1.4;
+.todayCard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
 }
 
-.footer {
-  margin-top: auto;
-  padding: var(--space-3);
-  border-top: var(--border-charcoal);
-}
-
-.footerText {
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow);
-  letter-spacing: 2px;
-  color: var(--color-caliper-grey);
-}
-
-// Tablet / desktop H5：容器居中 + 1px charcoal 边框（取代 prior box-shadow chrome）。
+// H5 桌面：保持移动布局居中，限制宽度避免 hero CTA 过宽。
 @media (min-width: 768px) {
   .page {
-    max-width: 640px;
+    max-width: 480px;
     margin: 0 auto;
-    border-left: var(--border-charcoal);
-    border-right: var(--border-charcoal);
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    background: var(--bg);
   }
-}
-@media (min-width: 1024px) {
-  .page {
-    max-width: 720px;
-  }
-}
-
-// 边距 CAD 刻度尺 —— 仅 H5 桌面 ≥1024px 显示。
-// JSX 已用 process.env.TARO_ENV === 'h5' 守住 (weapp 编译时整段消失)，
-// 这里再用 @media 守住 mobile H5 (≤1024px 时 display: none)。
-// 双 gate 设计：哪一端、什么宽度都不会乱出现。
-.rulerLeft, .rulerRight {
-  display: none;
-}
-@media (min-width: 1024px) {
-  .rulerLeft, .rulerRight {
-    display: block;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    width: 10px;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.55;
-    // 1px tick 每 16px 一格、模仿 CAD 边距测量条
-    background-image: repeating-linear-gradient(
-      to bottom,
-      var(--color-caliper-grey) 0,
-      var(--color-caliper-grey) 1px,
-      transparent 1px,
-      transparent 16px
-    );
-  }
-  .rulerLeft { left: 18px; }
-  .rulerRight { right: 18px; }
 }

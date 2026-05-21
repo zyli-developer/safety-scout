@@ -205,13 +205,13 @@ async function main() {
     // 4. 打开首页
     console.log(`\n[step 1/5] 打开 H5 首页...`);
     await page.goto(h5Url, { waitUntil: 'networkidle', timeout: 30_000 });
-    await page.waitForSelector('text=拍摄现场照片', { timeout: 10_000 });
+    await page.waitForSelector('text=开始巡检', { timeout: 10_000 });
     await page.screenshot({ path: join(SCREENSHOT_DIR, 'h5-real-01-home.png'), fullPage: true });
 
-    // 5. 点拍摄现场照片 → 触发 file chooser → 喂 case_001
-    console.log(`[step 2/5] 点"拍摄现场照片"按钮并喂 case_001.jpg...`);
+    // 5. 点开始巡检 → 触发 file chooser → 喂 case_001
+    console.log(`[step 2/5] 点"开始巡检"按钮并喂 case_001.jpg...`);
     const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 10_000 });
-    await page.locator('text=拍摄现场照片').click();
+    await page.locator('text=开始巡检').click();
     const chooser = await fileChooserPromise;
     await chooser.setFiles(SAMPLE_IMG);
     console.log(`[browser] file chooser 已喂入 ${SAMPLE_IMG.split('\\').pop()}`);
@@ -295,7 +295,7 @@ async function main() {
   if (failures.length === 0) {
     console.log(`✅ H5 REAL E2E PASSED`);
     console.log(`   - backend uvicorn 启动 + /healthz ok`);
-    console.log(`   - 首页拍摄现场照片 → file chooser → POST 上传`);
+    console.log(`   - 首页开始巡检 → file chooser → POST 上传`);
     console.log(`   - 报告页轮询 → 真实 Claude CLI 返回 → ReportPayload 解析`);
     console.log(`   - "高处坠落"（case_001 GT）在渲染报告中可见`);
     console.log(`   - 截图: h5-real-01-home.png / -02-polling.png / -03-final.png`);

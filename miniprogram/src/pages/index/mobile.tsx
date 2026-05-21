@@ -1,20 +1,23 @@
+/**
+ * 移动端首页 — Clean & Minimal 重排：品牌栏 / hero 文案 / 主 CTA / 副 CTA / 今日数据。
+ *
+ * 数据：暂无后端"今日数据"接口，Stat 显示 "—"；接入后改为读取真实计数。
+ * 同样地，"上次巡检照片"是设计稿里的视觉锚，但未有数据模型 → 当前不渲染。
+ */
 import Taro from '@tarojs/taro';
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 
 import { BigButton } from '../../components/BigButton';
+import { Button } from '../../components/Button';
 import { Brand } from '../../components/Brand';
+import { Stat } from '../../components/Stat';
+import { Icon } from '../../components/Icon';
 import { captureImage } from '../../hooks/useImageCapture';
 import { createInspection } from '../../api/inspections';
 import { mapApiError } from '../../utils/errorMessage';
 
 import styles from './mobile.module.scss';
-
-const SHOT_TIPS = [
-  '贴近隐患位置，保持光线充足',
-  '画面含工人 / 护栏 / 电箱 等关键元素',
-  '距离 1–3m 为佳',
-];
 
 export default function MobileIndex() {
   const [uploading, setUploading] = useState(false);
@@ -22,7 +25,11 @@ export default function MobileIndex() {
   const handleTap = async () => {
     if (uploading) return;
     let image;
-    try { image = await captureImage(); } catch (_e) { return; }
+    try {
+      image = await captureImage();
+    } catch (_e) {
+      return;
+    }
     setUploading(true);
     try {
       const resp = await createInspection(image.tempFilePath);
@@ -37,46 +44,47 @@ export default function MobileIndex() {
     }
   };
 
-  // 边距 CAD 刻度尺仅 H5 桌面 ≥1024px 显示。
-  // process.env.TARO_ENV 在 Taro webpack 构建时被替换为字面量字符串 ('h5' / 'weapp')，
-  // weapp 编译时 isH5 === false，下方两个 JSX 节点会被 tree-shake 掉，weapp 包零负担。
-  const isH5 = process.env.TARO_ENV === 'h5';
-
   return (
     <View className={styles.page}>
-      {/* H5-only 边距刻度尺（机制 1 演示：process.env.TARO_ENV 运行时分支） */}
-      {isH5 && <View className={styles.rulerLeft} />}
-      {isH5 && <View className={styles.rulerRight} />}
-
-      <Brand size="lg" />
-
-      <View className={styles.titleBlock}>
-        <Text className={styles.h1}>工地隐患识别</Text>
-        <Text className={styles.h1Latin}>AI · SITE HAZARD INSPECTION</Text>
-      </View>
-
-      <BigButton
-        text="拍摄现场照片"
-        subtitle="CAPTURE INSPECTION PHOTO"
-        prefixGlyph="plus-square"
-        onTap={handleTap}
-        loading={uploading}
-      />
-
-      <View className={styles.section}>
-        <View className={styles.sectionRule}>
-          <Text className={styles.sectionLabel}>拍摄要点</Text>
+      <View className={styles.brandBar}>
+        <Brand />
+        <View className={styles.avatar}>
+          <Text>用</Text>
         </View>
-        {SHOT_TIPS.map((tip, i) => (
-          <View key={i} className={styles.tipRow}>
-            <Text className={styles.tipIndex}>{String(i + 1).padStart(2, '0')}</Text>
-            <Text className={styles.tipText}>{tip}</Text>
-          </View>
-        ))}
       </View>
 
-      <View className={styles.footer}>
-        <Text className={styles.footerText}>⌖ AI ENGINE v3 · Claude Vision · ~30s/帧</Text>
+      <View className={styles.hero}>
+        <Text className={styles.eyebrow}>AI 现场巡检</Text>
+        <Text className={styles.h1}>拍一张</Text>
+        <Text className={styles.h1}>AI 找隐患</Text>
+        <Text className={styles.lede}>上传施工现场照片，30 秒内得到结构化安全报告</Text>
+      </View>
+
+      <View className={styles.ctaBlock}>
+        <BigButton
+          text="开始巡检"
+          subtitle="拍照 · 上传 · 等待报告"
+          prefixGlyph="camera"
+          onTap={handleTap}
+          loading={uploading}
+        />
+        <View className={styles.ghostWrap}>
+          <Button variant="ghost" block onTap={handleTap} disabled={uploading}>
+            <Icon name="image" size={18} color="var(--ink-2)" />
+            <Text className={styles.ghostText}>从相册选择</Text>
+          </Button>
+        </View>
+      </View>
+
+      <View className={styles.today}>
+        <View className={styles.todayHead}>
+          <Text className={styles.todayTitle}>今日巡检</Text>
+        </View>
+        <View className={styles.todayCard}>
+          <Stat num="—" label="次巡检" />
+          <Stat num="—" label="高风险" tone="high" />
+          <Stat num="—" label="中风险" tone="med" />
+        </View>
       </View>
     </View>
   );

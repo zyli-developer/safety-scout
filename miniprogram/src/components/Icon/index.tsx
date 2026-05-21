@@ -30,7 +30,8 @@ export type IconName =
   | 'dots'
   | 'upload'
   | 'image'
-  | 'share';
+  | 'share'
+  | 'download';
 
 interface IconProps {
   name: IconName;
@@ -61,6 +62,7 @@ const PATHS: Record<IconName, string> = {
   upload: 'M12 16V4m-5 5 5-5 5 5M4 20h16',
   image: 'M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6zm0 11 5-5 5 5 3-3 5 5',
   share: 'M8 12V6a4 4 0 1 1 8 0v6M5 12h14l-1 8H6l-1-8z',
+  download: 'M12 4v12m-5-5 5 5 5-5M4 20h16',
   stamp:
     'M6 4h12v8H6z M4 16h16v2H4z M9 12v4 M15 12v4', // 印章 + 底座 + 两条挂绳
   'plus-square':
