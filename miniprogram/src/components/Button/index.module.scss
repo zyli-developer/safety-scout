@@ -12,6 +12,12 @@
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s, border-color 0.15s, transform 0.08s;
+  // §10.5 触控目标：实心按钮起码 44px 高（iOS HIG）。Ghost 是行内文本按钮，豁免。
+  min-height: 44px;
+}
+
+.ghost {
+  min-height: 0;
 }
 
 .btn:active {

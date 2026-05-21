@@ -116,13 +116,20 @@
   gap: 16px;
 }
 
-// H5 桌面：保持移动布局居中，限制宽度避免 hero CTA 过宽。
-@media (min-width: 768px) {
+// IMPLEMENT.md §10.2 自适应：≥600px tablet 把 mobile shell 居中、左右露 backdrop。
+// 不重新设计布局，只是更窄居中，避免 H5 平板宽屏下行长成"恐怖文本墙"。
+// 选 600 作为分水岭：与 @container page (min-width:600px) 在原型 clean.css 保持一致。
+@media (min-width: 600px) {
   .page {
-    max-width: 480px;
+    max-width: 640px;
     margin: 0 auto;
     border-left: 1px solid var(--line);
     border-right: 1px solid var(--line);
-    background: var(--bg);
+    background: var(--surface);
   }
+}
+
+// §10.4 流体字号：phone 36 → tablet/超宽 44。weapp 不识 clamp()，会 fallback 到第一个值。
+.h1 {
+  font-size: clamp(36px, 9vw, 44px);
 }

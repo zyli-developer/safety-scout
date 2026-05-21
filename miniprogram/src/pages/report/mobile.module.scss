@@ -6,7 +6,6 @@
   flex-direction: column;
   min-height: 100vh;
   background: var(--bg);
-  padding-bottom: 88px; // 给 sticky actbar 留出空间，防止最后一条 hazard 被遮
 }
 
 .processingWrap {
@@ -125,11 +124,12 @@
   margin-top: 12px;
 }
 
+// §10.5 触控：粘性底部 actionbar，H5 用 sticky（weapp 端 cover-view 兼容是后续话题）。
+// sticky 比 fixed 更友好：父容器滚动到底时贴底；非视口尺寸也跟着布局走。
 .actbar {
-  position: fixed;
-  left: 0;
-  right: 0;
+  position: sticky;
   bottom: 0;
+  margin-top: 16px;
   padding: 12px 20px 28px;
   background: rgba(250, 250, 248, 0.92);
   backdrop-filter: blur(12px);
@@ -172,19 +172,14 @@
   text-transform: uppercase;
 }
 
-// H5 居中容器
-@media (min-width: 768px) {
+// §10.2 自适应：≥600px tablet 居中。sticky actbar 跟随 shell 居中，不再需要
+// fixed + transform 来对齐。
+@media (min-width: 600px) {
   .page {
-    max-width: 480px;
+    max-width: 640px;
     margin: 0 auto;
     border-left: 1px solid var(--line);
     border-right: 1px solid var(--line);
-  }
-  .actbar {
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: 480px;
+    background: var(--surface);
   }
 }

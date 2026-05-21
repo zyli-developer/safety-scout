@@ -202,3 +202,31 @@
   color: var(--ink-3);
   line-height: 1.5;
 }
+
+// §10.3 desktop-sm (1024–1279)：页头按钮组换到标题下方，gutter 收紧到 24px。
+@media (max-width: 1279px) {
+  .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .headerActions {
+    flex-wrap: wrap;
+  }
+}
+
+// §10.3 desktop-narrow (<1100)：双列变单列，sidebar 落到下方。
+@media (max-width: 1099px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+// §10.4 流体大标题
+.h1 {
+  font-size: clamp(28px, 4vw, 40px);
+}
