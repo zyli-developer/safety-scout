@@ -99,6 +99,26 @@ describe('DesktopReport', () => {
     expect(screen.getByText(/物体打击/)).toBeInTheDocument();
   });
 
+  it('renders timeout DesktopErrorView when polling exceeds timeout', async () => {
+    // 永远返回 processing —— usePolling 永远不会满足 stopWhen，触发 isTimedOut。
+    // to=50ms 让 elapsedMs 在两次 tick 内就超过；不依赖任何 wall-clock 精度。
+    mockedRouter.mockReturnValue({ params: { id: 'r-1', pi: '20', to: '50' } });
+    const resp: GetInspectionResponse = {
+      inspection_id: 'r-1',
+      status: 'processing',
+      created_at: '2026-05-21T10:00:00Z',
+      updated_at: '2026-05-21T10:00:01Z',
+      report: null,
+      error: null,
+    };
+    mockedGet.mockResolvedValue(resp);
+    render(<DesktopReport />);
+    await waitFor(() => {
+      // DesktopErrorView 的硬编码 timeout 文案 —— 唯一不经 mapApiError 的 user-facing 字串
+      expect(screen.getByText('AI 分析超时，请重试')).toBeInTheDocument();
+    });
+  });
+
   it('renders ErrorView on failed status', async () => {
     const resp: GetInspectionResponse = {
       inspection_id: 'r-1',
