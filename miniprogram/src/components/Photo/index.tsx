@@ -2,8 +2,15 @@
  * Photo — 圆角工地图卡 + 可选 meta 角标 + 可选底部渐变。
  * ratio 走 CSS aspect-ratio（H5 现代浏览器支持；weapp 走 height 退化时由调用方传 height）。
  * meta 是右下角的胶囊（如 "上次巡检 · 12 分钟前"）。
+ *
+ * H5 端故意用原生 <img> 而非 Taro <Image>：
+ *   - Taro Image 编译为 <taro-image-core> Stencil 自定义元素，blob: URL 在自定义
+ *     元素生命周期里有时序问题（首次加载到 onLoad 之间会闪空）；原生 <img>
+ *     直接走浏览器渲染管线，blob URL 立刻显示，print 时也能正常出图
+ *   - object-fit 在原生 <img> 上直接生效，省去自定义元素的 mode 分支
+ *   - weapp 路径目前未启用，TODO: 用 process.env.TARO_ENV === 'weapp' 分支挂回 Taro Image
  */
-import { View, Text, Image } from '@tarojs/components';
+import { View, Text } from '@tarojs/components';
 
 import styles from './index.module.scss';
 
@@ -38,9 +45,10 @@ export function Photo({
   return (
     <View className={[styles.photo, className].filter(Boolean).join(' ')} style={style}>
       {src ? (
-        <Image className={styles.img} src={src} mode="aspectFill" {...({ alt } as { alt: string })} />
+        // 原生 <img> + object-fit:cover 来自 .img；blob:/data:/http(s) 均原生支持。
+        <img className={styles.img} src={src} alt={alt} />
       ) : (
-        // 空 src 兜底：不渲染 Image（避免 H5 显示破图 icon），让父容器 surface-2
+        // 空 src 兜底：不渲染 <img>（避免 H5 显示破图 icon），让父容器 surface-2
         // 灰底兜底，meta 仍可显示 —— 用作"等数据"占位。
         <View className={styles.empty} aria-hidden />
       )}
