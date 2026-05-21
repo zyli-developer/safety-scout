@@ -131,13 +131,13 @@ async function main() {
     console.log(`[step 1/4] 打开 H5 首页 (desktop)...`);
     await page.goto(h5Url, { waitUntil: 'networkidle', timeout: 30_000 });
 
-    // 桌面分支：找到 dropzone 副标题 "CAPTURE INSPECTION PHOTO"
-    await page.waitForSelector('text=/CAPTURE INSPECTION PHOTO/i', { timeout: 10_000 });
+    // 桌面分支：找到 dropzone 标题 "上传现场照片"
+    await page.waitForSelector('text=上传现场照片', { timeout: 10_000 });
     await page.screenshot({ path: join(SCREENSHOT_DIR, 'h5-desktop-01-home.png'), fullPage: true });
 
-    // 验证桌面分栏存在：查询拍摄要点卡片（仅桌面 DesktopIndex 渲染）
-    const tipsVisible = await page.locator('text=拍摄要点').first().isVisible();
-    if (!tipsVisible) failures.push('桌面首页未渲染 "拍摄要点" 侧栏');
+    // 验证桌面分栏存在：查询今日卡（仅桌面 DesktopIndex 渲染）
+    const todayVisible = await page.locator('text=今日巡检').first().isVisible();
+    if (!todayVisible) failures.push('桌面首页未渲染 "今日巡检" 侧栏');
 
     console.log(`[step 2/4] 把图片塞进隐藏 <input>...`);
     await page.locator('input[type="file"]').setInputFiles(SAMPLE_IMG);

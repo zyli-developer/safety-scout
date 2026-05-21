@@ -1,13 +1,13 @@
 /**
- * 单元测试：UploadDropzone.
+ * 单元测试：UploadDropzone (clean-minimal).
  *
  * 验收要点：
- * - idle 默认渲染中文 + Latin 副标题 + 拖拽提示
+ * - idle 默认渲染中文 + sublabel 提示
  * - 点击触发隐藏 <input type="file"> 的 click()
  * - 选择文件触发 onSelect(file)
  * - 拖入文件触发 onSelect(file) + 阻止默认浏览器行为
- * - dragover 触发 hover 视觉状态（aria-busy/data-state 检查，因 SCSS modules 在测试里是 {}）
- * - uploading 时不响应 click / drop
+ * - dragenter / dragleave 切换 data-hover
+ * - uploading 时不响应 click / drop / 键盘 + aria-busy=true + tabindex=-1
  */
 import { fireEvent, render, screen } from '@testing-library/react';
 
@@ -21,7 +21,8 @@ describe('UploadDropzone', () => {
   it('renders default idle copy', () => {
     render(<UploadDropzone onSelect={() => undefined} />);
     expect(screen.getByText(/拖拽图片/)).toBeInTheDocument();
-    expect(screen.getByText(/CAPTURE INSPECTION PHOTO/i)).toBeInTheDocument();
+    expect(screen.getByText(/点击选择文件/)).toBeInTheDocument();
+    expect(screen.getByText('选择文件')).toBeInTheDocument();
   });
 
   it('calls onSelect when file picked via input change', () => {
@@ -102,7 +103,6 @@ describe('UploadDropzone', () => {
     fireEvent.keyDown(screen.getByRole('button'), { key: ' ' });
     expect(clickSpy).toHaveBeenCalledTimes(1);
 
-    // Uploading 时 tabindex 退到 -1，键盘不响应
     rerender(<UploadDropzone onSelect={fn} uploading />);
     expect(screen.getByRole('button')).toHaveAttribute('tabindex', '-1');
     clickSpy.mockClear();

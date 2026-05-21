@@ -1,15 +1,28 @@
 /**
- * 单元测试：ReportSidebar.
+ * 单元测试：ReportSidebar (clean-minimal 概要卡)。
  *
  * 验收要点：
- * - 渲染 'INSPECTION REPORT' eyebrow + 中文标题
- * - 渲染隐患数 + 风险等级
- * - 渲染 summary + plain_warning（plain_warning 可选）
+ * - eyebrow "巡检概要"
+ * - 渲染 hazardCount + "项隐患" 单位
+ * - 渲染 high/medium/low 三档 SeverityPill（含 count）
+ * - 渲染 summary 文案
+ * - 渲染 model_meta 的 latency / model 名字
  */
 import { render, screen } from '@testing-library/react';
 
 import { ReportSidebar } from '../../../src/components/desktop/ReportSidebar';
-import type { ReportPayload } from '../../../src/types/report';
+import type { Hazard, ReportPayload } from '../../../src/types/report';
+
+function makeHazard(severity: Hazard['severity']): Hazard {
+  return {
+    category_code: 'H1',
+    category_name: '高处作业',
+    description: '描述',
+    severity,
+    regulation: '',
+    suggestion: '建议',
+  };
+}
 
 const SAMPLE: ReportPayload = {
   inspection_id: 'rep-1',
@@ -17,33 +30,43 @@ const SAMPLE: ReportPayload = {
   plain_warning: '注意临边坠落',
   summary: '外架与楼梯间防护多处缺失',
   overall_severity: 'high',
-  hazards: [],
+  hazards: [makeHazard('high'), makeHazard('high'), makeHazard('medium'), makeHazard('low')],
   model_meta: { provider: 'claude_cli', model: 'sonnet', latency_ms: 30000 },
 };
 
-describe('ReportSidebar', () => {
-  it('renders inspection report eyebrow + title', () => {
-    render(<ReportSidebar report={SAMPLE} hazardCount={7} />);
-    expect(screen.getByText(/INSPECTION REPORT/i)).toBeInTheDocument();
-    expect(screen.getByText('现场巡检报告')).toBeInTheDocument();
+describe('ReportSidebar (clean-minimal)', () => {
+  it('renders 巡检概要 eyebrow', () => {
+    render(<ReportSidebar report={SAMPLE} hazardCount={4} />);
+    expect(screen.getByText('巡检概要')).toBeInTheDocument();
   });
 
-  it('renders hazard count + severity label', () => {
-    render(<ReportSidebar report={SAMPLE} hazardCount={7} />);
-    expect(screen.getByText('7')).toBeInTheDocument();
-    expect(screen.getByText(/项隐患待整改/)).toBeInTheDocument();
-    expect(screen.getByText(/高风险/)).toBeInTheDocument();
+  it('renders hazard count + 项隐患 unit', () => {
+    render(<ReportSidebar report={SAMPLE} hazardCount={4} />);
+    expect(screen.getByText('4')).toBeInTheDocument();
+    expect(screen.getByText('项隐患')).toBeInTheDocument();
   });
 
-  it('renders summary + plain_warning when both present', () => {
-    render(<ReportSidebar report={SAMPLE} hazardCount={7} />);
+  it('renders severity breakdown pills with per-level counts', () => {
+    render(<ReportSidebar report={SAMPLE} hazardCount={4} />);
+    expect(screen.getByText('高风险 · 2')).toBeInTheDocument();
+    expect(screen.getByText('中风险 · 1')).toBeInTheDocument();
+    expect(screen.getByText('低风险 · 1')).toBeInTheDocument();
+  });
+
+  it('renders summary text', () => {
+    render(<ReportSidebar report={SAMPLE} hazardCount={4} />);
     expect(screen.getByText('外架与楼梯间防护多处缺失')).toBeInTheDocument();
-    expect(screen.getByText('注意临边坠落')).toBeInTheDocument();
   });
 
-  it('omits plain_warning element when empty', () => {
-    const r = { ...SAMPLE, plain_warning: '' };
-    render(<ReportSidebar report={r} hazardCount={3} />);
-    expect(screen.queryByText('注意临边坠落')).not.toBeInTheDocument();
+  it('renders model meta — latency in seconds + model name', () => {
+    render(<ReportSidebar report={SAMPLE} hazardCount={4} />);
+    expect(screen.getByText('30.0 秒')).toBeInTheDocument();
+    expect(screen.getByText('sonnet')).toBeInTheDocument();
+  });
+
+  it('falls back to — when latency is missing', () => {
+    const r = { ...SAMPLE, model_meta: { ...SAMPLE.model_meta, latency_ms: 0 } };
+    render(<ReportSidebar report={r} hazardCount={4} />);
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
   });
 });

@@ -1,12 +1,11 @@
 /**
- * 单元测试：DesktopIndex 页面.
+ * 单元测试：DesktopIndex (clean-minimal)。
  *
  * 验收要点：
- * - 渲染上传区（UploadDropzone）+ 拍摄要点 + AI 引擎元信息
+ * - 渲染 page header（eyebrow + h1 "开始一次现场巡检"）+ dropzone 卡（顶部标题
+ *   "上传现场照片" + spec + dropzone + 底部模型可用性条）+ 右侧今日 + 最近巡检卡
  * - 上传文件后调 createInspection 并 Taro.navigateTo 跳报告页
  * - 上传失败时 Taro.showToast 展示 user_message
- *
- * createInspection 用 jest.mock 替换，避免真的发请求。
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import Taro from '@tarojs/taro';
@@ -27,21 +26,22 @@ function makeFile(): File {
   return new File([new Uint8Array([0xff, 0xd8, 0xff])], 'photo.jpg', { type: 'image/jpeg' });
 }
 
-describe('DesktopIndex', () => {
+describe('DesktopIndex (clean-minimal)', () => {
   beforeEach(() => {
     mockedCreate.mockReset();
     mockedNavigate.mockReset();
     mockedToast.mockReset();
   });
 
-  it('renders dropzone + 拍摄要点 list + AI 引擎 footer', () => {
+  it('renders page header + dropzone card + aside cards', () => {
     const { container } = render(<DesktopIndex />);
-    expect(screen.getByText('工地隐患识别')).toBeInTheDocument();
-    expect(screen.getByText(/AI · SITE HAZARD INSPECTION/)).toBeInTheDocument();
-    expect(screen.getByText(/拍摄要点/)).toBeInTheDocument();
-    expect(screen.getByText(/贴近隐患位置/)).toBeInTheDocument();
-    expect(screen.getByText(/AI ENGINE/)).toBeInTheDocument();
-    // TopNav 引入后页面里出现多个 role=button —— 用 aria-busy 锁定 dropzone（独有此属性）。
+    expect(screen.getByText('开始一次现场巡检')).toBeInTheDocument();
+    expect(screen.getByText('上传现场照片')).toBeInTheDocument();
+    expect(screen.getByText(/拖拽图片到此处/)).toBeInTheDocument();
+    expect(screen.getByText(/Claude Sonnet 4.5/)).toBeInTheDocument();
+    expect(screen.getByText('今日巡检')).toBeInTheDocument();
+    expect(screen.getByText('最近巡检')).toBeInTheDocument();
+    // dropzone 是页面里唯一带 aria-busy 的元素
     const dropzone = container.querySelector('[aria-busy]');
     expect(dropzone).toHaveAttribute('aria-busy', 'false');
   });
@@ -66,7 +66,6 @@ describe('DesktopIndex', () => {
   });
 
   it('shows toast on upload error', async () => {
-    // 用真的 ApiError 实例，因为 mapApiError 依赖 instanceof ApiError 才走 userMessage
     const err = new ApiError('INVALID_IMAGE', '图片格式不支持', 400);
     mockedCreate.mockRejectedValueOnce(err);
     const { container } = render(<DesktopIndex />);

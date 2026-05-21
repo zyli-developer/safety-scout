@@ -1,109 +1,204 @@
-// DesktopIndex 桌面布局：左右分栏 60/40，整页 max-width 1200px 居中。
-// 字号用 --*-desktop tokens（定义在 src/styles/tokens.scss）。
+// DesktopIndex (Clean & Minimal)：TopNav / 页头 / 1.5fr+1fr 两栏。
+// 整页 max-width 1280、左右 32px gutter。
 
 .page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--space-desktop-gutter);
-  background-color: var(--color-paper);
+  background: var(--bg);
 }
 
-.titleBlock {
-  padding: var(--space-5) 0 var(--space-3);
+.container {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 56px 32px 64px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  max-width: 640px;
+}
+
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  margin-bottom: 12px;
 }
 
 .h1 {
-  display: block;
-  font-family: var(--font-display);
-  font-size: var(--fs-h1-desktop);
-  font-weight: 700;
-  letter-spacing: 6px;
-  color: var(--color-charcoal);
+  font-size: 40px;
+  font-weight: 600;
   line-height: 1.1;
+  letter-spacing: -1px;
+  color: var(--ink);
 }
 
-.h1Latin {
-  display: block;
-  margin-top: var(--space-1);
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow-desktop);
-  font-weight: 400;
-  letter-spacing: 4px;
-  color: var(--color-caliper-grey);
+.lede {
+  margin-top: 10px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
 }
 
-.body {
-  display: grid;
-  grid-template-columns: 6fr 4fr;
-  gap: var(--space-desktop-gutter);
-  padding: var(--space-3) 0 var(--space-5);
-}
-
-.left {
+.headerActions {
   display: flex;
-  align-items: stretch;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.right {
+.btnText {
+  margin-left: 6px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.dropzoneCard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
 }
 
-.tipsCard,
-.engineCard {
-  padding: var(--space-3);
-  border: var(--border-charcoal);
-  background-color: var(--color-paper);
-}
-
-.sectionRule {
-  border-top: var(--border-charcoal);
-  padding-top: var(--space-1);
-  margin-bottom: var(--space-2);
-}
-
-.sectionLabel {
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow-desktop);
-  letter-spacing: 3px;
-  color: var(--color-charcoal);
-}
-
-.tipRow {
+.dropzoneHeader {
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--line);
   display: flex;
+  justify-content: space-between;
   align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-1) 0;
 }
 
-.tipIndex {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--color-eng-red);
+.dropzoneTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.2px;
 }
 
-.tipText {
-  font-size: var(--fs-body-desktop);
-  color: var(--color-charcoal);
+.dropzoneSpec {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.5px;
+}
+
+.engineStrip {
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.engineLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.engineDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--low);
+  box-shadow: 0 0 0 4px rgba(47, 132, 84, 0.15);
+}
+
+.engineModel {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.engineMeta {
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.engineVer {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.todayCard,
+.recentCard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.todayCard {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+}
+
+.todayGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.recentCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.recentHead {
+  padding: 20px 24px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.recentLink {
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.recentBody {
+  padding: 0 24px 24px;
+}
+
+.recentEmpty {
+  font-size: 13.5px;
+  color: var(--ink-3);
   line-height: 1.5;
-}
-
-.engineLabel {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow-desktop);
-  letter-spacing: 3px;
-  color: var(--color-caliper-grey);
-  margin-bottom: var(--space-1);
-}
-
-.engineText {
-  font-family: var(--font-mono);
-  font-size: var(--fs-meta-desktop);
-  color: var(--color-charcoal);
-  letter-spacing: 2px;
 }

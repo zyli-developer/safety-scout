@@ -1,13 +1,14 @@
 /**
- * 报告页桌面端左 sticky 侧栏：标题块 + 隐患数 + 风险等级 + 现场总览 + plain_warning.
+ * 报告页桌面右栏概要卡 — clean-minimal 重排。
  *
- * sticky 定位由父容器（DesktopReport）的 grid 配合 position:sticky 实现；本组件不
- * 自己 sticky，只负责内容编排。
+ * eyebrow + 大数字 + 项 + SeverityPills(high/medium/low breakdown) + summary +
+ * meta（分析耗时 / 模型）。plain_warning 不再在此渲染（移到页面全宽 AlarmBox）。
+ * sticky 定位由父容器（DesktopReport）的 grid 控制；本组件不自 sticky。
  */
 import { View, Text } from '@tarojs/components';
 
-import { SEVERITY_LABEL, SEVERITY_COLOR } from '../../../utils/severity';
-import type { ReportPayload } from '../../../types/report';
+import { SeverityPill } from '../../SeverityPill';
+import type { ReportPayload, Severity } from '../../../types/report';
 
 import styles from './index.module.scss';
 
@@ -16,45 +17,50 @@ export interface ReportSidebarProps {
   hazardCount: number;
 }
 
+function countBySeverity(hazards: readonly { severity: Severity }[]) {
+  return hazards.reduce(
+    (acc, h) => {
+      acc[h.severity] += 1;
+      return acc;
+    },
+    { high: 0, medium: 0, low: 0 } as Record<Severity, number>,
+  );
+}
+
+function formatLatency(ms?: number): string {
+  if (!ms || ms <= 0) return '—';
+  return `${(ms / 1000).toFixed(1)} 秒`;
+}
+
 export function ReportSidebar({ report, hazardCount }: ReportSidebarProps) {
-  const severity = report.overall_severity;
+  const counts = countBySeverity(report.hazards);
+  const meta = report.model_meta;
   return (
-    <View className={styles.sidebar}>
-      <View className={styles.titleBlock}>
-        <Text className={styles.eyebrow}>INSPECTION REPORT</Text>
-        <Text className={styles.title}>现场巡检报告</Text>
+    <View className={styles.card}>
+      <Text className={styles.eyebrow}>巡检概要</Text>
+
+      <View className={styles.countRow}>
+        <Text className={styles.count}>{hazardCount}</Text>
+        <Text className={styles.countUnit}>项隐患</Text>
       </View>
 
-      <View className={styles.hero}>
-        <View className={styles.heroRow}>
-          <Text
-            className={styles.heroCount}
-            style={{ color: SEVERITY_COLOR[severity] }}
-          >
-            {hazardCount}
-          </Text>
-          <Text className={styles.heroCountLabel}>项隐患待整改</Text>
-        </View>
-        <View className={styles.heroRow}>
-          <Text
-            className={styles.heroSeverity}
-            style={{ color: SEVERITY_COLOR[severity] }}
-          >
-            {SEVERITY_LABEL[severity]}
-          </Text>
-          <Text className={styles.heroSeverityLabel}>风险等级判定</Text>
-        </View>
+      <View className={styles.breakdown}>
+        <SeverityPill level="high" count={counts.high} />
+        <SeverityPill level="medium" count={counts.medium} />
+        <SeverityPill level="low" count={counts.low} />
       </View>
 
-      <View className={styles.summarySection}>
-        <View className={styles.summaryLabel}>
-          <Text className={styles.summaryLabelBar}>▎</Text>
-          <Text className={styles.summaryLabelText}>现场总览</Text>
+      <Text className={styles.summary}>{report.summary}</Text>
+
+      <View className={styles.metaGrid}>
+        <View className={styles.metaCell}>
+          <Text className={styles.metaLabel}>分析耗时</Text>
+          <Text className={styles.metaValue}>{formatLatency(meta?.latency_ms)}</Text>
         </View>
-        <Text className={styles.summaryText}>{report.summary}</Text>
-        {report.plain_warning && (
-          <Text className={styles.warning}>{report.plain_warning}</Text>
-        )}
+        <View className={styles.metaCell}>
+          <Text className={styles.metaLabel}>模型</Text>
+          <Text className={styles.metaValue}>{meta?.model ?? '—'}</Text>
+        </View>
       </View>
     </View>
   );
