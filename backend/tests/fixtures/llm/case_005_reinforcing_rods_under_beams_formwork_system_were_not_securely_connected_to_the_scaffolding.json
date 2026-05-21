@@ -2,50 +2,50 @@
   "input": {
     "image_sha256": "b5c11877028ff25b69ecbc75684437f1bdbbf53bb13e82637c1a161f1bec53e5",
     "image_path": "tests/fixtures/images/case_005_reinforcing_rods_under_beams_formwork_system_were_not_securely_connected_to_the_scaffolding.jpg",
-    "prompt_version": "v2",
+    "prompt_version": "v3",
     "provider": "claude_cli"
   },
   "output": {
-    "content": "{\"inspection_id\":\"a3f7c821-04b1-4e9d-b562-88d3e0f15c20\",\"created_at\":\"2026-05-19T08:00:00Z\",\"plain_warning\":\"支撑架缺斜撑，随时可能垮！\",\"summary\":\"满堂碗扣式模板支撑架剪刀撑严重不足、顶部操作层无防护、临时用电线路裸露，整体风险等级为高\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H4\",\"category_name\":\"坍塌\",\"description\":\"满堂碗扣式模板支撑架竖向剪刀撑及水平斜撑设置明显不足，部分区域横向连杆缺失；架体底部地面潮湿，可调底座与地面间垫板情况不明，底部承载条件存疑；支撑架整体高宽比偏大，抗侧稳定性不足\",\"severity\":\"high\",\"regulation\":\"JGJ162-2008《建筑施工模板安全技术规范》第6.1.9条；JGJ130-2011《建筑施工扣件式钢管脚手架安全技术规范》第6.6.1条\",\"suggestion\":\"立即暂停支撑架上方及周边区域作业，由专业技术人员对架体进行安全验算；按方案补设纵横向剪刀撑（间距不大于4跨且不大于6 m），底部铺设垫板并确认地基承载力满足要求后方可恢复作业\"},{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"模板支撑架顶部操作层四周未设防护栏杆及水平安全网；架体无专用爬梯或斜道，攀登通道不明确\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016《建筑施工高处作业安全技术规范》第4.1.1条、第6.2.1条\",\"suggestion\":\"在支撑架顶部操作层四周设置高度不低于1.2 m的防护栏杆及挡脚板；搭设专用爬梯，禁止攀爬立杆上下；顶层作业人员须正确佩戴安全带并挂设于可靠锚固点\"},{\"category_code\":\"H3\",\"category_name\":\"触电\",\"description\":\"架体顶部临时照明线路沿杆件缠绕敷设，导线无绝缘套管保护；线路接头处理情况不明，存在漏电风险；现场未见独立配电箱及漏电保护装置\",\"severity\":\"medium\",\"regulation\":\"JGJ46-2005《施工现场临时用电安全技术规范》第7.2.1条、第8.2.5条\",\"suggestion\":\"对架体范围内临时照明线路全面排查，导线采用绝缘套管或穿硬质管敷设；接头做绝缘包扎并固定于绝缘子；配置漏电保护开关（动作电流≤30 mA），确保三级配电两级保护到位\"},{\"category_code\":\"H2\",\"category_name\":\"物体打击\",\"description\":\"架体顶部模板区域存在散落木料及施工材料，高处坠物风险显著；地面堆放绳索、碎料等杂物，通道不畅\",\"severity\":\"medium\",\"regulation\":\"JGJ59-2011《建筑施工安全检查标准》第3.0.5条\",\"suggestion\":\"清理架体顶部所有散落材料并规范堆放固定；架体周边设置警戒区域及警示标志；地面通道杂物及时清运，保持通行宽度不小于1.0 m\"},{\"category_code\":\"H9\",\"category_name\":\"个人防护缺失\",\"description\":\"现场可见作业人员身着反光背心但未见明确佩戴安全帽；高处作业区域未见人员佩戴安全带\",\"severity\":\"low\",\"regulation\":\"GB2811-2019《头部防护 安全帽》；JGJ80-2016第5.2.1条\",\"suggestion\":\"强制要求所有进场人员佩戴合格安全帽（帽带扣紧）；2 m以上高处作业必须正确佩戴安全带并挂设于独立锚固点；安全员在进场口开展PPE检查并记录\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"placeholder\",\"latency_ms\":0}}",
+    "content": "{\"inspection_id\": \"a3f7b2c1-4e8d-4a9f-b6c3-d2e1f5a08b74\", \"created_at\": \"2026-05-19T00:00:00Z\", \"plain_warning\": \"支撑架剪刀撑严重不足，随时可能坍塌！\", \"summary\": \"室内满堂支撑架剪刀撑体系严重缺失（高风险），叠加临时用电导线裸露及个人防护不到位，综合评定为高风险现场，建议立即停工整改。\", \"overall_severity\": \"high\", \"hazards\": [{\"category_code\": \"H4\", \"category_name\": \"坍塌\", \"description\": \"满堂支撑架仅在局部设有少量斜撑，未形成完整纵横向剪刀撑体系；梁下加密立杆与主架横杆扣件连接节点不清晰，存在整体失稳风险。\", \"severity\": \"high\", \"regulation\": \"JGJ162-2008《建筑施工模板安全技术规范》第6.1.9条；JGJ130-2011《扣件式钢管脚手架安全技术规范》第6.6.3条\", \"suggestion\": \"立即停工；按方案补设纵横向剪刀撑；梁下加密杆与立杆用直角扣件双向固定，验收合格后方可浇筑。\"}, {\"category_code\": \"H3\", \"category_name\": \"触电\", \"description\": \"架体顶部临时照明导线裸露穿插于钢管杆件间，未采用绝缘套管保护；架体未见可靠重复接地，存在漏电触电风险。\", \"severity\": \"medium\", \"regulation\": \"JGJ46-2005《施工现场临时用电安全技术规范》第7.2.1条、第5.1.2条\", \"suggestion\": \"导线全程加装绝缘套管；架体立杆处设重复接地（电阻≤10Ω）；专职电工持证定期巡检。\"}, {\"category_code\": \"H9\", \"category_name\": \"个人防护缺失\", \"description\": \"现场作业人员仅佩戴反光背心，头部安全帽佩戴状态不明，在满堂架体作业区域内未见完整个人防护装备。\", \"severity\": \"medium\", \"regulation\": \"GB 2811-2019《头部防护 安全帽》；JGJ59-2011《建筑施工安全检查标准》第3.0.4条\", \"suggestion\": \"要求所有人员正确佩戴符合GB2811标准安全帽；管理人员入场检查，违者立即整改纳入班前交底。\"}, {\"category_code\": \"H10\", \"category_name\": \"其他/文明施工\", \"description\": \"地面散落废弃绳索及建筑杂物，作业通道不畅；架体底部物料堆置凌乱，影响应急逃生及日常安全巡查。\", \"severity\": \"low\", \"regulation\": \"JGJ59-2011《建筑施工安全检查标准》文明施工检查评分表\", \"suggestion\": \"收工前清理架体底部废料至指定区域；划定宽≥1m应急通道并全程保持畅通。\"}], \"model_meta\": {\"provider\": \"claude_cli\", \"model\": \"placeholder\", \"latency_ms\": 0}}",
     "model": "sonnet",
-    "latency_ms": 106614,
+    "latency_ms": 194006,
     "provider_payload": {
       "type": "result",
       "subtype": "success",
       "is_error": false,
       "api_error_status": null,
-      "duration_ms": 106614,
-      "duration_api_ms": 102310,
-      "ttft_ms": 6573,
-      "num_turns": 3,
-      "result": "{\"inspection_id\":\"a3f7c821-04b1-4e9d-b562-88d3e0f15c20\",\"created_at\":\"2026-05-19T08:00:00Z\",\"plain_warning\":\"支撑架缺斜撑，随时可能垮！\",\"summary\":\"满堂碗扣式模板支撑架剪刀撑严重不足、顶部操作层无防护、临时用电线路裸露，整体风险等级为高\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H4\",\"category_name\":\"坍塌\",\"description\":\"满堂碗扣式模板支撑架竖向剪刀撑及水平斜撑设置明显不足，部分区域横向连杆缺失；架体底部地面潮湿，可调底座与地面间垫板情况不明，底部承载条件存疑；支撑架整体高宽比偏大，抗侧稳定性不足\",\"severity\":\"high\",\"regulation\":\"JGJ162-2008《建筑施工模板安全技术规范》第6.1.9条；JGJ130-2011《建筑施工扣件式钢管脚手架安全技术规范》第6.6.1条\",\"suggestion\":\"立即暂停支撑架上方及周边区域作业，由专业技术人员对架体进行安全验算；按方案补设纵横向剪刀撑（间距不大于4跨且不大于6 m），底部铺设垫板并确认地基承载力满足要求后方可恢复作业\"},{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"模板支撑架顶部操作层四周未设防护栏杆及水平安全网；架体无专用爬梯或斜道，攀登通道不明确\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016《建筑施工高处作业安全技术规范》第4.1.1条、第6.2.1条\",\"suggestion\":\"在支撑架顶部操作层四周设置高度不低于1.2 m的防护栏杆及挡脚板；搭设专用爬梯，禁止攀爬立杆上下；顶层作业人员须正确佩戴安全带并挂设于可靠锚固点\"},{\"category_code\":\"H3\",\"category_name\":\"触电\",\"description\":\"架体顶部临时照明线路沿杆件缠绕敷设，导线无绝缘套管保护；线路接头处理情况不明，存在漏电风险；现场未见独立配电箱及漏电保护装置\",\"severity\":\"medium\",\"regulation\":\"JGJ46-2005《施工现场临时用电安全技术规范》第7.2.1条、第8.2.5条\",\"suggestion\":\"对架体范围内临时照明线路全面排查，导线采用绝缘套管或穿硬质管敷设；接头做绝缘包扎并固定于绝缘子；配置漏电保护开关（动作电流≤30 mA），确保三级配电两级保护到位\"},{\"category_code\":\"H2\",\"category_name\":\"物体打击\",\"description\":\"架体顶部模板区域存在散落木料及施工材料，高处坠物风险显著；地面堆放绳索、碎料等杂物，通道不畅\",\"severity\":\"medium\",\"regulation\":\"JGJ59-2011《建筑施工安全检查标准》第3.0.5条\",\"suggestion\":\"清理架体顶部所有散落材料并规范堆放固定；架体周边设置警戒区域及警示标志；地面通道杂物及时清运，保持通行宽度不小于1.0 m\"},{\"category_code\":\"H9\",\"category_name\":\"个人防护缺失\",\"description\":\"现场可见作业人员身着反光背心但未见明确佩戴安全帽；高处作业区域未见人员佩戴安全带\",\"severity\":\"low\",\"regulation\":\"GB2811-2019《头部防护 安全帽》；JGJ80-2016第5.2.1条\",\"suggestion\":\"强制要求所有进场人员佩戴合格安全帽（帽带扣紧）；2 m以上高处作业必须正确佩戴安全带并挂设于独立锚固点；安全员在进场口开展PPE检查并记录\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"placeholder\",\"latency_ms\":0}}",
+      "duration_ms": 194006,
+      "duration_api_ms": 185996,
+      "ttft_ms": 7243,
+      "num_turns": 5,
+      "result": "```json\n{\n  \"inspection_id\": \"a3f7b2c1-4e8d-4a9f-b6c3-d2e1f5a08b74\",\n  \"created_at\": \"2026-05-19T00:00:00Z\",\n  \"plain_warning\": \"支撑架剪刀撑严重不足，随时可能坍塌！\",\n  \"summary\": \"室内满堂支撑架剪刀撑体系严重缺失（高风险），叠加临时用电导线裸露及个人防护不到位，综合评定为高风险现场，建议立即停工整改。\",\n  \"overall_severity\": \"high\",\n  \"hazards\": [\n    {\n      \"category_code\": \"H4\",\n      \"category_name\": \"坍塌\",\n      \"description\": \"满堂支撑架仅在局部设有少量斜撑，未形成完整纵横向剪刀撑体系；梁下加密立杆与主架横杆扣件连接节点不清晰，存在整体失稳风险。\",\n      \"severity\": \"high\",\n      \"regulation\": \"JGJ162-2008《建筑施工模板安全技术规范》第6.1.9条；JGJ130-2011《扣件式钢管脚手架安全技术规范》第6.6.3条\",\n      \"suggestion\": \"立即停工；按方案补设纵横向剪刀撑；梁下加密杆与立杆用直角扣件双向固定，验收合格后方可浇筑。\"\n    },\n    {\n      \"category_code\": \"H3\",\n      \"category_name\": \"触电\",\n      \"description\": \"架体顶部临时照明导线裸露穿插于钢管杆件间，未采用绝缘套管保护；架体未见可靠重复接地，存在漏电触电风险。\",\n      \"severity\": \"medium\",\n      \"regulation\": \"JGJ46-2005《施工现场临时用电安全技术规范》第7.2.1条、第5.1.2条\",\n      \"suggestion\": \"导线全程加装绝缘套管；架体立杆处设重复接地（电阻≤10Ω）；专职电工持证定期巡检。\"\n    },\n    {\n      \"category_code\": \"H9\",\n      \"category_name\": \"个人防护缺失\",\n      \"description\": \"现场作业人员仅佩戴反光背心，头部安全帽佩戴状态不明，在满堂架体作业区域内未见完整个人防护装备。\",\n      \"severity\": \"medium\",\n      \"regulation\": \"GB 2811-2019《头部防护 安全帽》；JGJ59-2011《建筑施工安全检查标准》第3.0.4条\",\n      \"suggestion\": \"要求所有人员正确佩戴符合GB2811标准安全帽；管理人员入场检查，违者立即整改纳入班前交底。\"\n    },\n    {\n      \"category_code\": \"H10\",\n      \"category_name\": \"其他/文明施工\",\n      \"description\": \"地面散落废弃绳索及建筑杂物，作业通道不畅；架体底部物料堆置凌乱，影响应急逃生及日常安全巡查。\",\n      \"severity\": \"low\",\n      \"regulation\": \"JGJ59-2011《建筑施工安全检查标准》文明施工检查评分表\",\n      \"suggestion\": \"收工前清理架体底部废料至指定区域；划定宽≥1m应急通道并全程保持畅通。\"\n    }\n  ],\n  \"model_meta\": {\n    \"provider\": \"claude_cli\",\n    \"model\": \"placeholder\",\n    \"latency_ms\": 0\n  }\n}\n```",
       "stop_reason": "end_turn",
-      "session_id": "2960bdc1-d12f-4b7a-8cf8-adc461747e46",
-      "total_cost_usd": 0.15320040000000001,
+      "session_id": "1a749fb5-b715-477c-a019-cbd931985380",
+      "total_cost_usd": 0.3043065,
       "usage": {
-        "input_tokens": 5,
-        "cache_creation_input_tokens": 11986,
-        "cache_read_input_tokens": 52793,
-        "output_tokens": 6160,
+        "input_tokens": 7,
+        "cache_creation_input_tokens": 20498,
+        "cache_read_input_tokens": 104260,
+        "output_tokens": 13076,
         "server_tool_use": {
           "web_search_requests": 0,
           "web_fetch_requests": 0
         },
         "service_tier": "standard",
         "cache_creation": {
-          "ephemeral_1h_input_tokens": 11986,
+          "ephemeral_1h_input_tokens": 20498,
           "ephemeral_5m_input_tokens": 0
         },
         "inference_geo": "",
         "iterations": [
           {
             "input_tokens": 1,
-            "output_tokens": 1279,
-            "cache_read_input_tokens": 19301,
-            "cache_creation_input_tokens": 7405,
+            "output_tokens": 1092,
+            "cache_read_input_tokens": 26566,
+            "cache_creation_input_tokens": 8652,
             "cache_creation": {
               "ephemeral_5m_input_tokens": 0,
-              "ephemeral_1h_input_tokens": 7405
+              "ephemeral_1h_input_tokens": 8652
             },
             "type": "message"
           }
@@ -54,63 +54,55 @@
       },
       "modelUsage": {
         "claude-sonnet-4-6": {
-          "inputTokens": 5,
-          "outputTokens": 6160,
-          "cacheReadInputTokens": 52793,
-          "cacheCreationInputTokens": 11986,
+          "inputTokens": 7,
+          "outputTokens": 13076,
+          "cacheReadInputTokens": 104260,
+          "cacheCreationInputTokens": 20498,
           "webSearchRequests": 0,
-          "costUSD": 0.15320040000000001,
+          "costUSD": 0.3043065,
           "contextWindow": 200000,
           "maxOutputTokens": 32000
         }
       },
       "permission_denials": [],
       "structured_output": {
-        "inspection_id": "a3f7c821-04b1-4e9d-b562-88d3e0f15c20",
-        "created_at": "2026-05-19T08:00:00Z",
-        "plain_warning": "支撑架缺斜撑，随时可能垮！",
-        "summary": "满堂碗扣式模板支撑架剪刀撑严重不足、顶部操作层无防护、临时用电线路裸露，整体风险等级为高",
+        "inspection_id": "a3f7b2c1-4e8d-4a9f-b6c3-d2e1f5a08b74",
+        "created_at": "2026-05-19T00:00:00Z",
+        "plain_warning": "支撑架剪刀撑严重不足，随时可能坍塌！",
+        "summary": "室内满堂支撑架剪刀撑体系严重缺失（高风险），叠加临时用电导线裸露及个人防护不到位，综合评定为高风险现场，建议立即停工整改。",
         "overall_severity": "high",
         "hazards": [
           {
             "category_code": "H4",
             "category_name": "坍塌",
-            "description": "满堂碗扣式模板支撑架竖向剪刀撑及水平斜撑设置明显不足，部分区域横向连杆缺失；架体底部地面潮湿，可调底座与地面间垫板情况不明，底部承载条件存疑；支撑架整体高宽比偏大，抗侧稳定性不足",
+            "description": "满堂支撑架仅在局部设有少量斜撑，未形成完整纵横向剪刀撑体系；梁下加密立杆与主架横杆扣件连接节点不清晰，存在整体失稳风险。",
             "severity": "high",
-            "regulation": "JGJ162-2008《建筑施工模板安全技术规范》第6.1.9条；JGJ130-2011《建筑施工扣件式钢管脚手架安全技术规范》第6.6.1条",
-            "suggestion": "立即暂停支撑架上方及周边作业，由专业技术人员对架体进行安全验算；按方案补设纵横向剪刀撑（间距不大于4跨且不大于6 m），底部铺设垫板并确认地基承载力满足要求后方可恢复作业"
-          },
-          {
-            "category_code": "H1",
-            "category_name": "高处坠落",
-            "description": "模板支撑架顶部操作层四周未设防护栏杆及水平安全网；架体无专用爬梯或斜道，攀登通道不明确",
-            "severity": "high",
-            "regulation": "JGJ80-2016《建筑施工高处作业安全技术规范》第4.1.1条、第6.2.1条",
-            "suggestion": "在支撑架顶部操作层四周设置高度不低于1.2 m的防护栏杆及挡脚板；搭设专用爬梯，禁止攀爬立杆上下；顶层作业人员须正确佩戴安全带并挂设于可靠锚固点"
+            "regulation": "JGJ162-2008《建筑施工模板安全技术规范》第6.1.9条；JGJ130-2011《扣件式钢管脚手架安全技术规范》第6.6.3条",
+            "suggestion": "立即停工；按方案补设纵横向剪刀撑；梁下加密杆与立杆用直角扣件双向固定，验收合格后方可浇筑。"
           },
           {
             "category_code": "H3",
             "category_name": "触电",
-            "description": "架体顶部临时照明线路沿杆件缠绕敷设，导线无绝缘套管保护；线路接头处理情况不明，存在漏电隐患；现场未见独立配电箱及漏电保护装置",
+            "description": "架体顶部临时照明导线裸露穿插于钢管杆件间，未采用绝缘套管保护；架体未见可靠重复接地，存在漏电触电风险。",
             "severity": "medium",
-            "regulation": "JGJ46-2005《施工现场临时用电安全技术规范》第7.2.1条、第8.2.5条",
-            "suggestion": "对架体范围内临时照明线路全面排查，导线采用绝缘套管或穿硬质管敷设；接头做绝缘包扎并固定于绝缘子；配置漏电保护开关（动作电流≤30 mA），确保三级配电两级保护到位"
-          },
-          {
-            "category_code": "H2",
-            "category_name": "物体打击",
-            "description": "架体顶部模板区域存在散落木料及施工材料，高处坠物风险显著；地面堆放绳索、碎料等杂物，通道不畅",
-            "severity": "medium",
-            "regulation": "JGJ59-2011《建筑施工安全检查标准》第3.0.5条",
-            "suggestion": "清理架体顶部所有散落材料并规范堆放固定；架体周边设置警戒区域及警示标志；地面通道杂物及时清运，保持通行宽度不小于1.0 m"
+            "regulation": "JGJ46-2005《施工现场临时用电安全技术规范》第7.2.1条、第5.1.2条",
+            "suggestion": "导线全程加装绝缘套管；架体立杆处设重复接地（电阻≤10Ω）；专职电工持证定期巡检。"
           },
           {
             "category_code": "H9",
             "category_name": "个人防护缺失",
-            "description": "现场可见作业人员身着反光背心但未见明确佩戴安全帽；高处作业区域未见人员佩戴安全带",
+            "description": "现场作业人员仅佩戴反光背心，头部安全帽佩戴状态不明，在满堂架体作业区域内未见完整个人防护装备。",
+            "severity": "medium",
+            "regulation": "GB 2811-2019《头部防护 安全帽》；JGJ59-2011《建筑施工安全检查标准》第3.0.4条",
+            "suggestion": "要求所有人员正确佩戴符合GB2811标准安全帽；管理人员入场检查，违者立即整改纳入班前交底。"
+          },
+          {
+            "category_code": "H10",
+            "category_name": "其他/文明施工",
+            "description": "地面散落废弃绳索及建筑杂物，作业通道不畅；架体底部物料堆置凌乱，影响应急逃生及日常安全巡查。",
             "severity": "low",
-            "regulation": "GB2811-2019《头部防护 安全帽》；JGJ80-2016第5.2.1条",
-            "suggestion": "强制要求所有进场人员佩戴合格安全帽（帽带扣紧）；2 m以上高处作业必须正确佩戴安全带并挂设于独立锚固点；安全员在进场口开展PPE检查并记录"
+            "regulation": "JGJ59-2011《建筑施工安全检查标准》文明施工检查评分表",
+            "suggestion": "收工前清理架体底部废料至指定区域；划定宽≥1m应急通道并全程保持畅通。"
           }
         ],
         "model_meta": {
@@ -121,9 +113,9 @@
       },
       "terminal_reason": "completed",
       "fast_mode_state": "off",
-      "uuid": "ecb8c381-3bce-40fd-929f-51ccd7dc2373"
+      "uuid": "db8e2654-4bb5-4986-be55-13870ed6364b"
     }
   },
-  "captured_at": "2026-05-19T06:51:40Z",
+  "captured_at": "2026-05-19T09:06:02Z",
   "captured_by": "scripts/replay_capture.py"
 }

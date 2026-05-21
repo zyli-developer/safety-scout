@@ -1,0 +1,117 @@
+// iOS HIG grouped card：白底、轻分割线、无强调色块、内容主导。
+.card {
+  padding: 18px 20px 20px;
+  margin: 8px 16px;
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+.indexBadge {
+  font-size: 22px;
+  color: #8e8e93;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
+}
+
+.categoryName {
+  font-size: 30px;
+  font-weight: 600;
+  color: #000000;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+
+.severityBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 22px;
+  font-weight: 600;
+  flex-shrink: 0;
+  letter-spacing: 0.2px;
+}
+
+.severityDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.description {
+  display: block;
+  font-size: 26px;
+  line-height: 1.5;
+  color: #1c1c1e;
+  margin-bottom: 12px;
+}
+
+.regulationToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 22px;
+  margin-bottom: 8px;
+  padding: 4px 0;
+  user-select: none;
+}
+
+.regulationToggleLabel {
+  color: #007aff;
+}
+
+.regulation {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background-color: #f2f2f7;
+  border-radius: 8px;
+  font-size: 22px;
+  line-height: 1.5;
+  color: #3c3c43;
+}
+
+.suggestionDivider {
+  height: 0.5px;
+  background-color: rgba(60, 60, 67, 0.12);
+  margin: 6px 0 12px;
+}
+
+.suggestion {
+  display: flex;
+  flex-direction: column;
+}
+
+.suggestionLabel {
+  font-size: 22px;
+  font-weight: 600;
+  color: #8e8e93;
+  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+  text-transform: none;
+}
+
+.suggestionText {
+  font-size: 26px;
+  line-height: 1.5;
+  color: #1c1c1e;
+}

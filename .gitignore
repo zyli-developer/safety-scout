@@ -16,6 +16,7 @@ node_modules/
 dist/
 .temp/
 .cache/
+.swc/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -45,3 +46,9 @@ local_data/
 backend/.venv/
 backend/local_data/
 backend/.env
+
+# ===== Phase 3 Miniprogram =====
+# 微信小程序个人配置（含个人 AppID）；team-shared 配置走 project.config.json
+miniprogram/project.private.config.json
+# H5 smoke test 截图：每次跑会变，不入库
+miniprogram/tests/e2e/*.png

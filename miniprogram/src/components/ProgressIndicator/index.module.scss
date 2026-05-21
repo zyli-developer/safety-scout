@@ -1,0 +1,100 @@
+// iOS HIG：systemActivityIndicator 风格 spinner + 居中文案，
+// 三段步骤改为水平 mini stepper（无连接渐变 / 无 pulse / 无 emoji）。
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120px 32px 60px;
+  min-height: 80vh;
+  background-color: #f2f2f7;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 122, 255, 0.18);
+  border-top-color: #007aff;
+  animation: rotate 0.9s linear infinite;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 30px;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 4px;
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  font-size: 22px;
+  color: #8e8e93;
+  margin-bottom: 48px;
+}
+
+.steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+
+  &[data-state='done'] {
+    background-color: #34c759;
+  }
+  &[data-state='active'] {
+    background-color: #007aff;
+  }
+  &[data-state='pending'] {
+    background-color: #d1d1d6;
+  }
+}
+
+.label {
+  font-size: 22px;
+  letter-spacing: 0.2px;
+
+  &[data-state='done'] {
+    color: #34c759;
+    font-weight: 500;
+  }
+  &[data-state='active'] {
+    color: #007aff;
+    font-weight: 600;
+  }
+  &[data-state='pending'] {
+    color: #8e8e93;
+    font-weight: 400;
+  }
+}
+
+.connector {
+  width: 32px;
+  height: 1px;
+  background-color: #d1d1d6;
+  margin: 0 12px;
+}
+
+.elapsed {
+  font-size: 22px;
+  color: #8e8e93;
+  margin-top: 32px;
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}

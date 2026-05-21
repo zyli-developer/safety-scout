@@ -2,50 +2,50 @@
   "input": {
     "image_sha256": "604ae06139d2f07db86492eed16fc78a1810a7ed5da7ebab8d184d27d2be082e",
     "image_path": "tests/fixtures/images/case_002_scaffolding_and_structural_components_not_protected.jpg",
-    "prompt_version": "v2",
+    "prompt_version": "v3",
     "provider": "claude_cli"
   },
   "output": {
-    "content": "{\"inspection_id\":\"a1b2c3d4-0001-0000-0000-000000000000\",\"created_at\":\"2026-05-19T00:00:00Z\",\"plain_warning\":\"边缘缺口敞开安全网松垮，人员随时坠落\",\"summary\":\"现场整体风险等级为高：脚手架踏板与结构边梁之间临边缺口未封闭，安全平网松弛固定点稀疏失去兜底效果，临边作业人员未见佩戴安全带，高坠风险极高。\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"脚手架踏板与结构边梁之间存在较大临边缺口，钢筋外露且缺口未铺板封闭；现场安全平网铺挂松弛、固定绳结稀疏，网体下垂明显，无法形成有效兜底防护；临边区域未设置高度≥1.2m的防护栏杆，人员可直接踩空坠落\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第4.1.1条（临边作业必须设置防护栏杆）；JGJ80-2016 第6.2.2条（安全网应绷紧、固定牢靠）\",\"suggestion\":\"立即停止临边区域作业；用木跳板或钢板满铺封堵脚手架与边梁间缝隙；重新张挂安全平网并收紧，绳结间距≤45cm，固定至可靠结构；沿临边设置上下两道防护栏杆，上杆高1.2m、下杆高0.6m，并设挡脚板\"},{\"category_code\":\"H9\",\"category_name\":\"个人防护缺失\",\"description\":\"照片右侧临边作业人员未见佩戴安全带及安全绳，在无防护栏杆的楼层边缘从事作业活动\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第5.2.1条（高处作业人员必须系挂安全带，安全带应挂在作业处上方的牢固构件上）\",\"suggestion\":\"要求所有临边作业人员立即配挂双钩安全带，安全绳挂钩锚固于上方可靠结构；在防护措施完善前禁止人员进入临边2m范围内作业，现场安全员全程旁站监督\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"placeholder\",\"latency_ms\":0}}",
+    "content": "{\"inspection_id\": \"f3a2c1d0-58e4-4b7a-9c30-1a8e2d3f4b56\", \"created_at\": \"2026-05-19T08:30:00Z\", \"plain_warning\": \"外架安全网松弛破损，高处坠落风险极高！\", \"summary\": \"外架与结构间密目式安全立网严重松弛固定失效，临边无刚性防护栏，整体风险等级高，须立即停止临边作业并整改。\", \"overall_severity\": \"high\", \"hazards\": [{\"category_code\": \"H1\", \"category_name\": \"高处坠落\", \"description\": \"外架与建筑结构间密目式安全立网松弛下垂，绳扣非标，存在明显缝隙；临边未设≥1.2m刚性防护栏\", \"severity\": \"high\", \"regulation\": \"JGJ80-2016 第4.3.1条；JGJ59-2011 安全网设置章节（密目网固定间距≤45cm）\", \"suggestion\": \"重新张紧立网，绳扣间距≤45cm，消除缝隙；张挂安全平网；临边补设≥1.2m双横杆防护栏；整改前禁止临边作业\"}, {\"category_code\": \"H2\", \"category_name\": \"物体打击\", \"description\": \"安全立网松弛失效，无法拦截高处坠物；结构边缘混凝土残渣未清理，存在随振动坠落风险\", \"severity\": \"high\", \"regulation\": \"JGJ59-2011 第3.0.5条\", \"suggestion\": \"恢复立网防护功能；外架内侧张挂安全平网；清理结构边缘残渣；正下方设硬质防护棚或封闭警戒区\"}, {\"category_code\": \"H9\", \"category_name\": \"个人防护缺失\", \"description\": \"临边高处作业人员未见系挂安全带，于无临边防护的楼层边沿处作业\", \"severity\": \"high\", \"regulation\": \"JGJ80-2016 第6.1.1条\", \"suggestion\": \"所有临边高处作业人员必须系挂双钩安全带，安全绳挂至独立可靠锚固点；未佩戴者立即停工\"}], \"model_meta\": {\"provider\": \"claude_cli\", \"model\": \"placeholder\", \"latency_ms\": 0}}",
     "model": "sonnet",
-    "latency_ms": 73167,
+    "latency_ms": 142239,
     "provider_payload": {
       "type": "result",
       "subtype": "success",
       "is_error": false,
       "api_error_status": null,
-      "duration_ms": 73167,
-      "duration_api_ms": 65823,
-      "ttft_ms": 5954,
-      "num_turns": 3,
-      "result": "{\"inspection_id\":\"a1b2c3d4-0001-0000-0000-000000000000\",\"created_at\":\"2026-05-19T00:00:00Z\",\"plain_warning\":\"边缘缺口敞开安全网松垮，人员随时坠落\",\"summary\":\"现场整体风险等级为高：脚手架踏板与结构边梁之间临边缺口未封闭，安全平网松弛固定点稀疏失去兜底效果，临边作业人员未见佩戴安全带，高坠风险极高。\",\"overall_severity\":\"high\",\"hazards\":[{\"category_code\":\"H1\",\"category_name\":\"高处坠落\",\"description\":\"脚手架踏板与结构边梁之间存在较大临边缺口，钢筋外露且缺口未铺板封闭；现场安全平网铺挂松弛、固定绳结稀疏，网体下垂明显，无法形成有效兜底防护；临边区域未设置高度≥1.2m的防护栏杆，人员可直接踩空坠落\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第4.1.1条（临边作业必须设置防护栏杆）；JGJ80-2016 第6.2.2条（安全网应绷紧、固定牢靠）\",\"suggestion\":\"立即停止临边区域作业；用木跳板或钢板满铺封堵脚手架与边梁间缝隙；重新张挂安全平网并收紧，绳结间距≤45cm，固定至可靠结构；沿临边设置上下两道防护栏杆，上杆高1.2m、下杆高0.6m，并设挡脚板\"},{\"category_code\":\"H9\",\"category_name\":\"个人防护缺失\",\"description\":\"照片右侧临边作业人员未见佩戴安全带及安全绳，在无防护栏杆的楼层边缘从事作业活动\",\"severity\":\"high\",\"regulation\":\"JGJ80-2016 第5.2.1条（高处作业人员必须系挂安全带，安全带应挂在作业处上方的牢固构件上）\",\"suggestion\":\"要求所有临边作业人员立即配挂双钩安全带，安全绳挂钩锚固于上方可靠结构；在防护措施完善前禁止人员进入临边2m范围内作业，现场安全员全程旁站监督\"}],\"model_meta\":{\"provider\":\"claude_cli\",\"model\":\"placeholder\",\"latency_ms\":0}}",
+      "duration_ms": 142239,
+      "duration_api_ms": 133101,
+      "ttft_ms": 4156,
+      "num_turns": 4,
+      "result": "```json\n{\n  \"inspection_id\": \"f3a2c1d0-58e4-4b7a-9c30-1a8e2d3f4b56\",\n  \"created_at\": \"2026-05-19T08:30:00Z\",\n  \"plain_warning\": \"外架安全网松弛破损，高处坠落风险极高！\",\n  \"summary\": \"外架与结构间密目式安全立网严重松弛固定失效，临边无刚性防护栏，整体风险等级高，须立即停止临边作业并整改。\",\n  \"overall_severity\": \"high\",\n  \"hazards\": [\n    {\n      \"category_code\": \"H1\",\n      \"category_name\": \"高处坠落\",\n      \"description\": \"外架与建筑结构间密目式安全立网松弛下垂，绳扣非标，存在明显缝隙；临边未设≥1.2m刚性防护栏\",\n      \"severity\": \"high\",\n      \"regulation\": \"JGJ80-2016 第4.3.1条；JGJ59-2011 安全网设置章节（密目网固定间距≤45cm）\",\n      \"suggestion\": \"重新张紧立网，绳扣间距≤45cm，消除缝隙；张挂安全平网；临边补设≥1.2m双横杆防护栏；整改前禁止临边作业\"\n    },\n    {\n      \"category_code\": \"H2\",\n      \"category_name\": \"物体打击\",\n      \"description\": \"安全立网松弛失效，无法拦截高处坠物；结构边缘混凝土残渣未清理，存在随振动坠落风险\",\n      \"severity\": \"high\",\n      \"regulation\": \"JGJ59-2011 第3.0.5条\",\n      \"suggestion\": \"恢复立网防护功能；外架内侧张挂安全平网；清理结构边缘残渣；正下方设硬质防护棚或封闭警戒区\"\n    },\n    {\n      \"category_code\": \"H9\",\n      \"category_name\": \"个人防护缺失\",\n      \"description\": \"临边高处作业人员未见系挂安全带，于无临边防护的楼层边沿处作业\",\n      \"severity\": \"high\",\n      \"regulation\": \"JGJ80-2016 第6.1.1条\",\n      \"suggestion\": \"所有临边高处作业人员必须系挂双钩安全带，安全绳挂至独立可靠锚固点；未佩戴者立即停工\"\n    }\n  ],\n  \"model_meta\": {\n    \"provider\": \"claude_cli\",\n    \"model\": \"placeholder\",\n    \"latency_ms\": 0\n  }\n}\n```",
       "stop_reason": "end_turn",
-      "session_id": "a269032e-1347-4abd-8186-d997eb740c57",
-      "total_cost_usd": 0.0921936,
+      "session_id": "a5713d9d-1f1e-4e22-9d98-60fcbb3d2291",
+      "total_cost_usd": 0.21558495,
       "usage": {
-        "input_tokens": 5,
-        "cache_creation_input_tokens": 8094,
-        "cache_read_input_tokens": 52787,
-        "output_tokens": 3066,
+        "input_tokens": 6,
+        "cache_creation_input_tokens": 16373,
+        "cache_read_input_tokens": 80244,
+        "output_tokens": 8673,
         "server_tool_use": {
           "web_search_requests": 0,
           "web_fetch_requests": 0
         },
         "service_tier": "standard",
         "cache_creation": {
-          "ephemeral_1h_input_tokens": 8094,
+          "ephemeral_1h_input_tokens": 16373,
           "ephemeral_5m_input_tokens": 0
         },
         "inference_geo": "",
         "iterations": [
           {
             "input_tokens": 1,
-            "output_tokens": 737,
-            "cache_read_input_tokens": 19296,
-            "cache_creation_input_tokens": 3518,
+            "output_tokens": 782,
+            "cache_read_input_tokens": 25096,
+            "cache_creation_input_tokens": 5997,
             "cache_creation": {
               "ephemeral_5m_input_tokens": 0,
-              "ephemeral_1h_input_tokens": 3518
+              "ephemeral_1h_input_tokens": 5997
             },
             "type": "message"
           }
@@ -54,39 +54,47 @@
       },
       "modelUsage": {
         "claude-sonnet-4-6": {
-          "inputTokens": 5,
-          "outputTokens": 3066,
-          "cacheReadInputTokens": 52787,
-          "cacheCreationInputTokens": 8094,
+          "inputTokens": 6,
+          "outputTokens": 8673,
+          "cacheReadInputTokens": 80244,
+          "cacheCreationInputTokens": 16373,
           "webSearchRequests": 0,
-          "costUSD": 0.0921936,
+          "costUSD": 0.21558495,
           "contextWindow": 200000,
           "maxOutputTokens": 32000
         }
       },
       "permission_denials": [],
       "structured_output": {
-        "inspection_id": "a1b2c3d4-0001-0000-0000-000000000000",
-        "created_at": "2026-05-19T00:00:00Z",
-        "plain_warning": "边缘缺口敞开安全网松垮，人员随时坠落",
-        "summary": "现场整体风险等级为高：脚手架踏板与结构边梁之间临边缺口未封闭，安全平网松弛固定点稀疏失去兜底效果，临边作业人员未见佩戴安全带，高坠风险极高。",
+        "inspection_id": "f3a2c1d0-58e4-4b7a-9c30-1a8e2d3f4b56",
+        "created_at": "2026-05-19T08:30:00Z",
+        "plain_warning": "外架安全网松弛破损，高处坠落风险极高！",
+        "summary": "外架与结构间密目式安全立网严重松弛固定失效，临边无刚性防护栏，整体风险等级高，须立即停止临边作业并整改。",
         "overall_severity": "high",
         "hazards": [
           {
             "category_code": "H1",
             "category_name": "高处坠落",
-            "description": "脚手架踏板与结构边梁之间存在较大临边缺口，钢筋外露且缺口未铺板封闭；现场安全平网铺挂松弛、固定绳结稀疏，网体下垂明显，无法形成有效兜底防护；临边区域未设置高度≥1.2m的防护栏杆，人员可直接踩空坠落",
+            "description": "外架与建筑结构间密目式安全立网松弛下垂，绳扣非标，存在明显缝隙；临边未设≥1.2m刚性防护栏",
             "severity": "high",
-            "regulation": "JGJ80-2016 第4.1.1条（临边作业必须设置防护栏杆）；JGJ80-2016 第6.2.2条（安全网应绷紧、固定牢靠）",
-            "suggestion": "立即停止临边区域作业；用木跳板或钢板满铺封堵脚手架与边梁间缝隙；重新张挂安全平网并收紧，绳结间距≤45cm，固定至可靠结构；沿临边设置上下两道防护栏杆，上杆高1.2m、下杆高0.6m，并设挡脚板"
+            "regulation": "JGJ80-2016 第4.3.1条；JGJ59-2011 安全网设置章节（密目网固定间距≤45cm）",
+            "suggestion": "重新张紧立网，绳扣间距≤45cm，消除缝隙；张挂安全平网；临边补设≥1.2m双横杆防护栏；整改前禁止临边作业"
+          },
+          {
+            "category_code": "H2",
+            "category_name": "物体打击",
+            "description": "安全立网松弛失效，无法拦截高处坠物；结构边缘混凝土残渣未清理，存在随振动坠落风险",
+            "severity": "high",
+            "regulation": "JGJ59-2011 第3.0.5条",
+            "suggestion": "恢复立网防护功能；外架内侧张挂安全平网；清理结构边缘残渣；正下方设硬质防护棚或封闭警戒区"
           },
           {
             "category_code": "H9",
             "category_name": "个人防护缺失",
-            "description": "照片右侧临边作业人员未见佩戴安全带及安全绳，在无防护栏杆的楼层边缘从事作业活动",
+            "description": "临边高处作业人员未见系挂安全带，于无临边防护的楼层边沿处作业",
             "severity": "high",
-            "regulation": "JGJ80-2016 第5.2.1条（高处作业人员必须系挂安全带，安全带应挂在作业处上方的牢固构件上）",
-            "suggestion": "要求所有临边作业人员立即配挂双钩安全带，安全绳挂钩锚固于上方可靠结构；在防护措施完善前禁止人员进入临边2m范围内作业，现场安全员全程旁站监督"
+            "regulation": "JGJ80-2016 第6.1.1条",
+            "suggestion": "所有临边高处作业人员必须系挂双钩安全带，安全绳挂至独立可靠锚固点；未佩戴者立即停工"
           }
         ],
         "model_meta": {
@@ -97,9 +105,9 @@
       },
       "terminal_reason": "completed",
       "fast_mode_state": "off",
-      "uuid": "93896504-7184-45ef-81f7-32772472d87b"
+      "uuid": "08358791-6ffb-40fa-bc5c-75bf2b77638d"
     }
   },
-  "captured_at": "2026-05-19T06:45:00Z",
+  "captured_at": "2026-05-19T08:59:04Z",
   "captured_by": "scripts/replay_capture.py"
 }
