@@ -78,7 +78,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `provider` | string | 是 | `"claude_cli"` \| `"fake"`（`fake` 仅集成测试用） |
+| `provider` | string | 是 | `"claude_cli"` \| `"doubao"` \| `"fake"`（`fake` 仅集成测试用） |
 | `model` | string | 是 | 具体模型 ID，如 `"claude-sonnet-4-6"` |
 | `latency_ms` | integer | 是 | LLM 调用耗时（毫秒），不含图片落盘和 schema 校验 |
 
