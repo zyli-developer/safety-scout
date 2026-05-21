@@ -12,6 +12,7 @@
  * - idle：默认提示文案
  * - hover：拖拽悬停（data-hover='true'）—— SCSS 用 [data-hover='true'] 选择器变色
  * - uploading：禁用交互 + aria-busy='true'
+ * - 键盘可达：tabIndex=0、Enter/Space 等价于点击（uploading 时 tabIndex=-1，键盘不响应）
  */
 import { useRef, useState } from 'react';
 
@@ -49,7 +50,14 @@ export function UploadDropzone({ onSelect, uploading = false }: UploadDropzonePr
       role="button"
       aria-busy={uploading}
       data-hover={hover}
+      tabIndex={uploading ? -1 : 0}
       onClick={trigger}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          trigger();
+        }
+      }}
       onDragEnter={(e) => {
         e.preventDefault();
         setHover(true);

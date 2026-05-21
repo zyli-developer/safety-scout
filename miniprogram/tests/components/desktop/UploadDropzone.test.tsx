@@ -79,4 +79,34 @@ describe('UploadDropzone', () => {
     fireEvent.dragLeave(zone);
     expect(zone).toHaveAttribute('data-hover', 'false');
   });
+
+  it('activates via Enter key (keyboard a11y)', () => {
+    const fn = jest.fn();
+    const { container } = render(<UploadDropzone onSelect={fn} />);
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const clickSpy = jest.spyOn(input, 'click').mockImplementation(() => undefined);
+
+    const zone = screen.getByRole('button');
+    expect(zone).toHaveAttribute('tabindex', '0');
+
+    fireEvent.keyDown(zone, { key: 'Enter' });
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('activates via Space key and is not focusable when uploading', () => {
+    const fn = jest.fn();
+    const { container, rerender } = render(<UploadDropzone onSelect={fn} />);
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const clickSpy = jest.spyOn(input, 'click').mockImplementation(() => undefined);
+
+    fireEvent.keyDown(screen.getByRole('button'), { key: ' ' });
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+
+    // Uploading 时 tabindex 退到 -1，键盘不响应
+    rerender(<UploadDropzone onSelect={fn} uploading />);
+    expect(screen.getByRole('button')).toHaveAttribute('tabindex', '-1');
+    clickSpy.mockClear();
+    fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
+    expect(clickSpy).not.toHaveBeenCalled();
+  });
 });
