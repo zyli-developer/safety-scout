@@ -6,10 +6,9 @@ import { getInspection } from '../../api/inspections';
 import { HazardCard } from '../../components/HazardCard';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { Icon } from '../../components/Icon';
-import { HeaderBand } from '../../components/HeaderBand';
+import { AppBar } from '../../components/AppBar';
 import { sortBySeverity, SEVERITY_LABEL, SEVERITY_COLOR } from '../../utils/severity';
 import { mapApiError } from '../../utils/errorMessage';
-import { relativeTime } from '../../utils/relativeTime';
 import { ApiError } from '../../api/client';
 import {
   DEFAULT_POLL_INTERVAL_MS,
@@ -87,13 +86,9 @@ function ErrorView({
 function SucceededReport({ report }: { report: ReportPayload }) {
   const sorted = sortBySeverity(report.hazards);
   const severity = report.overall_severity;
-  const meta = `${SEVERITY_LABEL[severity]} · ${relativeTime(report.created_at)}`;
   return (
     <View className={styles.page}>
-      <HeaderBand
-        identifier={`NO.${formatIdentifier(report.created_at)}`}
-        subtitle={meta}
-      />
+      <AppBar title={`巡检报告 · NO.${formatIdentifier(report.created_at)}`} />
 
       <View className={styles.titleBlock}>
         <Text className={styles.eyebrow}>INSPECTION REPORT</Text>

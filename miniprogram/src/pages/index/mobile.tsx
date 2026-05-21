@@ -3,7 +3,7 @@ import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 
 import { BigButton } from '../../components/BigButton';
-import { HeaderBand } from '../../components/HeaderBand';
+import { Brand } from '../../components/Brand';
 import { captureImage } from '../../hooks/useImageCapture';
 import { createInspection } from '../../api/inspections';
 import { mapApiError } from '../../utils/errorMessage';
@@ -48,7 +48,7 @@ export default function MobileIndex() {
       {isH5 && <View className={styles.rulerLeft} />}
       {isH5 && <View className={styles.rulerRight} />}
 
-      <HeaderBand subtitle="拍照即查 · AI 30s 出报告" />
+      <Brand size="lg" />
 
       <View className={styles.titleBlock}>
         <Text className={styles.h1}>工地隐患识别</Text>

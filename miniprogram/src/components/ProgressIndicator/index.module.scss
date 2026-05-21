@@ -1,85 +1,36 @@
-// Dossier readout：等宽字 + 滴答 dots + numbered step rows.
-.container {
+.wrap {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-6) var(--space-3);
-  background-color: var(--color-paper);
-  min-height: 100vh;
+  gap: var(--s3);
+  padding: var(--s3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
 }
 
-.readout {
+.head {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-family: var(--font-mono);
-  border-top: var(--border-charcoal);
-  border-bottom: var(--border-charcoal);
-  padding: var(--space-2) 0;
+  align-items: center;
+  gap: var(--s3);
 }
 
-.readoutLabel {
-  font-size: 14px;
-  letter-spacing: 3px;
-  color: var(--color-charcoal);
-}
-
-.readoutDots {
-  flex: 1;
-  font-size: 14px;
-  color: var(--color-caliper-grey);
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.readoutTime {
-  font-size: 14px;
-  color: var(--color-eng-red);
-}
-
-// readout band 下方的预期耗时小字 —— 第一次用的用户看到也安心，知道 60-180s 不是卡了。
-.readoutHint {
-  display: block;
-  margin-top: var(--space-1);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 1px;
-  color: var(--color-caliper-grey);
-}
-
-.steps {
+.headText {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 4px;
 }
 
-.step {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-2) 0;
-  font-family: var(--font-mono);
-
-  &[data-state='done'] {
-    color: var(--color-caliper-grey);
-  }
-  &[data-state='active'] {
-    color: var(--color-eng-red);
-  }
-  &[data-state='pending'] {
-    color: var(--color-caliper-grey);
-    opacity: 0.5;
-  }
-}
-
-.stepIndex {
-  font-family: var(--font-mono);
-  font-size: 16px;
+.eyebrow {
+  font-family: var(--f-mono);
   font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--ink-3);
+  text-transform: uppercase;
 }
 
-.stepLabel {
-  font-family: var(--font-body);
-  font-size: var(--fs-body);
-  letter-spacing: 1px;
+.hint {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
 }

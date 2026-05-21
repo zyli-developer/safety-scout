@@ -35,13 +35,15 @@ describe('DesktopIndex', () => {
   });
 
   it('renders dropzone + 拍摄要点 list + AI 引擎 footer', () => {
-    render(<DesktopIndex />);
+    const { container } = render(<DesktopIndex />);
     expect(screen.getByText('工地隐患识别')).toBeInTheDocument();
     expect(screen.getByText(/AI · SITE HAZARD INSPECTION/)).toBeInTheDocument();
     expect(screen.getByText(/拍摄要点/)).toBeInTheDocument();
     expect(screen.getByText(/贴近隐患位置/)).toBeInTheDocument();
     expect(screen.getByText(/AI ENGINE/)).toBeInTheDocument();
-    expect(screen.getByRole('button')).toHaveAttribute('aria-busy', 'false');
+    // TopNav 引入后页面里出现多个 role=button —— 用 aria-busy 锁定 dropzone（独有此属性）。
+    const dropzone = container.querySelector('[aria-busy]');
+    expect(dropzone).toHaveAttribute('aria-busy', 'false');
   });
 
   it('navigates to report on successful upload', async () => {

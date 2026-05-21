@@ -14,7 +14,7 @@ import { View, Text } from '@tarojs/components';
 import { usePolling } from '../../hooks/usePolling';
 import { getInspection } from '../../api/inspections';
 import { HazardCard } from '../../components/HazardCard';
-import { HeaderBand } from '../../components/HeaderBand';
+import { TopNav } from '../../components/TopNav';
 import { Icon } from '../../components/Icon';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { ReportSidebar } from '../../components/desktop/ReportSidebar';
@@ -94,10 +94,7 @@ function DesktopSucceededReport({ report }: { report: ReportPayload }) {
   const sorted = sortBySeverity(report.hazards);
   return (
     <View className={styles.page}>
-      <HeaderBand
-        identifier={`NO.${formatIdentifier(report.created_at)}`}
-        subtitle={report.summary}
-      />
+      <TopNav activeTab="reports" />
 
       <View className={styles.body}>
         <View className={styles.aside}>
@@ -122,21 +119,3 @@ function DesktopSucceededReport({ report }: { report: ReportPayload }) {
   );
 }
 
-function formatIdentifier(iso: string): string {
-  try {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return iso;
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    const seq = Math.abs(hash(iso)) % 10000;
-    return `${yyyy}-${mm}-${dd}-${String(seq).padStart(4, '0')}`;
-  } catch {
-    return iso;
-  }
-}
-function hash(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
-  return h;
-}

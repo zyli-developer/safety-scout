@@ -11,7 +11,7 @@ import Taro from '@tarojs/taro';
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 
-import { HeaderBand } from '../../components/HeaderBand';
+import { TopNav } from '../../components/TopNav';
 import { UploadDropzone } from '../../components/desktop/UploadDropzone';
 import { createInspection } from '../../api/inspections';
 import { mapApiError } from '../../utils/errorMessage';
@@ -45,7 +45,7 @@ export default function DesktopIndex() {
 
   return (
     <View className={styles.page}>
-      <HeaderBand subtitle="桌面端 · AI 30s 出报告" />
+      <TopNav activeTab="inspect" />
 
       <View className={styles.titleBlock}>
         <Text className={styles.h1}>工地隐患识别</Text>
