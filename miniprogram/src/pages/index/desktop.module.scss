@@ -1,0 +1,116 @@
+// DesktopIndex 桌面布局：左右分栏 60/40，整页 max-width 1200px 居中。
+// 字号用 *-desktop 变量，不污染 tokens.scss。
+
+:root {
+  --fs-body-desktop: 16px;
+  --fs-h1-desktop: 48px;
+  --fs-eyebrow-desktop: 11px;
+  --space-desktop-gutter: 48px;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-desktop-gutter);
+  background-color: var(--color-paper);
+}
+
+.titleBlock {
+  padding: var(--space-5) 0 var(--space-3);
+}
+
+.h1 {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--fs-h1-desktop);
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: var(--color-charcoal);
+  line-height: 1.1;
+}
+
+.h1Latin {
+  display: block;
+  margin-top: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow-desktop);
+  font-weight: 400;
+  letter-spacing: 4px;
+  color: var(--color-caliper-grey);
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 6fr 4fr;
+  gap: var(--space-desktop-gutter);
+  padding: var(--space-3) 0 var(--space-5);
+}
+
+.left {
+  display: flex;
+  align-items: stretch;
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tipsCard,
+.engineCard {
+  padding: var(--space-3);
+  border: var(--border-charcoal);
+  background-color: var(--color-paper);
+}
+
+.sectionRule {
+  border-top: var(--border-charcoal);
+  padding-top: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.sectionLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow-desktop);
+  letter-spacing: 3px;
+  color: var(--color-charcoal);
+}
+
+.tipRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+}
+
+.tipIndex {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-eng-red);
+}
+
+.tipText {
+  font-size: var(--fs-body-desktop);
+  color: var(--color-charcoal);
+  line-height: 1.5;
+}
+
+.engineLabel {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow-desktop);
+  letter-spacing: 3px;
+  color: var(--color-caliper-grey);
+  margin-bottom: var(--space-1);
+}
+
+.engineText {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-charcoal);
+  letter-spacing: 2px;
+}
