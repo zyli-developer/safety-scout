@@ -26,12 +26,6 @@ export const SEVERITY_SOFT: Record<Severity, string> = {
   low: '#DEEFE3',
 };
 
-/** @deprecated Use {@link SEVERITY_SOFT} — kept only for legacy HazardCard during clean-UI migration. */
-export const SEVERITY_BG_TINT = SEVERITY_SOFT;
-
-/** @deprecated Use {@link SEVERITY_COLOR} — kept only for legacy HazardCard during clean-UI migration. */
-export const SEVERITY_TEXT_ON_TINT = SEVERITY_COLOR;
-
 export const SEVERITY_LABEL: Record<Severity, string> = {
   high: '高风险',
   medium: '中风险',

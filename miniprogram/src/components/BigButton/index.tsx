@@ -1,13 +1,17 @@
-import { View, Text } from '@tarojs/components';
-
-import { Icon, type IconName } from '../Icon';
-
-import styles from './index.module.scss';
+/**
+ * BigButton — clean-minimal 版本：薄壳代理到 Button variant="hero"。
+ *
+ * 旧 dossier 形态（朱红填充 + 等距字 Latin 副标 + glyph 槽位）已废弃；新版是
+ * 安全橙 hero CTA + icon 圆 + 中文 title + 副文。保留 props API 让 pages/index
+ * 调用方在 Slice 3 阶段无需改动。
+ */
+import { Button } from '../Button';
+import type { IconName } from '../Icon';
 
 export interface BigButtonProps {
-  text: string;                  // 中文 label (e.g. "拍摄现场照片")
-  subtitle?: string;             // Latin uppercase subtitle (e.g. "CAPTURE INSPECTION PHOTO")
-  prefixGlyph?: IconName;        // Optional engineering glyph (e.g. 'plus-square')
+  text: string;
+  subtitle?: string;
+  prefixGlyph?: IconName;
   onTap: () => void;
   loading?: boolean;
   disabled?: boolean;
@@ -18,34 +22,18 @@ export function BigButton({
   subtitle,
   prefixGlyph,
   onTap,
-  loading = false,
-  disabled = false,
+  loading,
+  disabled,
 }: BigButtonProps) {
-  const isInteractive = !loading && !disabled;
-  const className = [
-    styles.button,
-    loading ? styles.loading : '',
-    disabled ? styles.disabled : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
-
   return (
-    <View
-      className={className}
-      onClick={isInteractive ? onTap : undefined}
-      role="button"
-      aria-disabled={!isInteractive}
-    >
-      {prefixGlyph && (
-        <View className={styles.glyphSlot}>
-          <Icon name={prefixGlyph} size={28} color="#F4EFE5" />
-        </View>
-      )}
-      <View className={styles.labels}>
-        <Text className={styles.labelZh}>{loading ? '处理中' : text}</Text>
-        {subtitle && <Text className={styles.labelEn}>{loading ? 'PROCESSING' : subtitle}</Text>}
-      </View>
-    </View>
+    <Button
+      variant="hero"
+      title={text}
+      subtitle={subtitle}
+      icon={prefixGlyph}
+      onTap={onTap}
+      loading={loading}
+      disabled={disabled}
+    />
   );
 }
