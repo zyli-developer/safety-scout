@@ -15,7 +15,7 @@
 
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--fs-eyebrow-desktop);
   letter-spacing: 4px;
   color: var(--color-caliper-grey);
 }
@@ -89,7 +89,7 @@
 }
 
 .summaryText {
-  font-size: 15px;
+  font-size: var(--fs-body-desktop);
   line-height: 1.6;
   color: var(--color-charcoal);
 }
