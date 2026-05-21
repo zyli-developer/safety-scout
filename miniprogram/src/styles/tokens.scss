@@ -1,17 +1,24 @@
-// Dossier design tokens — paper-document aesthetic.
+// Design tokens —— white + iOS-blue 调色板。
+// 从早期 "paper dossier" 米色调换成纯白底 + #007AFF 主蓝，severity 也走蓝色家族
+// （高=深蓝、中=系统蓝、低=浅蓝），不再用红/橙/绿。
+// Token 名字保留向后兼容（--color-paper / --color-eng-red 等）让现有组件 SCSS 不必
+// 全部 rename；语义上 "paper" 现在 = 主体背景白，"eng-red" 现在 = 主强调色蓝。
+// 组件代码注释里的 "paper" 与 "engineering red" 字面表述未必跟得上，看到不一致以本
+// 文件为准。
+//
 // Used globally via app.scss import; module SCSS files reference via var(--token).
 // Both H5 (regular CSS) and weapp (WXSS) support CSS custom properties.
 
 :root {
   // Palette
-  --color-paper: #F4EFE5;
-  --color-paper-backdrop: #E8E2D4;
-  --color-charcoal: #1A1A1A;
-  --color-eng-red: #C8281C;
-  --color-survey-blue: #1A4B8C;
-  --color-caliper-grey: #A8A096;
-  --color-warning-amber: #E07B1F;
-  --color-pass-green: #3D7C3D;
+  --color-paper: #FFFFFF;             // 主体背景：纯白（原米色 #F4EFE5）
+  --color-paper-backdrop: #F2F4F7;    // 桌面 backdrop：冷调浅灰，比 paper 暗一档
+  --color-charcoal: #0F172A;           // 主文本：slate-900 深蓝灰（原 #1A1A1A 纯黑）
+  --color-eng-red: #007AFF;            // 主强调色：iOS 蓝（原 #C8281C 工程红）
+  --color-survey-blue: #0040C8;        // 深蓝：标识 / 严重风险（原同义已是蓝色）
+  --color-caliper-grey: #94A3B8;       // 辅助灰：slate-400 冷调（原 #A8A096 暖灰）
+  --color-warning-amber: #3B82F6;      // 中等警示：mid-blue（原琥珀，改蓝色家族）
+  --color-pass-green: #38BDF8;         // 低风险/通过：浅 sky-blue（原墨绿，改蓝色家族）
 
   // Spacing (8px base)
   --space-1: 8px;

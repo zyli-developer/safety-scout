@@ -82,7 +82,7 @@ function DesktopErrorView({
   return (
     <View className={styles.centered}>
       <View className={styles.errorBox}>
-        <Icon name="x-circle" size={56} color="#C8281C" />
+        <Icon name="x-circle" size={56} color="#007AFF" />
         <Text className={styles.errorText}>{userMessage}</Text>
         {allowRetry && <Text className={styles.retryHint}>请返回首页重新上传</Text>}
       </View>

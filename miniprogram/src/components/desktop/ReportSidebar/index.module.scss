@@ -97,7 +97,8 @@
 .warning {
   margin-top: var(--space-1);
   padding: var(--space-1) var(--space-2);
-  background-color: rgba(224, 123, 31, 0.08);
+  // 8% --color-warning-amber tint —— 在新调色板下 warning-amber=#3B82F6（蓝色家族）
+  background-color: rgba(59, 130, 246, 0.08);
   border-left: 3px solid var(--color-warning-amber);
   color: var(--color-charcoal);
   font-size: 14px;

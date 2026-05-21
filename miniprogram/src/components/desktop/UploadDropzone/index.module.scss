@@ -18,7 +18,8 @@
 
 .zone[data-hover='true'] {
   border-color: var(--color-eng-red);
-  background-color: rgba(200, 40, 28, 0.04);
+  // 4% --color-eng-red (now #007AFF iOS blue) on white
+  background-color: rgba(0, 122, 255, 0.04);
 }
 
 .zone[aria-busy='true'] {

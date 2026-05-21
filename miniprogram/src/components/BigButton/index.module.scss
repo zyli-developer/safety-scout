@@ -1,4 +1,5 @@
-// Dossier 直角按钮：炭灰底、纸色字、中英文两行、可选 prefix glyph。
+// iOS-blue 主 CTA 按钮：iOS 蓝底、白字、中英文两行、可选 prefix glyph。
+// 用 --color-eng-red 是因为它在新调色板里 = #007AFF（token 名沿用旧名，详见 tokens.scss）。
 .button {
   display: flex;
   align-items: center;
@@ -8,13 +9,13 @@
   padding: 24px 28px;
   margin: 32px auto;
   border-radius: 4px;
-  background-color: var(--color-charcoal);
-  border: 1px solid var(--color-charcoal);
+  background-color: var(--color-eng-red);
+  border: 1px solid var(--color-eng-red);
   transition: background-color 0.12s linear;
   user-select: none;
 
   &:active {
-    background-color: #000000;  // even darker; no scale, no shadow — static document feel
+    background-color: var(--color-survey-blue);  // #0040C8 深蓝，按压态
   }
 
   &.loading,

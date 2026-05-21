@@ -72,7 +72,7 @@ export function UploadDropzone({ onSelect, uploading = false }: UploadDropzonePr
       onDrop={handleDrop}
     >
       <div className={styles.icon}>
-        <Icon name="plus-square" size={56} color="#1A1A1A" />
+        <Icon name="plus-square" size={56} color="#007AFF" />
       </div>
       <span className={styles.label}>
         {uploading ? '上传中...' : '拖拽图片到此 / 点击选择文件'}

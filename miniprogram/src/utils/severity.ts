@@ -12,26 +12,28 @@ export const SEVERITY_ORDER: Record<Severity, number> = {
   low: 1,
 };
 
-/** Dossier engineering palette — sharper than iOS HIG, matches paper-document context.
- *  See docs/plans/2026-05-20-miniprogram-ui-dossier-design.md. */
+/** White + iOS-blue palette —— severity 走蓝色家族 (deep / mid / light)。
+ *  代替早期 dossier 红/橙/绿三档；语义保留：值越高视觉越重。
+ *  注意：这是有意识的设计权衡，违背了「红色=最危险」的工业惯例 ——
+ *  详见 PR 描述。saber officer 需要重新建立"深蓝=高风险"的视觉记忆。 */
 export const SEVERITY_COLOR: Record<Severity, string> = {
-  high: '#C8281C',    // engineering red (stamps, critical)
-  medium: '#E07B1F',  // warning amber
-  low: '#3D7C3D',     // pass green
+  high: '#0040C8',    // deep blue (alarm, critical)
+  medium: '#007AFF',  // iOS system blue (mid)
+  low: '#38BDF8',     // sky blue (info, calmer)
 };
 
-/** Paper-tinted pill background — sits on the #F4EFE5 body. */
+/** White-base pill 背景：与 #FFFFFF body 形成淡蓝层次。 */
 export const SEVERITY_BG_TINT: Record<Severity, string> = {
-  high: '#F5DDD9',
-  medium: '#F6E2CB',
-  low: '#DDE8DD',
+  high: '#DCE7FA',    // deep-blue 12% on white
+  medium: '#D6E8FF',  // system-blue tint
+  low: '#E0F4FE',     // sky-blue tint
 };
 
-/** AA-contrast text on the tint background. */
+/** AA-contrast 深蓝文字色，分别落在对应 tint 上保证可读。 */
 export const SEVERITY_TEXT_ON_TINT: Record<Severity, string> = {
-  high: '#7A1812',
-  medium: '#7C4214',
-  low: '#1F4A1F',
+  high: '#001E66',    // deep navy
+  medium: '#003E80',  // royal navy
+  low: '#075985',     // sky-800
 };
 
 export const SEVERITY_LABEL: Record<Severity, string> = {

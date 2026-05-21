@@ -53,9 +53,9 @@ describe('utils/severity', () => {
     expect(Object.keys(SEVERITY_LABEL)).toHaveLength(3);
   });
 
-  it('uses dossier engineering palette (not iOS systemRed/Orange/Green)', () => {
-    expect(SEVERITY_COLOR.high).toBe('#C8281C');
-    expect(SEVERITY_COLOR.medium).toBe('#E07B1F');
-    expect(SEVERITY_COLOR.low).toBe('#3D7C3D');
+  it('uses white+blue palette (severity 走蓝色家族 deep/mid/light)', () => {
+    expect(SEVERITY_COLOR.high).toBe('#0040C8');    // deep blue
+    expect(SEVERITY_COLOR.medium).toBe('#007AFF');  // iOS system blue
+    expect(SEVERITY_COLOR.low).toBe('#38BDF8');     // sky blue
   });
 });

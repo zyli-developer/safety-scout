@@ -75,7 +75,7 @@ function ErrorView({
 }) {
   return (
     <View className={styles.errorView}>
-      <Icon name="x-circle" size={48} color="#C8281C" />
+      <Icon name="x-circle" size={48} color="#007AFF" />
       <Text className={styles.errorText}>{userMessage}</Text>
       {allowRetry && (
         <Text className={styles.retryHint}>请返回首页重新拍照</Text>

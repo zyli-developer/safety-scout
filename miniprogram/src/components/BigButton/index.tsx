@@ -39,7 +39,7 @@ export function BigButton({
     >
       {prefixGlyph && (
         <View className={styles.glyphSlot}>
-          <Icon name={prefixGlyph} size={28} color="#F4EFE5" />
+          <Icon name={prefixGlyph} size={28} color="#FFFFFF" />
         </View>
       )}
       <View className={styles.labels}>
