@@ -1,21 +1,21 @@
-// 全局样式：dossier 调子，paper 背景 + 默认 charcoal 文字 + 桌面 backdrop。
-// 用 @use 而不是 @import —— Sass 2.0 已废弃 @import；webpack-dev-server 默认把
-// deprecation warning 渲染成黄色全屏 overlay 盖在页面上、看上去像页面没出来。
+// 全局样式：Clean & Minimal 暖白底 + 系统 sans。
+// @use 而不是 @import —— Sass 2.0 已废弃 @import；webpack-dev-server 默认把
+// deprecation warning 渲染成黄色 overlay 盖在页面上。
 // fonts.scss / tokens.scss 都是纯 CSS 规则（无 Sass 变量），换 @use CSS 输出一致。
 @use './styles/fonts';
 @use './styles/tokens';
 
 page {
-  font-family: var(--font-body);
-  background-color: var(--color-paper);
-  color: var(--color-charcoal);
+  font-family: var(--f-sans);
+  background-color: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
 }
 
-// 平板 / 桌面 H5：手机宽度以外露出 paper-darker backdrop。
-// weapp 永远是单一手机视口，media query 不会触发，noop 安全。
+// H5 desktop：露出 surface-2 作为最外层 backdrop，与 page 暖白形成层次。
 @media (min-width: 768px) {
   body {
-    background-color: var(--color-paper-backdrop);
+    background-color: var(--surface-2);
     margin: 0;
   }
 }

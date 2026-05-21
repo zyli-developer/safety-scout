@@ -1,55 +1,59 @@
-// Dossier design tokens — paper-document aesthetic.
-// Used globally via app.scss import; module SCSS files reference via var(--token).
-// Both H5 (regular CSS) and weapp (WXSS) support CSS custom properties.
+// Clean & Minimal design tokens — warm-white surface, near-black ink, single warm-orange accent.
+// 全局导入到 app.scss；module SCSS 通过 var(--token) 引用，weapp + H5 均支持 CSS custom properties。
+// 旧 dossier token（--color-paper / --font-display / …）已废弃；如发现仍有引用，应在 Slice 5/6 迁移。
 
 :root {
-  // Palette
-  --color-paper: #F4EFE5;
-  --color-paper-backdrop: #E8E2D4;
-  --color-charcoal: #1A1A1A;
-  --color-eng-red: #C8281C;
-  --color-survey-blue: #1A4B8C;
-  --color-caliper-grey: #A8A096;
-  --color-warning-amber: #E07B1F;
-  --color-pass-green: #3D7C3D;
+  // Neutrals — 暖白底
+  --bg:        #FAFAF8;
+  --surface:   #FFFFFF;
+  --surface-2: #F4F4F2;
+  --line:      #ECECE8;
+  --line-2:    #DCDCD6;
 
-  // Spacing (8px base)
-  --space-1: 8px;
-  --space-2: 16px;
-  --space-3: 24px;
-  --space-4: 32px;
-  --space-5: 48px;
-  --space-6: 64px;
+  --ink:       #0E0E0C;
+  --ink-2:     #4D4E4B;
+  --ink-3:     #8A8B86;
+  --ink-4:     #B6B6B0;
 
-  // Type scale — px values; Taro pxtransform handles weapp scaling
-  --fs-eyebrow: 12px;       // Plex Mono labels
-  --fs-meta: 14px;          // Plex Mono identifiers
-  --fs-body: 26px;          // 中文 body text
-  --fs-section: 30px;       // section labels
-  --fs-h2: 40px;            // sub-titles
-  --fs-h1: 56px;            // page large title (H5 desktop)
-  --fs-display: 96px;       // hazard count number
+  // 唯一强调色：安全橙
+  --accent:    #E85D2C;
+  --accent-2:  #C44A1F;
+  --accent-soft: #FFF1EA;
+  --on-accent: #FFFFFF;
 
-  // Font families — Latin first, Chinese fallback chain.
-  // Source Han Serif is OPTIONAL — if the woff2 isn't loaded, system serif takes over.
-  --font-display: 'IBM Plex Serif', 'Source Han Serif SC', 'STSongti-SC', 'Songti SC', 'SimSun', serif;
-  --font-body: 'IBM Plex Sans', 'Source Han Sans SC', 'PingFang SC', 'Helvetica Neue', sans-serif;
-  --font-mono: 'IBM Plex Mono', 'Sarasa Mono SC', 'Menlo', 'Consolas', monospace;
-  --font-condensed: 'IBM Plex Sans Condensed', 'IBM Plex Sans', 'Helvetica Neue Condensed', sans-serif;
+  // 严重度（克制，不发光）
+  --high:      #D7373F;
+  --high-soft: #FCE7E9;
+  --med:       #C77A1F;
+  --med-soft:  #FBEED6;
+  --low:       #2F8454;
+  --low-soft:  #DEEFE3;
 
-  // Geometry
-  --radius-button: 4px;
-  --radius-card: 0;
-  --border-charcoal: 1px solid var(--color-charcoal);
-  --border-hairline: 1px solid var(--color-caliper-grey);
+  // 字体
+  --f-sans: -apple-system, BlinkMacSystemFont, 'Helvetica Neue',
+            'PingFang SC', 'Noto Sans SC', 'Hiragino Sans GB',
+            ui-sans-serif, sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
-  // Desktop-only type scale + spacing (consumed by pages/*/desktop.module.scss)
-  // Defined here (single source of truth) rather than in each desktop SCSS module:
-  // :root inside a CSS module is :global, so per-module declarations would race in
-  // the global cascade under MiniCssExtractPluginOption.ignoreOrder=true.
-  --fs-body-desktop: 16px;
-  --fs-h1-desktop: 48px;
-  --fs-eyebrow-desktop: 11px;
-  --fs-meta-desktop: 13px;
-  --space-desktop-gutter: 48px;
+  // 间距 (8px 基准)
+  --s-1: 4px;
+  --s0: 8px;
+  --s1: 12px;
+  --s2: 16px;
+  --s3: 24px;
+  --s4: 32px;
+  --s5: 48px;
+  --s6: 64px;
+  --s7: 96px;
+
+  // 圆角
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-pill: 999px;
+
+  // 阴影
+  --shadow-sm: 0 1px 2px rgba(20,20,16,0.04);
+  --shadow:    0 6px 24px rgba(20,20,16,0.06);
+  --shadow-lg: 0 16px 48px rgba(20,20,16,0.10);
 }

@@ -1,13 +1,6 @@
-// Self-hosted IBM Plex subset for H5. weapp uses wx.loadFontFace (see app.tsx).
-// font-display: swap → no FOIT; fallback renders immediately, swaps to Plex when ready.
-
-@font-face {
-  font-family: 'IBM Plex Serif';
-  src: url('../assets/fonts/IBMPlexSerif-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
+// Self-hosted IBM Plex Mono subset for H5. weapp 通过 wx.loadFontFace 拉远端字体（见 app.tsx）。
+// font-display: swap → 不阻塞首屏；fallback 系统等宽字体先出现，加载完成后再 swap。
+// Clean & Minimal 方向只保留 Plex Mono 用作 eyebrow / 数字 / mono 标签；正文走系统 sans。
 
 @font-face {
   font-family: 'IBM Plex Mono';
@@ -21,14 +14,6 @@
   font-family: 'IBM Plex Mono';
   src: url('../assets/fonts/IBMPlexMono-Medium.woff2') format('woff2');
   font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IBM Plex Sans Condensed';
-  src: url('../assets/fonts/IBMPlexSansCondensed-Bold.woff2') format('woff2');
-  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
