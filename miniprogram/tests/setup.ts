@@ -33,3 +33,23 @@ jest.mock('@tarojs/components', () => {
     Text: passthrough('span'),
   };
 });
+
+// 编译期 Taro DefinePlugin 会把 process.env.TARO_ENV 替换为字面量；
+// 测试期手动注入 'h5'，让走 H5 分支的逻辑可测。
+// 单测要测 weapp 分支时在自己 beforeEach 里覆盖。
+process.env.TARO_ENV = process.env.TARO_ENV ?? 'h5';
+
+// jsdom 不实现 matchMedia；给一个不匹配的默认 stub。
+// useIsDesktop 测试在 beforeEach 里重写它来注入特定行为。
+if (typeof window !== 'undefined' && !window.matchMedia) {
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    dispatchEvent: () => false,
+  })) as typeof window.matchMedia;
+}
