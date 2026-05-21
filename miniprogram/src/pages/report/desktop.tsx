@@ -25,6 +25,7 @@ import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { ReportSidebar } from '../../components/desktop/ReportSidebar';
 import { sortBySeverity } from '../../utils/severity';
 import { mapApiError } from '../../utils/errorMessage';
+import { getPhotoFor } from '../../utils/lastPhotoStore';
 import { ApiError } from '../../api/client';
 import { DEFAULT_POLL_INTERVAL_MS, DEFAULT_TIMEOUT_MS } from '../../config';
 import type { GetInspectionResponse } from '../../types/inspection';
@@ -109,9 +110,18 @@ function DesktopSucceededReport({ report }: { report: ReportPayload }) {
   const sorted = sortBySeverity(report.hazards);
   const severity = report.overall_severity;
   const no = shortId(report.inspection_id);
+  const photo = getPhotoFor(report.inspection_id);
 
   const notImplemented = (label: string) => () =>
     Taro.showToast({ title: `${label}：开发中`, icon: 'none', duration: 2000 });
+
+  const handleExportPdf = () => {
+    if (process.env.TARO_ENV === 'h5' && typeof window !== 'undefined') {
+      window.print();
+    } else {
+      Taro.showToast({ title: '导出 PDF 需在 H5 端使用', icon: 'none', duration: 2000 });
+    }
+  };
 
   return (
     <View className={styles.page}>
@@ -134,7 +144,7 @@ function DesktopSucceededReport({ report }: { report: ReportPayload }) {
             <Text className={styles.lede}>由 Claude Vision 分析 · {report.hazards.length} 项隐患</Text>
           </View>
           <View className={styles.headerActions}>
-            <Button variant="secondary" onTap={notImplemented('导出 PDF')}>
+            <Button variant="secondary" onTap={handleExportPdf}>
               <Icon name="download" size={16} color="var(--ink)" />
               <Text className={styles.btnText}>导出 PDF</Text>
             </Button>
@@ -151,7 +161,12 @@ function DesktopSucceededReport({ report }: { report: ReportPayload }) {
 
         <View className={styles.hero}>
           <View className={styles.heroLeft}>
-            <Photo src="" ratio="4/3" meta={`NO.${no} · ${report.created_at.slice(0, 19).replace('T', ' ')}`} />
+            <Photo
+              src={photo?.src ?? ''}
+              ratio="4/3"
+              overlay={!!photo}
+              meta={`NO.${no} · ${report.created_at.slice(0, 19).replace('T', ' ')}`}
+            />
           </View>
           <View className={styles.heroRight}>
             <ReportSidebar report={report} hazardCount={sorted.length} />

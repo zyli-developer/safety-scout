@@ -77,3 +77,10 @@
   color: var(--ink-2);
   cursor: pointer;
 }
+
+// 打印时整条 nav 不要进纸。
+@media print {
+  .nav {
+    display: none !important;
+  }
+}

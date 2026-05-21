@@ -34,3 +34,13 @@
 .back:active {
   background: var(--surface-2);
 }
+
+// 打印时返回 / 右侧操作组隐藏，保留 .title 让纸面有"巡检报告"标题。
+@media print {
+  .back {
+    display: none !important;
+  }
+  .side:last-child {
+    display: none !important;
+  }
+}

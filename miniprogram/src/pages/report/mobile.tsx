@@ -23,6 +23,7 @@ import { AlarmBox } from '../../components/AlarmBox';
 import { Photo } from '../../components/Photo';
 import { sortBySeverity } from '../../utils/severity';
 import { mapApiError } from '../../utils/errorMessage';
+import { getPhotoFor } from '../../utils/lastPhotoStore';
 import { ApiError } from '../../api/client';
 import {
   DEFAULT_POLL_INTERVAL_MS,
@@ -61,7 +62,7 @@ export default function MobileReport() {
     const step = result?.status === 'processing' ? 2 : 1;
     return (
       <View className={styles.page}>
-        <AppBar title="巡检报告" />
+        <AppBar title="巡检报告" onBack={() => Taro.navigateBack()} />
         <View className={styles.processingWrap}>
           <ProgressIndicator currentStep={step} elapsedMs={elapsedMs} />
         </View>
@@ -116,14 +117,24 @@ function SucceededReport({ report }: { report: ReportPayload }) {
   const total = sorted.length;
   const shortNo = report.inspection_id.slice(0, 12).toUpperCase();
   const photoMeta = `NO.${shortNo} · ${report.created_at.slice(0, 16).replace('T', ' ')}`;
+  const photo = getPhotoFor(report.inspection_id);
 
   const notImplemented = (label: string) => () =>
     Taro.showToast({ title: `${label}：开发中`, icon: 'none', duration: 2000 });
+
+  const handleExportPdf = () => {
+    if (process.env.TARO_ENV === 'h5' && typeof window !== 'undefined') {
+      window.print();
+    } else {
+      Taro.showToast({ title: '导出 PDF 需在 H5 端使用', icon: 'none', duration: 2000 });
+    }
+  };
 
   return (
     <View className={styles.page}>
       <AppBar
         title="巡检报告"
+        onBack={() => Taro.navigateBack()}
         right={
           <>
             <View
@@ -146,10 +157,11 @@ function SucceededReport({ report }: { report: ReportPayload }) {
         }
       />
 
-      {/* 现场照片大图（4:3）—— 报告即报告，照片永远是核心证据。后端 GET 报告
-          暂未带 photo_url，src="" 时 Photo 自动用 surface-2 灰底兜底；接入后填回。 */}
+      {/* 现场照片大图（4:3）—— 报告即报告，照片永远是核心证据。
+          src 优先来自 lastPhotoStore（上传时缓存的本地 tempFilePath / blob URL）；
+          后端 GET 报告无 photo_url 时 fallback 灰底占位。 */}
       <View className={styles.photoWrap}>
-        <Photo src="" ratio="4/3" overlay meta={photoMeta} />
+        <Photo src={photo?.src ?? ''} ratio="4/3" overlay={!!photo} meta={photoMeta} />
       </View>
 
       <View className={styles.summaryWrap}>
@@ -190,7 +202,7 @@ function SucceededReport({ report }: { report: ReportPayload }) {
       </View>
 
       <View className={styles.actbar}>
-        <Button variant="secondary" block onTap={notImplemented('导出 PDF')}>
+        <Button variant="secondary" block onTap={handleExportPdf}>
           <Icon name="download" size={16} color="var(--ink)" />
           <Text className={styles.actbarText}>导出 PDF</Text>
         </Button>

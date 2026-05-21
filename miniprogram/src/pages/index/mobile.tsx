@@ -17,11 +17,14 @@ import { Photo } from '../../components/Photo';
 import { captureImage } from '../../hooks/useImageCapture';
 import { createInspection } from '../../api/inspections';
 import { mapApiError } from '../../utils/errorMessage';
+import { getLastPhoto, rememberPhoto } from '../../utils/lastPhotoStore';
+import { relativeTime } from '../../utils/relativeTime';
 
 import styles from './mobile.module.scss';
 
 export default function MobileIndex() {
   const [uploading, setUploading] = useState(false);
+  const lastPhoto = getLastPhoto();
 
   const handleTap = async () => {
     if (uploading) return;
@@ -34,6 +37,7 @@ export default function MobileIndex() {
     setUploading(true);
     try {
       const resp = await createInspection(image.tempFilePath);
+      rememberPhoto(resp.inspection_id, image.tempFilePath);
       Taro.navigateTo({
         url: `/pages/report/index?id=${resp.inspection_id}&pi=${resp.poll_interval_ms}&to=${resp.timeout_ms}`,
       });
@@ -61,10 +65,18 @@ export default function MobileIndex() {
         <Text className={styles.lede}>上传施工现场照片，30 秒内得到结构化安全报告</Text>
       </View>
 
-      {/* 工地照片视觉锚 —— 当前用 surface-2 灰底占位；接入「上次巡检」数据后填回 src + meta。 */}
-      <View className={styles.photoWrap}>
-        <Photo src="" ratio="4/3" />
-      </View>
+      {/* 工地照片视觉锚 —— 仅当本 session 内有上传过才渲染，避免首次进入看到空灰底。
+          src 来自 lastPhotoStore（内存缓存的 tempFilePath / blob:URL）；接入后端 photo_url 后改读。 */}
+      {lastPhoto && (
+        <View className={styles.photoWrap}>
+          <Photo
+            src={lastPhoto.src}
+            ratio="4/3"
+            overlay
+            meta={`上次巡检 · ${relativeTime(new Date(lastPhoto.capturedAt).toISOString())}`}
+          />
+        </View>
+      )}
 
       <View className={styles.ctaBlock}>
         <BigButton

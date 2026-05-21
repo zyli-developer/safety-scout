@@ -183,3 +183,21 @@
     background: var(--surface);
   }
 }
+
+// 打印 / 导出 PDF：隐藏交互 chrome，让纸面只剩内容（照片 + 概要 + 隐患列表）。
+@media print {
+  .page {
+    max-width: none;
+    margin: 0;
+    border: 0;
+    background: #fff !important;
+  }
+  .actbar,
+  .iconBtn {
+    display: none !important;
+  }
+  .summaryCard,
+  .hazardList {
+    break-inside: avoid;
+  }
+}

@@ -320,3 +320,24 @@
 .h1 {
   font-size: clamp(28px, 4vw, 40px);
 }
+
+// 打印 / 导出 PDF：隐藏导航 / 面包屑 / 操作按钮，纸面只剩报告本体。
+@media print {
+  .page {
+    background: #fff !important;
+  }
+  .container {
+    max-width: none;
+    padding: 24px;
+  }
+  .breadcrumb,
+  .headerActions,
+  .listFilters {
+    display: none !important;
+  }
+  .listCard,
+  .signCell {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+}

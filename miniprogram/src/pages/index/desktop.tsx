@@ -24,6 +24,7 @@ import { Stat } from '../../components/Stat';
 import { UploadDropzone } from '../../components/desktop/UploadDropzone';
 import { createInspection } from '../../api/inspections';
 import { mapApiError } from '../../utils/errorMessage';
+import { rememberPhoto } from '../../utils/lastPhotoStore';
 
 import styles from './desktop.module.scss';
 
@@ -34,7 +35,16 @@ export default function DesktopIndex() {
     if (uploading) return;
     setUploading(true);
     try {
+      // 桌面 H5：用 File → blob URL 给报告页直显，免一次 round-trip。
+      // try/catch 包 createObjectURL：jsdom 测试环境不实现，weapp 也没有；都按"没缓存到"处理。
+      let localUrl: string | null = null;
+      try {
+        localUrl = URL.createObjectURL(file);
+      } catch {
+        localUrl = null;
+      }
       const resp = await createInspection(file);
+      if (localUrl) rememberPhoto(resp.inspection_id, localUrl);
       Taro.navigateTo({
         url: `/pages/report/index?id=${resp.inspection_id}&pi=${resp.poll_interval_ms}&to=${resp.timeout_ms}`,
       });
