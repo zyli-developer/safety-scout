@@ -13,6 +13,7 @@ import { Button } from '../../components/Button';
 import { Brand } from '../../components/Brand';
 import { Stat } from '../../components/Stat';
 import { Icon } from '../../components/Icon';
+import { Photo } from '../../components/Photo';
 import { captureImage } from '../../hooks/useImageCapture';
 import { createInspection } from '../../api/inspections';
 import { mapApiError } from '../../utils/errorMessage';
@@ -60,6 +61,11 @@ export default function MobileIndex() {
         <Text className={styles.lede}>上传施工现场照片，30 秒内得到结构化安全报告</Text>
       </View>
 
+      {/* 工地照片视觉锚 —— 当前用 surface-2 灰底占位；接入「上次巡检」数据后填回 src + meta。 */}
+      <View className={styles.photoWrap}>
+        <Photo src="" ratio="4/3" />
+      </View>
+
       <View className={styles.ctaBlock}>
         <BigButton
           text="开始巡检"
@@ -86,6 +92,10 @@ export default function MobileIndex() {
           <Stat num="—" label="中风险" tone="med" />
         </View>
       </View>
+
+      {/* 把剩余空间放在 today 之后 —— hero/photo/CTA/today 自然顶部对齐，
+          底部 spacer 兜住短内容场景，避免 today 被 margin-top:auto 顶到屏底。 */}
+      <View className={styles.spacer} />
     </View>
   );
 }

@@ -25,4 +25,11 @@ describe('Photo', () => {
     const root = container.firstChild as HTMLElement;
     expect(root.style.aspectRatio).toBe('4 / 3');
   });
+
+  it('empty src renders no <img> (avoids broken-image icon)', () => {
+    const { container } = render(<Photo src="" ratio="4/3" meta="占位" />);
+    expect(container.querySelector('img')).toBeNull();
+    // meta still rendered — Photo can serve as labeled placeholder
+    expect(container.textContent).toContain('占位');
+  });
 });

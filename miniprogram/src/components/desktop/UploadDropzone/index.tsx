@@ -25,9 +25,11 @@ export interface UploadDropzoneProps {
   onSelect: (file: File) => void;
   /** 上传进行中：禁用点击与拖放，UI 灰态。 */
   uploading?: boolean;
+  /** 「手机扫码」按钮回调（设计稿里和「选择文件」并排）；不传则不渲染该按钮。 */
+  onQRRequest?: () => void;
 }
 
-export function UploadDropzone({ onSelect, uploading = false }: UploadDropzoneProps) {
+export function UploadDropzone({ onSelect, uploading = false, onQRRequest }: UploadDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [hover, setHover] = useState(false);
 
@@ -83,10 +85,26 @@ export function UploadDropzone({ onSelect, uploading = false }: UploadDropzonePr
         </span>
       </div>
       <div className={styles.cta}>
-        <span className={styles.ctaBtn}>
+        {/* 「选择文件」纯视觉提示；点击事件会冒泡到外层 zone 的 onClick → 触发 file picker。 */}
+        <span className={styles.ctaPrimary}>
           <Icon name="upload" size={16} color="var(--on-accent)" />
           <span className={styles.ctaText}>选择文件</span>
         </span>
+        {onQRRequest && (
+          // stopPropagation：本按钮独立动作，不能误触发 file picker。
+          <span
+            className={styles.ctaSecondary}
+            role="button"
+            aria-label="手机扫码"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!uploading) onQRRequest();
+            }}
+          >
+            <Icon name="camera" size={16} color="var(--ink)" />
+            <span className={styles.ctaText}>手机扫码</span>
+          </span>
+        )}
       </div>
       <input
         ref={inputRef}

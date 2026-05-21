@@ -20,6 +20,7 @@ import { AppBar } from '../../components/AppBar';
 import { Button } from '../../components/Button';
 import { SeverityPill } from '../../components/SeverityPill';
 import { AlarmBox } from '../../components/AlarmBox';
+import { Photo } from '../../components/Photo';
 import { sortBySeverity } from '../../utils/severity';
 import { mapApiError } from '../../utils/errorMessage';
 import { ApiError } from '../../api/client';
@@ -113,6 +114,8 @@ function SucceededReport({ report }: { report: ReportPayload }) {
   const severity = report.overall_severity;
   const counts = countBySeverity(sorted);
   const total = sorted.length;
+  const shortNo = report.inspection_id.slice(0, 12).toUpperCase();
+  const photoMeta = `NO.${shortNo} · ${report.created_at.slice(0, 16).replace('T', ' ')}`;
 
   const notImplemented = (label: string) => () =>
     Taro.showToast({ title: `${label}：开发中`, icon: 'none', duration: 2000 });
@@ -142,6 +145,12 @@ function SucceededReport({ report }: { report: ReportPayload }) {
           </>
         }
       />
+
+      {/* 现场照片大图（4:3）—— 报告即报告，照片永远是核心证据。后端 GET 报告
+          暂未带 photo_url，src="" 时 Photo 自动用 surface-2 灰底兜底；接入后填回。 */}
+      <View className={styles.photoWrap}>
+        <Photo src="" ratio="4/3" overlay meta={photoMeta} />
+      </View>
 
       <View className={styles.summaryWrap}>
         <View className={styles.summaryCard}>

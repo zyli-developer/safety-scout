@@ -37,8 +37,14 @@ export function Photo({
   }
   return (
     <View className={[styles.photo, className].filter(Boolean).join(' ')} style={style}>
-      <Image className={styles.img} src={src} mode="aspectFill" {...({ alt } as { alt: string })} />
-      {overlay && <View className={styles.grad} />}
+      {src ? (
+        <Image className={styles.img} src={src} mode="aspectFill" {...({ alt } as { alt: string })} />
+      ) : (
+        // 空 src 兜底：不渲染 Image（避免 H5 显示破图 icon），让父容器 surface-2
+        // 灰底兜底，meta 仍可显示 —— 用作"等数据"占位。
+        <View className={styles.empty} aria-hidden />
+      )}
+      {overlay && src && <View className={styles.grad} />}
       {meta && (
         <View className={styles.meta}>
           <View className={styles.dot} />

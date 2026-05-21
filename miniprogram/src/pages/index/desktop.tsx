@@ -79,7 +79,11 @@ export default function DesktopIndex() {
               <Text className={styles.dropzoneTitle}>上传现场照片</Text>
               <Text className={styles.dropzoneSpec}>JPG · PNG · HEIC · 最大 15MB</Text>
             </View>
-            <UploadDropzone onSelect={handleFile} uploading={uploading} />
+            <UploadDropzone
+              onSelect={handleFile}
+              uploading={uploading}
+              onQRRequest={notImplemented('手机扫码')}
+            />
             <View className={styles.engineStrip}>
               <View className={styles.engineLeft}>
                 <View className={styles.engineDot} />

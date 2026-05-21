@@ -66,17 +66,32 @@
   gap: 8px;
 }
 
-.ctaBtn {
+.ctaPrimary,
+.ctaSecondary {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  background: var(--accent);
-  color: var(--on-accent);
   border-radius: var(--r-pill);
   font-size: 15px;
   font-weight: 600;
   box-shadow: var(--shadow-sm);
+}
+
+.ctaPrimary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.ctaSecondary {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-2);
+  cursor: pointer;
+}
+
+.ctaSecondary:hover {
+  background: var(--surface-2);
 }
 
 .ctaText {

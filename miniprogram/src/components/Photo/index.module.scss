@@ -15,6 +15,13 @@
   object-fit: cover;
 }
 
+.empty {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, var(--surface-2) 0%, #EFEFEC 100%);
+}
+
 .grad {
   position: absolute;
   inset: 0;
