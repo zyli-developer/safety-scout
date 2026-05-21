@@ -1,0 +1,215 @@
+"""analyze_image orchestration 测试 —— 不打 Claude，靠 monkeypatch 模拟 SDK。
+
+策略：
+- monkeypatch `app.safety_agent.agent.build_safety_tools` 同时捕获 sink + tools
+  （这样在 fake_query 里能拿到 submit 工具来注入报告 / 不注入报告）
+- monkeypatch `app.safety_agent.agent.query` 为 async generator，yield ResultMessage
+- 覆盖：happy / 未 submit / SDK 异常 / 超时
+"""
+from __future__ import annotations
+
+import asyncio
+import json
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+from app.config import Settings
+from app.errors import LLMCallError, LLMTimeoutError
+from app.safety_agent import agent as agent_mod
+from app.safety_agent.loader import SkillLoader
+from app.safety_agent.tools import build_safety_tools as _real_build_safety_tools
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+SKILLS_ROOT = REPO_ROOT / "safety_skills"
+
+VALID_REPORT = {
+    "report_meta": {
+        "image_summary": "脚手架作业面",
+        "scene_detected": ["S03"],
+        "analysis_confidence": "高",
+        "overall_risk_level": "较大",
+    },
+    "findings": [
+        {
+            "check_id": "B01",
+            "category": "高坠",
+            "status": "存在隐患",
+            "title": "临边无栏杆",
+            "location": "图片中部",
+            "description": "三层楼板东侧未见栏杆",
+            "severity": "重大",
+            "regulation": "JGJ80-2016",
+            "action": "立即停工搭设栏杆",
+            "confidence": "高",
+        }
+    ],
+    "no_findings": [],
+    "uncertain": [],
+    "summary": {
+        "total_checks": 35,
+        "findings_count": 1,
+        "fatal_count": 1,
+        "major_count": 0,
+        "minor_count": 0,
+        "no_issue_count": 30,
+        "uncertain_count": 4,
+        "key_recommendations": ["立即停工"],
+    },
+}
+
+
+def _make_result_message(input_tokens: int = 1000, output_tokens: int = 200):
+    """构造一个最小可用的 ResultMessage（字段跟 SDK 0.2.83 对齐）。"""
+    from claude_agent_sdk import ResultMessage
+
+    return ResultMessage(
+        subtype="result",
+        duration_ms=2500,
+        duration_api_ms=2000,
+        is_error=False,
+        num_turns=3,
+        session_id="test-session",
+        total_cost_usd=0.012,
+        usage={"input_tokens": input_tokens, "output_tokens": output_tokens},
+    )
+
+
+@pytest.fixture
+def skill_loader() -> SkillLoader:
+    if not SKILLS_ROOT.is_dir():
+        pytest.skip(f"safety_skills 未部署到 {SKILLS_ROOT}")
+    return SkillLoader(SKILLS_ROOT)
+
+
+@pytest.fixture
+def settings() -> Settings:
+    # 默认 90s 太长；测里都用 5s
+    return Settings(agent_timeout_seconds=5, safety_skills_root=SKILLS_ROOT)
+
+
+@pytest.fixture
+def spy_build_tools(monkeypatch):
+    """spy 进 build_safety_tools，把 sink + tools 暴露给测试用例。"""
+    captured: dict[str, Any] = {}
+
+    def spy(loader, sink):
+        tools = _real_build_safety_tools(loader, sink)
+        captured["sink"] = sink
+        captured["by_name"] = {t.name: t for t in tools}
+        return tools
+
+    monkeypatch.setattr(agent_mod, "build_safety_tools", spy)
+    return captured
+
+
+async def test_happy_path(monkeypatch, settings, skill_loader, spy_build_tools) -> None:
+    """模拟 Agent 调用 submit_safety_report，最终返回报告 + 统计。"""
+
+    async def fake_query(*, prompt, options, transport=None):
+        # 模拟 Agent 调 submit
+        submit = spy_build_tools["by_name"]["submit_safety_report"]
+        await submit.handler({"report_json": json.dumps(VALID_REPORT, ensure_ascii=False)})
+        yield _make_result_message()
+
+    monkeypatch.setattr(agent_mod, "query", fake_query)
+
+    report, stats = await agent_mod.analyze_image(
+        image_bytes=b"fake-jpeg",
+        settings=settings,
+        skill_loader=skill_loader,
+    )
+    assert report.findings[0].check_id == "B01"
+    assert stats.input_tokens == 1000
+    assert stats.output_tokens == 200
+    assert stats.cost_usd == pytest.approx(0.012)
+
+
+async def test_agent_did_not_submit_raises(
+    monkeypatch, settings, skill_loader, spy_build_tools
+) -> None:
+    """Agent 走完整个 stream 却没调 submit → LLMCallError。"""
+
+    async def fake_query(*, prompt, options, transport=None):
+        # 不调任何工具，直接 yield 结束
+        yield _make_result_message()
+
+    monkeypatch.setattr(agent_mod, "query", fake_query)
+
+    with pytest.raises(LLMCallError) as exc:
+        await agent_mod.analyze_image(
+            image_bytes=b"x", settings=settings, skill_loader=skill_loader
+        )
+    assert "submit_safety_report" in str(exc.value)
+
+
+async def test_sdk_error_wrapped(monkeypatch, settings, skill_loader, spy_build_tools) -> None:
+    """SDK 抛 ClaudeSDKError → 包装成 LLMCallError。"""
+    from claude_agent_sdk import ClaudeSDKError
+
+    async def fake_query(*, prompt, options, transport=None):
+        raise ClaudeSDKError("simulated CLI failure")
+        yield  # 让函数成为 async generator（不会跑到这里）
+
+    monkeypatch.setattr(agent_mod, "query", fake_query)
+
+    with pytest.raises(LLMCallError) as exc:
+        await agent_mod.analyze_image(
+            image_bytes=b"x", settings=settings, skill_loader=skill_loader
+        )
+    assert "simulated CLI failure" in str(exc.value)
+
+
+async def test_timeout_raises_llm_timeout(
+    monkeypatch, skill_loader, spy_build_tools
+) -> None:
+    """流跑得比 agent_timeout_seconds 慢 → LLMTimeoutError。"""
+    tight_settings = Settings(agent_timeout_seconds=1, safety_skills_root=SKILLS_ROOT)
+
+    async def slow_query(*, prompt, options, transport=None):
+        await asyncio.sleep(10)
+        yield _make_result_message()
+
+    monkeypatch.setattr(agent_mod, "query", slow_query)
+
+    with pytest.raises(LLMTimeoutError):
+        await agent_mod.analyze_image(
+            image_bytes=b"x", settings=tight_settings, skill_loader=skill_loader
+        )
+
+
+async def test_scenarios_loaded_recorded(
+    monkeypatch, settings, skill_loader, spy_build_tools
+) -> None:
+    """模拟 Agent 调 load_scenario_skill 两次，stats 记录场景 ID。"""
+    # 用 AssistantMessage + ToolUseBlock 模拟 Agent 工具调用流
+    from claude_agent_sdk import AssistantMessage, ToolUseBlock
+
+    async def fake_query(*, prompt, options, transport=None):
+        yield AssistantMessage(
+            content=[
+                ToolUseBlock(
+                    id="t1",
+                    name="mcp__safety__load_scenario_skill",
+                    input={"scenario_id": "S03"},
+                ),
+                ToolUseBlock(
+                    id="t2",
+                    name="mcp__safety__load_scenario_skill",
+                    input={"scenario_id": "S05"},
+                ),
+            ],
+            model="claude-opus-4-7",
+        )
+        submit = spy_build_tools["by_name"]["submit_safety_report"]
+        await submit.handler({"report_json": json.dumps(VALID_REPORT, ensure_ascii=False)})
+        yield _make_result_message()
+
+    monkeypatch.setattr(agent_mod, "query", fake_query)
+
+    _, stats = await agent_mod.analyze_image(
+        image_bytes=b"x", settings=settings, skill_loader=skill_loader
+    )
+    assert stats.scenarios_loaded == ["S03", "S05"]
+    assert stats.tool_calls == 2  # 两个 load；submit 是 spy 直接调的，不经过 stream

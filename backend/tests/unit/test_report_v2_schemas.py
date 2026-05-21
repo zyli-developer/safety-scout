@@ -1,0 +1,122 @@
+"""ReportV2Payload 校验测试 —— output_schema.md 的合同体现。
+
+关键 case：
+- 文档示例 JSON（happy path）能解析
+- 必填字段缺失 → ValidationError
+- severity / status / confidence 枚举值不在白名单 → ValidationError
+- 计数字段为负 → ValidationError
+- 额外字段（extra='forbid'） → ValidationError
+"""
+from __future__ import annotations
+
+import pytest
+from pydantic import ValidationError
+
+from app.schemas.report_v2 import ReportV2Payload
+
+DOC_EXAMPLE = {
+    "report_meta": {
+        "image_summary": "在建主体结构外侧，落地式脚手架，工人正在绑扎钢筋",
+        "scene_detected": ["S03", "S05", "S07"],
+        "analysis_confidence": "高",
+        "overall_risk_level": "重大",
+    },
+    "findings": [
+        {
+            "check_id": "B01",
+            "category": "高坠风险",
+            "status": "存在隐患",
+            "title": "三层临边未设置防护栏杆",
+            "location": "图片中部，三层楼板边缘",
+            "description": "三层楼板东侧边缘（落差约 6m）未见任何防护栏杆",
+            "severity": "重大",
+            "regulation": "JGJ80-2016 第 4.1.1 条",
+            "action": "立即停工，搭设标准防护栏杆",
+            "confidence": "高",
+        }
+    ],
+    "no_findings": [{"check_id": "A01", "note": "图中可见 4 名工人均佩戴黄色安全帽"}],
+    "uncertain": [
+        {
+            "check_id": "S03-A03",
+            "reason": "立杆垂直度需要现场测量",
+            "suggested_action": "建议现场用线锤复测",
+        }
+    ],
+    "summary": {
+        "total_checks": 95,
+        "findings_count": 5,
+        "fatal_count": 2,
+        "major_count": 1,
+        "minor_count": 2,
+        "no_issue_count": 78,
+        "uncertain_count": 12,
+        "key_recommendations": ["立即停工整改 2 项重大隐患"],
+    },
+}
+
+
+def test_doc_example_parses() -> None:
+    report = ReportV2Payload.model_validate(DOC_EXAMPLE)
+    assert report.report_meta.image_summary.startswith("在建主体")
+    assert report.findings[0].severity == "重大"
+    assert report.summary.fatal_count == 2
+
+
+def test_missing_top_level_field_rejected() -> None:
+    bad = dict(DOC_EXAMPLE)
+    del bad["summary"]
+    with pytest.raises(ValidationError) as exc:
+        ReportV2Payload.model_validate(bad)
+    assert any(e["loc"] == ("summary",) for e in exc.value.errors())
+
+
+def test_invalid_severity_rejected() -> None:
+    bad = {**DOC_EXAMPLE, "findings": [{**DOC_EXAMPLE["findings"][0], "severity": "high"}]}
+    with pytest.raises(ValidationError):
+        ReportV2Payload.model_validate(bad)
+
+
+def test_invalid_confidence_rejected() -> None:
+    bad = {
+        **DOC_EXAMPLE,
+        "report_meta": {**DOC_EXAMPLE["report_meta"], "analysis_confidence": "very high"},
+    }
+    with pytest.raises(ValidationError):
+        ReportV2Payload.model_validate(bad)
+
+
+def test_invalid_status_rejected() -> None:
+    bad = {**DOC_EXAMPLE, "findings": [{**DOC_EXAMPLE["findings"][0], "status": "确认"}]}
+    with pytest.raises(ValidationError):
+        ReportV2Payload.model_validate(bad)
+
+
+def test_negative_count_rejected() -> None:
+    bad = {**DOC_EXAMPLE, "summary": {**DOC_EXAMPLE["summary"], "fatal_count": -1}}
+    with pytest.raises(ValidationError):
+        ReportV2Payload.model_validate(bad)
+
+
+def test_extra_field_rejected() -> None:
+    bad = {**DOC_EXAMPLE, "unexpected_field": "x"}
+    with pytest.raises(ValidationError):
+        ReportV2Payload.model_validate(bad)
+
+
+def test_findings_empty_list_allowed() -> None:
+    """无隐患的图也应通过 —— findings 默认空列表。"""
+    good = {**DOC_EXAMPLE, "findings": []}
+    report = ReportV2Payload.model_validate(good)
+    assert report.findings == []
+
+
+def test_finding_check_id_required() -> None:
+    bad = {
+        **DOC_EXAMPLE,
+        "findings": [{k: v for k, v in DOC_EXAMPLE["findings"][0].items() if k != "check_id"}],
+    }
+    with pytest.raises(ValidationError) as exc:
+        ReportV2Payload.model_validate(bad)
+    locs = {e["loc"] for e in exc.value.errors()}
+    assert any("check_id" in str(loc) for loc in locs)

@@ -14,6 +14,7 @@ from __future__ import annotations
 import sqlite3
 from collections.abc import Iterator
 from functools import lru_cache
+from pathlib import Path
 
 from fastapi import Depends
 
@@ -21,6 +22,7 @@ from app.config import Settings, get_settings
 from app.llm.base import LLMProvider
 from app.llm.claude_cli import ClaudeCLIProvider
 from app.llm.doubao import DoubaoProvider
+from app.safety_agent.loader import SkillLoader
 from app.storage.db import connect
 
 
@@ -73,3 +75,18 @@ def get_llm_provider(settings: Settings = Depends(get_settings)) -> LLMProvider:
         model=settings.claude_model,
         timeout_seconds=settings.claude_timeout_seconds,
     )
+
+
+@lru_cache(maxsize=1)
+def _build_skill_loader(skills_root: str) -> SkillLoader:
+    """私有：用字符串路径做 cache key（Path 也 hashable，但 str 更省事 + 跨平台稳定）。"""
+    return SkillLoader(skills_root)
+
+
+def get_skill_loader(settings: Settings = Depends(get_settings)) -> SkillLoader:
+    """进程单例 SkillLoader —— 预热 L1+shared 后被 v2 路由 / runner 共用。
+
+    集成测试可通过 app.dependency_overrides 注入指向 tmp dir 的桩 loader；
+    需要时也可直接 _build_skill_loader.cache_clear() 强制重建。
+    """
+    return _build_skill_loader(str(Path(settings.safety_skills_root)))
