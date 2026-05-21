@@ -1,0 +1,45 @@
+// UploadDropzone —— dossier paper aesthetic 的桌面上传区。
+// data-hover='true' 由 React 设置；hover 状态边框变 eng-red、背景轻微高亮。
+
+.zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-3);
+  border: 2px dashed var(--color-charcoal);
+  background-color: var(--color-paper);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 120ms ease, background-color 120ms ease;
+  min-height: 280px;
+}
+
+.zone[data-hover='true'] {
+  border-color: var(--color-eng-red);
+  background-color: rgba(200, 40, 28, 0.04);
+}
+
+.zone[aria-busy='true'] {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.icon {
+  margin-bottom: var(--space-1);
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: 18px;
+  color: var(--color-charcoal);
+  letter-spacing: 1px;
+}
+
+.sublabel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-caliper-grey);
+  letter-spacing: 3px;
+}
