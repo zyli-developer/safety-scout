@@ -144,7 +144,8 @@ async function main() {
 
     console.log(`[step 3/4] 等跳转报告页...`);
     await page.waitForURL(/\/pages\/report\/index/i, { timeout: 30_000 });
-    await page.waitForSelector('text=/AI 分析中|正在为你生成报告|拍照成功/', { timeout: 5_000 })
+    // ProgressIndicator 真实 step labels：拍照已就绪 / AI 识别中 / 报告生成中
+    await page.waitForSelector('text=/AI 识别中|拍照已就绪|报告生成中/', { timeout: 5_000 })
       .catch(() => console.log('未匹配到 polling 文案'));
     await page.screenshot({ path: join(SCREENSHOT_DIR, 'h5-desktop-02-polling.png'), fullPage: true });
 
@@ -154,8 +155,21 @@ async function main() {
     while (Date.now() < deadline) {
       const sidebarVisible = await page.locator('text=现场巡检报告').first().isVisible().catch(() => false);
       const hazardVisible = await page.locator('text=高处坠落').first().isVisible().catch(() => false);
-      if (sidebarVisible && hazardVisible) { ok = true; break; }
-      const errVisible = await page.locator('text=/AI 分析超时|AI 分析失败|网络异常/').first().isVisible().catch(() => false);
+      if (sidebarVisible && hazardVisible) {
+        // 桌面分支 sentinel：<View className={styles.aside}> 只出现在
+        // pages/report/desktop.tsx 的 DesktopSucceededReport 里。若 useIsDesktop
+        // 在 1440×900 下回归到 false，MobileReport 会渲染相同的标题文案但没有
+        // aside wrapper，下面的断言会失败，回归会被抓住。
+        const asideVisible = await page.locator('[class*="aside"]').first().isVisible().catch(() => false);
+        if (!asideVisible) {
+          failures.push('报告页找不到桌面专属 [class*="aside"] sticky 侧栏 —— 可能进了 mobile 分支');
+        }
+        ok = true;
+        break;
+      }
+      // 错误文案：DesktopErrorView 走 mapApiError 的多数路径都带 "AI" 前缀，
+      // 但 result.error.user_message 缺失时回退到裸 "分析失败"（report/desktop.tsx:65）。
+      const errVisible = await page.locator('text=/(?:AI )?分析超时|(?:AI )?分析失败|网络异常|请返回首页/').first().isVisible().catch(() => false);
       if (errVisible) {
         failures.push('报告页显示错误页');
         break;

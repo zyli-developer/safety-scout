@@ -221,8 +221,9 @@ async function main() {
     await page.waitForURL(/\/pages\/report\/index/i, { timeout: 30_000 });
     console.log(`[browser] 报告页 URL: ${page.url()}`);
     // 等 ProgressIndicator React 节点渲染完再截图（不然时序竞争抓到空白页）
+    // ProgressIndicator 真实 step labels：拍照已就绪 / AI 识别中 / 报告生成中
     await page
-      .waitForSelector('text=/正在为你生成报告|AI 分析中|拍照成功/', { timeout: 5_000 })
+      .waitForSelector('text=/AI 识别中|拍照已就绪|报告生成中/', { timeout: 5_000 })
       .catch(() => console.log('[browser] 警告：未检测到 ProgressIndicator 标志文案'));
     await sleep(300);
     await page.screenshot({
