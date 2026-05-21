@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -25,12 +26,30 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """运行期配置。字段名 = 环境变量名（大写后）。"""
 
+    # === LLM provider 开关 ===
+    # 业务粒度的二选一：claude_cli | doubao。
+    # 默认 claude_cli —— 现有部署不传环境变量也保持原行为。
+    # provider 内部具体走哪个模型（sonnet/opus / 火山 endpoint id）各自归各自的字段管。
+    llm_provider: Literal["claude_cli", "doubao"] = "claude_cli"
+
     # === Claude CLI provider ===
     claude_cli_path: str = "claude"
     # 全名，不用 sonnet alias —— Phase 1 实测 alias 会 fallback 到 Opus
     claude_model: str = "claude-sonnet-4-5"
     # 从 Phase 1 的 180 上调；case_004 实测 266s
     claude_timeout_seconds: int = 300
+
+    # === Doubao (火山方舟) provider ===
+    # API key 从火山方舟控制台拿；未配置时若选中 doubao，dependencies.get_llm_provider
+    # 启动即抛 ValueError，避免请求时才报错。
+    doubao_api_key: str = ""
+    # 火山方舟的 model 字段：可以填用户账号下自建的 endpoint id（如 ep-2026...），
+    # 也可以直接填公共模型名。默认给一个公共 vision 模型，配上 DOUBAO_API_KEY 即可跑；
+    # 想换模型 / endpoint 时再覆盖 DOUBAO_MODEL。
+    doubao_model: str = "doubao-1-5-vision-pro-32k-250115"
+    doubao_base_url: str = "https://ark.cn-beijing.volces.com/api/v3"
+    # HTTP 调用比 Claude CLI 子进程短得多；120s 已含一次 reprompt 余量
+    doubao_timeout_seconds: int = 120
 
     # === Storage ===
     sqlite_path: str = "local_data/safety_scout.db"

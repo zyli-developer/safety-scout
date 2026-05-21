@@ -37,9 +37,22 @@ describe('BigButton', () => {
     expect(fn).not.toHaveBeenCalled();
   });
 
-  it('shows "上传中..." when loading', () => {
+  it('shows "处理中" when loading', () => {
     render(<BigButton text="拍隐患" onTap={() => undefined} loading />);
-    expect(screen.getByText('上传中...')).toBeInTheDocument();
+    expect(screen.getByText('处理中')).toBeInTheDocument();
     expect(screen.queryByText('拍隐患')).not.toBeInTheDocument();
+  });
+
+  it('renders both Chinese label and Latin subtitle', () => {
+    render(<BigButton text="拍摄现场照片" subtitle="CAPTURE INSPECTION PHOTO" onTap={() => undefined} />);
+    expect(screen.getByText('拍摄现场照片')).toBeInTheDocument();
+    expect(screen.getByText('CAPTURE INSPECTION PHOTO')).toBeInTheDocument();
+  });
+
+  it('renders prefix glyph if provided', () => {
+    const { container } = render(
+      <BigButton text="拍摄现场照片" subtitle="CAPTURE" prefixGlyph="plus-square" onTap={() => undefined} />,
+    );
+    expect(container.querySelector('svg')).not.toBeNull();
   });
 });

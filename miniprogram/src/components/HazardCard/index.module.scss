@@ -1,117 +1,108 @@
-// iOS HIG grouped card：白底、轻分割线、无强调色块、内容主导。
+// Dossier hazard card：no rounded corners, no shadow.
+// Header (编号 + tag) + 3 field rows + severity stripe at bottom.
+
 .card {
-  padding: 18px 20px 20px;
-  margin: 8px 16px;
-  border-radius: 12px;
-  background-color: #ffffff;
-  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.04);
+  padding: var(--space-3);
+  background-color: var(--color-paper);
+  border-top: var(--border-charcoal);
+  position: relative;
 }
 
 .header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-mono);
 }
 
-.headerLeft {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  flex: 1;
-  min-width: 0;
-}
-
-.indexBadge {
+.index {
   font-size: 22px;
-  color: #8e8e93;
   font-weight: 500;
-  letter-spacing: 1.5px;
-  margin-bottom: 4px;
+  color: var(--color-charcoal);
 }
 
-.categoryName {
-  font-size: 30px;
-  font-weight: 600;
-  color: #000000;
-  line-height: 1.2;
-  letter-spacing: -0.3px;
-}
-
-.severityBadge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 6px;
+.dot {
   font-size: 22px;
-  font-weight: 600;
-  flex-shrink: 0;
-  letter-spacing: 0.2px;
+  color: var(--color-caliper-grey);
 }
 
-.severityDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 6px;
-  flex-shrink: 0;
+.tag {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 2px;
 }
 
-.description {
-  display: block;
-  font-size: 26px;
-  line-height: 1.5;
-  color: #1c1c1e;
-  margin-bottom: 12px;
+.headerRule {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-caliper-grey);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
 }
 
-.regulationToggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 22px;
-  margin-bottom: 8px;
-  padding: 4px 0;
-  user-select: none;
+.indexOfTotal {
+  font-size: 14px;
+  color: var(--color-caliper-grey);
 }
 
-.regulationToggleLabel {
-  color: #007aff;
-}
-
-.regulation {
-  padding: 12px 14px;
-  margin-bottom: 12px;
-  background-color: #f2f2f7;
-  border-radius: 8px;
-  font-size: 22px;
-  line-height: 1.5;
-  color: #3c3c43;
-}
-
-.suggestionDivider {
-  height: 0.5px;
-  background-color: rgba(60, 60, 67, 0.12);
-  margin: 6px 0 12px;
-}
-
-.suggestion {
+.field {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
 }
 
-.suggestionLabel {
+// 用相邻兄弟选 dashed 分隔 —— 而不是 :last-of-type，因为后面跟着 .stripe / .metaTag 是同 tag 的 div/span。
+// `+ .field` 自然只在两个 field 之间画线，2 行 / 3 行两种情况都安全。
+.field + .field {
+  border-top: 1px dashed var(--color-caliper-grey);
+}
+
+.fieldLabel {
+  flex-shrink: 0;
+  width: 48px;
+  font-family: var(--font-display);
   font-size: 22px;
-  font-weight: 600;
-  color: #8e8e93;
-  margin-bottom: 4px;
-  letter-spacing: 0.3px;
-  text-transform: none;
+  font-weight: 700;
+  color: var(--color-charcoal);
 }
 
-.suggestionText {
-  font-size: 26px;
-  line-height: 1.5;
-  color: #1c1c1e;
+.fieldDivider {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  color: var(--color-caliper-grey);
+}
+
+.fieldValue {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.45;
+  color: var(--color-charcoal);
+}
+
+.stripe {
+  margin-top: var(--space-2);
+  height: 10px;
+  // 警示斜条 pattern：12px tile 走完一周期，10px height 容纳约 1.2 周期 → 斜条可识别。
+  // weapp 不支持 background-image 的 fallback 是 inline backgroundColor (走 style 优先级)。
+  background-image: linear-gradient(
+    135deg,
+    transparent 0,
+    transparent 6px,
+    rgba(0, 0, 0, 0.22) 6px,
+    rgba(0, 0, 0, 0.22) 12px
+  );
+  background-size: 12px 12px;
+}
+
+.metaTag {
+  display: block;
+  margin-top: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-align: right;
 }

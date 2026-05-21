@@ -34,7 +34,7 @@ export interface Hazard {
 }
 
 export interface ModelMeta {
-  provider: 'claude_cli' | 'fake';
+  provider: 'claude_cli' | 'doubao' | 'fake';
   model: string;
   latency_ms: number;
 }

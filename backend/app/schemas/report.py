@@ -21,7 +21,7 @@ class Hazard(BaseModel):
 
 
 class ModelMeta(BaseModel):
-    provider: Literal["claude_cli", "fake"]
+    provider: Literal["claude_cli", "doubao", "fake"]
     model: str
     latency_ms: int = Field(ge=0)
 

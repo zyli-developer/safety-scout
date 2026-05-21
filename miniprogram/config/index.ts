@@ -28,7 +28,11 @@ export default defineConfig(async (merge, { command, mode }) => {
       ),
     },
     copy: {
-      patterns: [],
+      patterns: [
+        // H5: 把 src/assets/fonts 拷到 dist/assets/fonts 让 @font-face 找得到。
+        // weapp 上拷过去也无害，weapp build 自己会忽略未被引用的资源。
+        { from: 'src/assets/fonts/', to: 'dist/assets/fonts/', ignore: ['*.md'] },
+      ],
       options: {},
     },
     framework: 'react',

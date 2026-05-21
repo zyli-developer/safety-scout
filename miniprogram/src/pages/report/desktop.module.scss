@@ -1,0 +1,77 @@
+// DesktopReport 布局：max-width 1400px 居中；body 用 CSS grid 4fr/6fr。
+// 字号 / 间距 token 都来自 src/styles/tokens.scss，模块内不再重声明 :root。
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-desktop-gutter);
+  background-color: var(--color-paper);
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 4fr 6fr;
+  gap: var(--space-desktop-gutter);
+  padding: var(--space-3) 0 var(--space-5);
+  align-items: start;
+}
+
+.aside {
+  position: sticky;
+  top: var(--space-3);
+  align-self: start;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sectionRule {
+  border-top: var(--border-charcoal);
+  padding-top: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.sectionLabel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--color-charcoal);
+}
+
+.centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-3);
+}
+
+.errorBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: var(--border-charcoal);
+  background-color: var(--color-paper);
+  max-width: 480px;
+}
+
+.errorText {
+  font-size: 18px;
+  color: var(--color-charcoal);
+  text-align: center;
+}
+
+.retryHint {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--color-caliper-grey);
+}

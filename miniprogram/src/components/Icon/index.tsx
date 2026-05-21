@@ -18,7 +18,12 @@ export type IconName =
   | 'x-circle'
   | 'document'
   | 'lightbulb'
-  | 'arrow-right';
+  | 'arrow-right'
+  | 'stamp'
+  | 'plus-square'
+  | 'crosshair'
+  | 'slash-circle'
+  | 'tick';
 
 interface IconProps {
   name: IconName;
@@ -42,6 +47,15 @@ const PATHS: Record<IconName, string> = {
   lightbulb:
     'M12 2a7 7 0 0 0-4 12.71V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.29A7 7 0 0 0 12 2zM9 21h6',
   'arrow-right': 'M5 12h14m-7-7 7 7-7 7',
+  stamp:
+    'M6 4h12v8H6z M4 16h16v2H4z M9 12v4 M15 12v4', // 印章 + 底座 + 两条挂绳
+  'plus-square':
+    'M4 4h16v16H4z M12 8v8 M8 12h8', // ⊕ measure plus inside square
+  crosshair:
+    'M12 2v20 M2 12h20 M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12z', // ⌖ engineering target
+  'slash-circle':
+    'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M5 5l14 14', // ⊘ forbid / strike
+  tick: 'M5 12l4 4 10-10', // ✓ checkmark
 };
 
 // camera / document / alert-triangle / lightbulb 用 fill="none" + stroke + 部分填充

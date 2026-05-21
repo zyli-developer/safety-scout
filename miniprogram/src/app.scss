@@ -1,5 +1,21 @@
-// 全局样式 / NutUI 主题变量预留
+// 全局样式：dossier 调子，paper 背景 + 默认 charcoal 文字 + 桌面 backdrop。
+// 用 @use 而不是 @import —— Sass 2.0 已废弃 @import；webpack-dev-server 默认把
+// deprecation warning 渲染成黄色全屏 overlay 盖在页面上、看上去像页面没出来。
+// fonts.scss / tokens.scss 都是纯 CSS 规则（无 Sass 变量），换 @use CSS 输出一致。
+@use './styles/fonts';
+@use './styles/tokens';
+
 page {
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-  background-color: #f5f5f5;
+  font-family: var(--font-body);
+  background-color: var(--color-paper);
+  color: var(--color-charcoal);
+}
+
+// 平板 / 桌面 H5：手机宽度以外露出 paper-darker backdrop。
+// weapp 永远是单一手机视口，media query 不会触发，noop 安全。
+@media (min-width: 768px) {
+  body {
+    background-color: var(--color-paper-backdrop);
+    margin: 0;
+  }
 }

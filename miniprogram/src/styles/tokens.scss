@@ -1,0 +1,55 @@
+// Dossier design tokens — paper-document aesthetic.
+// Used globally via app.scss import; module SCSS files reference via var(--token).
+// Both H5 (regular CSS) and weapp (WXSS) support CSS custom properties.
+
+:root {
+  // Palette
+  --color-paper: #F4EFE5;
+  --color-paper-backdrop: #E8E2D4;
+  --color-charcoal: #1A1A1A;
+  --color-eng-red: #C8281C;
+  --color-survey-blue: #1A4B8C;
+  --color-caliper-grey: #A8A096;
+  --color-warning-amber: #E07B1F;
+  --color-pass-green: #3D7C3D;
+
+  // Spacing (8px base)
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 48px;
+  --space-6: 64px;
+
+  // Type scale — px values; Taro pxtransform handles weapp scaling
+  --fs-eyebrow: 12px;       // Plex Mono labels
+  --fs-meta: 14px;          // Plex Mono identifiers
+  --fs-body: 26px;          // 中文 body text
+  --fs-section: 30px;       // section labels
+  --fs-h2: 40px;            // sub-titles
+  --fs-h1: 56px;            // page large title (H5 desktop)
+  --fs-display: 96px;       // hazard count number
+
+  // Font families — Latin first, Chinese fallback chain.
+  // Source Han Serif is OPTIONAL — if the woff2 isn't loaded, system serif takes over.
+  --font-display: 'IBM Plex Serif', 'Source Han Serif SC', 'STSongti-SC', 'Songti SC', 'SimSun', serif;
+  --font-body: 'IBM Plex Sans', 'Source Han Sans SC', 'PingFang SC', 'Helvetica Neue', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Sarasa Mono SC', 'Menlo', 'Consolas', monospace;
+  --font-condensed: 'IBM Plex Sans Condensed', 'IBM Plex Sans', 'Helvetica Neue Condensed', sans-serif;
+
+  // Geometry
+  --radius-button: 4px;
+  --radius-card: 0;
+  --border-charcoal: 1px solid var(--color-charcoal);
+  --border-hairline: 1px solid var(--color-caliper-grey);
+
+  // Desktop-only type scale + spacing (consumed by pages/*/desktop.module.scss)
+  // Defined here (single source of truth) rather than in each desktop SCSS module:
+  // :root inside a CSS module is :global, so per-module declarations would race in
+  // the global cascade under MiniCssExtractPluginOption.ignoreOrder=true.
+  --fs-body-desktop: 16px;
+  --fs-h1-desktop: 48px;
+  --fs-eyebrow-desktop: 11px;
+  --fs-meta-desktop: 13px;
+  --space-desktop-gutter: 48px;
+}

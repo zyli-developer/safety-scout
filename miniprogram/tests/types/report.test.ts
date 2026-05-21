@@ -30,7 +30,7 @@ describe('ReportPayload 类型 vs report-schema.md', () => {
       expect(typeof h.description).toBe('string');
       expect(typeof h.suggestion).toBe('string');
     });
-    expect(['claude_cli', 'fake']).toContain(example.model_meta.provider);
+    expect(['claude_cli', 'doubao', 'fake']).toContain(example.model_meta.provider);
     expect(typeof example.model_meta.model).toBe('string');
     expect(typeof example.model_meta.latency_ms).toBe('number');
   });

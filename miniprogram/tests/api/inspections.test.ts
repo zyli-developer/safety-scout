@@ -121,3 +121,76 @@ describe('api/inspections.getInspection', () => {
     expect(call.method).toBe('GET');
   });
 });
+
+describe('api/inspections.createInspection — File input (desktop H5)', () => {
+  let originalFetch: typeof globalThis.fetch;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it('uses FormData + fetch when given a File, resolves on 2xx', async () => {
+    const payload = {
+      inspection_id: 'desk-1',
+      poll_url: '/api/v1/inspections/desk-1',
+      poll_interval_ms: 2000,
+      timeout_ms: 330_000,
+      status: 'queued',
+    };
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => payload,
+      text: async () => JSON.stringify(payload),
+    });
+    globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
+
+    const file = new File([new Uint8Array([0xff, 0xd8, 0xff])], 'photo.jpg', {
+      type: 'image/jpeg',
+    });
+    const res = await createInspection(file);
+    expect(res).toEqual(payload);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe(API_BASE_URL + '/api/v1/inspections');
+    expect(init.method).toBe('POST');
+    expect(init.body).toBeInstanceOf(FormData);
+    expect((init.body as FormData).get('image')).toBeInstanceOf(File);
+  });
+
+  it('rejects ApiError with server error code on 4xx', async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        error: {
+          code: 'INVALID_IMAGE',
+          message: 'bad mime',
+          user_message: '图片格式不支持',
+        },
+      }),
+      text: async () => '{}',
+    }) as unknown as typeof globalThis.fetch;
+
+    const file = new File([new Uint8Array([0])], 'x.bin', { type: 'application/octet-stream' });
+    await expect(createInspection(file)).rejects.toMatchObject({
+      name: 'ApiError',
+      code: 'INVALID_IMAGE',
+      statusCode: 400,
+    });
+  });
+
+  it('rejects NETWORK_ERROR on fetch reject', async () => {
+    globalThis.fetch = jest.fn().mockRejectedValue(new Error('boom')) as unknown as typeof globalThis.fetch;
+    const file = new File([new Uint8Array([0])], 'x.jpg', { type: 'image/jpeg' });
+    await expect(createInspection(file)).rejects.toMatchObject({
+      code: 'NETWORK_ERROR',
+      statusCode: 0,
+    });
+  });
+});
