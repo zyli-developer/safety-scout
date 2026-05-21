@@ -27,10 +27,18 @@ jest.mock('@tarojs/components', () => {
     (tag: 'div' | 'span') =>
     ({ children, ...props }: { children?: React.ReactNode } & Record<string, unknown>) =>
       React.createElement(tag, props, children);
+  const imagePassthrough = ({
+    src,
+    mode: _mode,
+    children: _children,
+    ...props
+  }: { src?: string; mode?: string; children?: React.ReactNode } & Record<string, unknown>) =>
+    React.createElement('img', { src, ...props });
   return {
     __esModule: true,
     View: passthrough('div'),
     Text: passthrough('span'),
+    Image: imagePassthrough,
   };
 });
 

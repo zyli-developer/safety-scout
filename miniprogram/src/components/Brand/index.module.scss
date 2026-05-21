@@ -1,0 +1,44 @@
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+}
+
+.mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.markText {
+  color: var(--on-accent);
+  font-weight: 700;
+  font-size: 13px;
+  font-family: var(--f-mono);
+  line-height: 1;
+}
+
+.name {
+  color: var(--ink);
+}
+
+.lg {
+  font-size: 17px;
+}
+
+.lg .mark {
+  width: 32px;
+  height: 32px;
+}
+
+.lg .markText {
+  font-size: 15px;
+}
