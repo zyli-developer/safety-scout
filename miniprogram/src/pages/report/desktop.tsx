@@ -161,9 +161,12 @@ function DesktopSucceededReport({ report }: { report: ReportPayload }) {
 
         <View className={styles.hero}>
           <View className={styles.heroLeft}>
+            {/* Hero 高度被 sidebar 卡片决定（grid align-items:stretch），
+                给 Photo 一个高度上限避免 4:3 在窄列上拉得过高吃满视口。
+                clamp(240, 36vh, 360) —— 1280×800 → 288; 1920×1080 → ~360。 */}
             <Photo
               src={photo?.src ?? ''}
-              ratio="4/3"
+              height="clamp(240px, 36vh, 360px)"
               overlay={!!photo}
               meta={`NO.${no} · ${report.created_at.slice(0, 19).replace('T', ' ')}`}
             />

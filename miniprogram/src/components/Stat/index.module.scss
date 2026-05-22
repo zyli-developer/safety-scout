@@ -5,10 +5,11 @@
 }
 
 .num {
-  font-size: clamp(40px, 3.2vw, 52px);
+  // 默认 compact，1280 视口约 36；宽屏 ≥1600 可放到 52。
+  font-size: clamp(32px, 2.4vw, 52px);
   font-weight: 600;
   line-height: 1;
-  letter-spacing: -1.5px;
+  letter-spacing: -1px;
   color: var(--ink);
   font-feature-settings: 'tnum' on;
 }

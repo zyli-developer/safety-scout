@@ -29,6 +29,8 @@ const VIEWPORTS = [
   { name: 'phone', width: 390, height: 844 },
   { name: 'tablet', width: 768, height: 1024 },
   { name: 'desktop-sm', width: 1100, height: 800 },
+  // 1280×800 是常见笔记本视口 —— 验收点：home 整页 + report hero 一屏可见、不滚。
+  { name: 'desktop-laptop', width: 1280, height: 800 },
   { name: 'desktop', width: 1440, height: 900 },
   { name: 'desktop-wide', width: 1920, height: 1080 },
 ];
@@ -143,10 +145,57 @@ async function main() {
         });
       }
 
-      const shotPath = join(__dirname, `h5-responsive-${vp.name}-home.png`);
-      await mkdir(dirname(shotPath), { recursive: true });
-      await page.screenshot({ path: shotPath, fullPage: true });
-      console.log(`  ✓ screenshot: ${shotPath}`);
+      // fullPage 截整张做存档；viewport-only 截一屏看是否需要滚。
+      const shotFullPath = join(__dirname, `h5-responsive-${vp.name}-home.png`);
+      const shotViewPath = join(__dirname, `h5-responsive-${vp.name}-home-viewport.png`);
+      await mkdir(dirname(shotFullPath), { recursive: true });
+      await page.screenshot({ path: shotFullPath, fullPage: true });
+      await page.screenshot({ path: shotViewPath, fullPage: false });
+      console.log(`  ✓ screenshot: ${shotFullPath}`);
+      console.log(`  ✓ viewport: ${shotViewPath}`);
+
+      // 1280×800 验收：document 横纵都不应超 viewport（home 不滚屏 / 不横滚）
+      if (vp.name === 'desktop-laptop') {
+        const m = await page.evaluate(() => {
+          const html = document.documentElement;
+          const card = document.querySelector('[class*="recentCard"], [class*="todayCard"]');
+          const aside = document.querySelector('[class*="aside"]');
+          const grid = document.querySelector('[class*="grid"]');
+          const container = document.querySelector('[class*="container"]');
+          const page = document.querySelector('[class*="page"]');
+          const r = (el) => {
+            if (!el) return null;
+            const b = el.getBoundingClientRect();
+            return `x=${Math.round(b.x)} w=${Math.round(b.width)} right=${Math.round(b.right)}`;
+          };
+          return {
+            sw: html.scrollWidth,
+            innerW: window.innerWidth,
+            page: r(page),
+            container: r(container),
+            grid: r(grid),
+            aside: r(aside),
+            card: r(card),
+          };
+        });
+        console.log(`  → innerWidth=${m.innerW} scrollWidth=${m.sw}`);
+        console.log(`  → page      ${m.page}`);
+        console.log(`  → container ${m.container}`);
+        console.log(`  → grid      ${m.grid}`);
+        console.log(`  → aside     ${m.aside}`);
+        console.log(`  → card      ${m.card}`);
+        console.log(`  → scrollWidth=${m.sw} innerWidth=${m.innerW} rightmost-card-edge=${m.rightMost}`);
+        if (m.sh > vp.height + 20) {
+          failures.push(
+            `[${vp.name}] body height ${m.sh}px > viewport ${vp.height}px — home 整页不再一屏`,
+          );
+        }
+        if (m.rightMost > m.innerW + 1) {
+          failures.push(
+            `[${vp.name}] aside card right edge ${m.rightMost} > viewport ${m.innerW} — 内容溢出右侧`,
+          );
+        }
+      }
 
       if (consoleErrors.length) {
         failures.push(`[${vp.name}] console errors: ${consoleErrors.join(' | ')}`);

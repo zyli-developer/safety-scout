@@ -95,7 +95,8 @@ async function main() {
   try {
     browser = await chromium.launch({ executablePath: CHROME_PATH, headless: true });
     const context = await browser.newContext({
-      viewport: { width: 1440, height: 900 },
+      // 1280×800 笔记本视口 —— 报告页 hero（页头 + photo + 概要卡）应一屏可见。
+      viewport: { width: 1280, height: 800 },
       deviceScaleFactor: 1,
     });
     const page = await context.newPage();
@@ -210,9 +211,26 @@ async function main() {
     await page.waitForTimeout(400);
 
     const shotPath = join(__dirname, 'h5-photo-flow-report.png');
+    const shotViewport = join(__dirname, 'h5-photo-flow-report-viewport.png');
     await mkdir(dirname(shotPath), { recursive: true });
     await page.screenshot({ path: shotPath, fullPage: true });
+    await page.screenshot({ path: shotViewport, fullPage: false });
     console.log(`  ✓ screenshot: ${shotPath}`);
+    console.log(`  ✓ viewport: ${shotViewport}`);
+
+    // 1280×800 验收：hero（photo + 概要卡）应该 above-the-fold；通过 photo bbox
+    // bottom 不超 viewport.height 判断
+    const photoBottom = await page.evaluate(() => {
+      const img = document.querySelector('img[src^="blob:"]');
+      return img ? Math.round(img.getBoundingClientRect().bottom) : null;
+    });
+    if (photoBottom == null) {
+      failures.push('找不到 hero photo 用作 fit 检查');
+    } else if (photoBottom > 800) {
+      failures.push(`hero photo 底边 ${photoBottom}px > viewport 800px — hero 不再一屏`);
+    } else {
+      console.log(`  ✓ hero photo bottom ${photoBottom}px fits viewport 800px`);
+    }
 
     if (consoleErrors.length) {
       failures.push(`browser errors: ${consoleErrors.join(' | ')}`);

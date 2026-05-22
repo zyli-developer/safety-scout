@@ -1,8 +1,8 @@
 .card {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 32px;
+  gap: 14px;
+  padding: 22px 24px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
@@ -21,14 +21,15 @@
 .countRow {
   display: flex;
   align-items: baseline;
-  gap: 12px;
+  gap: 10px;
 }
 
 .count {
-  font-size: clamp(64px, 5.5vw, 88px);
+  // compact 默认：1280 ≈ 54；宽屏 ≥1600 经下文 @media 还原到 88。
+  font-size: clamp(48px, 4.2vw, 88px);
   font-weight: 600;
   line-height: 0.95;
-  letter-spacing: -2.5px;
+  letter-spacing: -2px;
   color: var(--ink);
   font-feature-settings: 'tnum' on;
 }
@@ -53,8 +54,8 @@
 .metaGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  padding-top: 22px;
+  gap: 14px;
+  padding-top: 14px;
   border-top: 1px solid var(--line);
 }
 

@@ -12,12 +12,13 @@
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
-  padding: 48px 32px 96px;
+  // compact 默认：1280×800 视口要让 hero（页头 + photo + 概要卡）尽量一屏可见。
+  padding: 24px 32px 40px;
 }
 
 .processing {
   max-width: 720px;
-  margin: 56px auto;
+  margin: 40px auto;
   padding: 0 32px;
 }
 
@@ -25,7 +26,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   font-size: clamp(12px, 0.95vw, 14px);
 }
 
@@ -43,8 +44,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 32px;
-  margin-bottom: 40px;
+  gap: 24px;
+  margin-bottom: 20px;
 }
 
 .headerLeft {
@@ -55,8 +56,8 @@
 .headerTopRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .headerNo {
@@ -66,17 +67,17 @@
 }
 
 .h1 {
-  font-size: clamp(40px, 3.6vw, 56px);
+  font-size: clamp(28px, 2.8vw, 56px);
   font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -1.5px;
+  line-height: 1.1;
+  letter-spacing: -1px;
   color: var(--ink);
 }
 
 .lede {
-  margin-top: 14px;
-  font-size: clamp(15px, 1.1vw, 17px);
-  line-height: 1.55;
+  margin-top: 8px;
+  font-size: clamp(14px, 1vw, 17px);
+  line-height: 1.5;
   color: var(--ink-2);
 }
 
@@ -92,9 +93,9 @@
 
 .hero {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 32px;
-  margin-bottom: 32px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
   align-items: stretch;
 }
 
@@ -105,7 +106,7 @@
 }
 
 .alarmRow {
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .listCard {
@@ -113,11 +114,11 @@
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   overflow: hidden;
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .listHead {
-  padding: 24px 32px;
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -169,21 +170,21 @@
 }
 
 .listBody {
-  padding: 0 32px;
+  padding: 0 24px;
 }
 
 .signoff {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 48px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
 }
 
 .signCell {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  padding: 24px;
+  padding: 18px 20px;
 }
 
 .signRole {
@@ -316,16 +317,32 @@
   }
 }
 
-// 宽屏：≥1600 放宽 container 到 1440 + 加 gutter；≥1920 顶到 1520。
+// 宽屏：≥1600 放宽 container + 还原大间距；≥1920 顶到 1520。
 @media (min-width: 1600px) {
   .container {
     max-width: 1440px;
-    padding: 64px 48px 112px;
+    padding: 40px 48px 80px;
+  }
+  .header {
+    margin-bottom: 32px;
+  }
+  .hero {
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  .alarmRow,
+  .listCard {
+    margin-bottom: 32px;
+  }
+  .signoff {
+    gap: 20px;
+    margin-bottom: 40px;
   }
 }
 @media (min-width: 1920px) {
   .container {
     max-width: 1520px;
+    padding: 56px 48px 96px;
   }
 }
 

@@ -5,6 +5,13 @@
 @use './styles/fonts';
 @use './styles/tokens';
 
+// 全局 box-sizing reset：原 prototype clean.css 在 `.clean` 子树里跑过，但
+// 我们没有那个 wrapper —— 浏览器默认 content-box 会让 `width: 100% + padding`
+// 总尺寸算到 padding 外，1280 max-width 容器在 1280 视口实际撑到 1344，溢出 64。
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 page {
   font-family: var(--f-sans);
   background-color: var(--bg);

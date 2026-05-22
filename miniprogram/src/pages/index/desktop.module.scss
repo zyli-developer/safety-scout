@@ -13,21 +13,23 @@
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
-  padding: 64px 32px 80px;
+  // 默认 compact：保证 1280×800 笔记本视口下 TopNav(70) + 页头(~150) + grid(~480)
+  // + 这里上下 padding(64) ≈ 764px 装得下，不强迫滚屏。宽屏 ≥1600 在文件末再放大。
+  padding: 28px 32px 36px;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 32px;
-  margin-bottom: 48px;
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
 .headerLeft {
   display: flex;
   flex-direction: column;
-  max-width: 720px;
+  max-width: 680px;
 }
 
 .eyebrow {
@@ -37,21 +39,22 @@
   letter-spacing: 1.5px;
   color: var(--ink-3);
   text-transform: uppercase;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .h1 {
-  font-size: clamp(40px, 3.6vw, 56px);
+  // 1280 视口下落在 ~36px（清晰但不过大）；宽屏可继续伸到 56px。
+  font-size: clamp(28px, 2.8vw, 56px);
   font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -1.5px;
+  line-height: 1.1;
+  letter-spacing: -1px;
   color: var(--ink);
 }
 
 .lede {
-  margin-top: 14px;
-  font-size: clamp(15px, 1.1vw, 17px);
-  line-height: 1.55;
+  margin-top: 10px;
+  font-size: clamp(14px, 1vw, 17px);
+  line-height: 1.5;
   color: var(--ink-2);
 }
 
@@ -67,8 +70,8 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 32px;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 20px;
   align-items: start;
 }
 
@@ -82,7 +85,7 @@
 }
 
 .dropzoneHeader {
-  padding: 28px 32px;
+  padding: 18px 28px;
   border-bottom: 1px solid var(--line);
   display: flex;
   justify-content: space-between;
@@ -90,7 +93,7 @@
 }
 
 .dropzoneTitle {
-  font-size: clamp(20px, 1.6vw, 24px);
+  font-size: clamp(17px, 1.4vw, 24px);
   font-weight: 600;
   color: var(--ink);
   letter-spacing: -0.2px;
@@ -98,13 +101,13 @@
 
 .dropzoneSpec {
   font-family: var(--f-mono);
-  font-size: clamp(12px, 0.95vw, 14px);
+  font-size: clamp(11.5px, 0.9vw, 14px);
   color: var(--ink-3);
   letter-spacing: 0.5px;
 }
 
 .engineStrip {
-  padding: 18px 32px;
+  padding: 12px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -146,7 +149,7 @@
 .aside {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
 
 .todayCard,
@@ -157,14 +160,14 @@
 }
 
 .todayCard {
-  padding: 28px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
 
 .cardTitle {
-  font-size: clamp(17px, 1.3vw, 20px);
+  font-size: clamp(15px, 1.15vw, 20px);
   font-weight: 600;
   color: var(--ink);
   letter-spacing: -0.2px;
@@ -182,7 +185,7 @@
 }
 
 .recentHead {
-  padding: 24px 28px 14px;
+  padding: 16px 20px 8px;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -195,13 +198,13 @@
 }
 
 .recentBody {
-  padding: 0 28px 28px;
+  padding: 0 20px 18px;
 }
 
 .recentEmpty {
-  font-size: clamp(13.5px, 1.05vw, 15px);
+  font-size: clamp(13px, 1vw, 15px);
   color: var(--ink-3);
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
 // §10.3 desktop-sm (1024–1279)：页头按钮组换到标题下方，gutter 收紧到 24px。
@@ -231,11 +234,21 @@
 @media (min-width: 1600px) {
   .container {
     max-width: 1440px;
-    padding: 80px 48px 96px;
+    padding: 56px 48px 64px;
+  }
+  .header {
+    margin-bottom: 40px;
+  }
+  .grid {
+    gap: 32px;
+  }
+  .aside {
+    gap: 20px;
   }
 }
 @media (min-width: 1920px) {
   .container {
     max-width: 1520px;
+    padding: 72px 48px 80px;
   }
 }
