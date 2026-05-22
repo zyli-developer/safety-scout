@@ -35,20 +35,23 @@ export default function DesktopIndex() {
     if (uploading) return;
     setUploading(true);
     try {
-      // 桌面 H5：File 优先转 data:URL（持久化到 sessionStorage，刷新 / HMR 也能恢复），
-      // FileReader 不可用时（jsdom 测试 / 老浏览器）退到 blob URL，最后退到 skip。
-      // createInspection 用原始 File 上传；不阻塞 createInspection 串行执行。
       const resp = await createInspection(file);
+
+      // 双轨保存：
+      // 1) blob URL 立即同步进内存 —— 不阻塞 navigateTo、报告页挂载时即可读到
+      // 2) data URL 异步转换写 sessionStorage —— 给"刷新 / HMR / 新 tab"持久化
+      // 单独失败都不致命（catch 静默吞掉，最多回退到灰底占位）
       try {
-        await rememberPhotoFromFile(resp.inspection_id, file);
-      } catch {
-        // FileReader 失败 → 再试 blob URL（jsdom 也没 URL.createObjectURL，会 catch 到 skip）
-        try {
-          rememberPhoto(resp.inspection_id, URL.createObjectURL(file));
-        } catch {
-          /* 没办法本地预览了 —— 报告页会显灰底占位，不致命 */
-        }
+        const blobUrl = URL.createObjectURL(file);
+        rememberPhoto(resp.inspection_id, blobUrl);
+      } catch (e) {
+        console.warn('[upload] createObjectURL 失败，photo 同步预览不可用', e);
       }
+      // 不 await：FileReader 在大图上可能慢，让它在背景跑；首次显示已由 blob URL 兜底
+      rememberPhotoFromFile(resp.inspection_id, file).catch((e) => {
+        console.warn('[upload] FileReader → data URL 失败，reload 后 photo 会丢', e);
+      });
+
       Taro.navigateTo({
         url: `/pages/report/index?id=${resp.inspection_id}&pi=${resp.poll_interval_ms}&to=${resp.timeout_ms}`,
       });
