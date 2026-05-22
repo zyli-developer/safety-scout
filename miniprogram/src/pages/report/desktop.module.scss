@@ -31,8 +31,17 @@
 }
 
 .crumbItem {
-  color: var(--ink-3);
+  color: var(--ink-2);
   cursor: pointer;
+  padding: 4px 6px;
+  margin-left: -6px;
+  border-radius: var(--r-sm);
+  transition: background 0.12s, color 0.12s;
+}
+
+.crumbItem:hover {
+  background: var(--surface-2);
+  color: var(--ink);
 }
 
 .crumbCurrent {

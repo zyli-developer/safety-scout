@@ -24,7 +24,7 @@ import { Stat } from '../../components/Stat';
 import { UploadDropzone } from '../../components/desktop/UploadDropzone';
 import { createInspection } from '../../api/inspections';
 import { mapApiError } from '../../utils/errorMessage';
-import { rememberPhoto } from '../../utils/lastPhotoStore';
+import { rememberPhoto, rememberPhotoFromFile } from '../../utils/lastPhotoStore';
 
 import styles from './desktop.module.scss';
 
@@ -35,16 +35,20 @@ export default function DesktopIndex() {
     if (uploading) return;
     setUploading(true);
     try {
-      // 桌面 H5：用 File → blob URL 给报告页直显，免一次 round-trip。
-      // try/catch 包 createObjectURL：jsdom 测试环境不实现，weapp 也没有；都按"没缓存到"处理。
-      let localUrl: string | null = null;
-      try {
-        localUrl = URL.createObjectURL(file);
-      } catch {
-        localUrl = null;
-      }
+      // 桌面 H5：File 优先转 data:URL（持久化到 sessionStorage，刷新 / HMR 也能恢复），
+      // FileReader 不可用时（jsdom 测试 / 老浏览器）退到 blob URL，最后退到 skip。
+      // createInspection 用原始 File 上传；不阻塞 createInspection 串行执行。
       const resp = await createInspection(file);
-      if (localUrl) rememberPhoto(resp.inspection_id, localUrl);
+      try {
+        await rememberPhotoFromFile(resp.inspection_id, file);
+      } catch {
+        // FileReader 失败 → 再试 blob URL（jsdom 也没 URL.createObjectURL，会 catch 到 skip）
+        try {
+          rememberPhoto(resp.inspection_id, URL.createObjectURL(file));
+        } catch {
+          /* 没办法本地预览了 —— 报告页会显灰底占位，不致命 */
+        }
+      }
       Taro.navigateTo({
         url: `/pages/report/index?id=${resp.inspection_id}&pi=${resp.poll_interval_ms}&to=${resp.timeout_ms}`,
       });

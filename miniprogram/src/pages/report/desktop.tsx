@@ -59,7 +59,12 @@ export default function DesktopReport() {
     const step = result?.status === 'processing' ? 2 : 1;
     return (
       <View className={styles.page}>
-        <TopNav activeTab="reports" />
+        <TopNav
+          activeTab="reports"
+          onTabChange={(tab) => {
+            if (tab === 'inspect') goHomeReplay();
+          }}
+        />
         <View className={styles.processing}>
           <ProgressIndicator currentStep={step} elapsedMs={elapsedMs} />
         </View>
@@ -81,6 +86,15 @@ export default function DesktopReport() {
   return <DesktopSucceededReport report={result.report!} />;
 }
 
+// 报告页所有"返回首页"入口共享一套逻辑：先 navigateBack，无栈时 reLaunch 重置到 index。
+async function goHomeReplay(): Promise<void> {
+  try {
+    await Taro.navigateBack();
+  } catch {
+    Taro.reLaunch({ url: '/pages/index/index' });
+  }
+}
+
 function DesktopErrorView({
   userMessage,
   allowRetry,
@@ -90,7 +104,12 @@ function DesktopErrorView({
 }) {
   return (
     <View className={styles.page}>
-      <TopNav activeTab="reports" />
+      <TopNav
+        activeTab="reports"
+        onTabChange={(tab) => {
+          if (tab === 'inspect') goHomeReplay();
+        }}
+      />
       <View className={styles.centered}>
         <View className={styles.errorBox}>
           <Icon name="x-circle" size={56} color="var(--high)" />
@@ -125,11 +144,23 @@ function DesktopSucceededReport({ report }: { report: ReportPayload }) {
 
   return (
     <View className={styles.page}>
-      <TopNav activeTab="reports" />
+      <TopNav
+        activeTab="reports"
+        onTabChange={(tab) => {
+          if (tab === 'inspect') goHomeReplay();
+        }}
+      />
 
       <View className={styles.container}>
         <View className={styles.breadcrumb}>
-          <Text className={styles.crumbItem}>报告</Text>
+          <View
+            className={styles.crumbItem}
+            role="button"
+            aria-label="返回首页"
+            onClick={goHomeReplay}
+          >
+            <Text>← 报告</Text>
+          </View>
           <Icon name="chevron-right" size={12} color="var(--ink-3)" />
           <Text className={styles.crumbCurrent}>NO.{no}</Text>
         </View>

@@ -176,14 +176,14 @@ async function main() {
     // 等隐患明细出现，证明 report 已加载 + 渲染
     await page.waitForSelector('text=高处作业', { timeout: 10_000 });
 
-    // 关键：找到 hero 区的 <img>（不是 icon SVG），src 应是 blob:
-    const heroImg = await page.locator('img[src^="blob:"]').first();
-    const heroImgCount = await page.locator('img[src^="blob:"]').count();
+    // 关键：找到 hero 区的 <img>（不是 icon SVG），src 应是 blob: 或 data: image
+    const heroImg = await page.locator('img[src^="blob:"], img[src^="data:image/"]').first();
+    const heroImgCount = await page.locator('img[src^="blob:"], img[src^="data:image/"]').count();
     if (heroImgCount === 0) {
-      failures.push('报告页没找到 <img src="blob:..."> —— Photo 没拿到 lastPhotoStore 的 src');
+      failures.push('报告页没找到 <img src="blob:|data:"> —— Photo 没拿到 lastPhotoStore 的 src');
     } else {
       const src = await heroImg.getAttribute('src');
-      console.log(`  ✓ <img> rendered with src: ${src?.slice(0, 60)}...`);
+      console.log(`  ✓ <img> rendered with src prefix: ${src?.slice(0, 30)}...`);
 
       // 确认 img 真有可见尺寸（>0×0）—— 如果 size 是 0，前面 CSS 链路某处出问题。
       const box = await heroImg.boundingBox();
@@ -221,7 +221,7 @@ async function main() {
     // 1280×800 验收：hero（photo + 概要卡）应该 above-the-fold；通过 photo bbox
     // bottom 不超 viewport.height 判断
     const photoBottom = await page.evaluate(() => {
-      const img = document.querySelector('img[src^="blob:"]');
+      const img = document.querySelector('img[src^="blob:"], img[src^="data:image/"]');
       return img ? Math.round(img.getBoundingClientRect().bottom) : null;
     });
     if (photoBottom == null) {
@@ -230,6 +230,19 @@ async function main() {
       failures.push(`hero photo 底边 ${photoBottom}px > viewport 800px — hero 不再一屏`);
     } else {
       console.log(`  ✓ hero photo bottom ${photoBottom}px fits viewport 800px`);
+    }
+
+    // 验证 sessionStorage 持久化：刷新页面后 Photo 应仍能渲（数据 URL 已存）
+    console.log('  → reloading page to verify sessionStorage persistence');
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('text=高处作业', { timeout: 10_000 });
+    const reloadedCount = await page
+      .locator('img[src^="blob:"], img[src^="data:image/"]')
+      .count();
+    if (reloadedCount === 0) {
+      failures.push('页面 reload 后 Photo 没恢复 —— sessionStorage 持久化失效');
+    } else {
+      console.log(`  ✓ reload 后 ${reloadedCount} 张 img 仍渲染 — sessionStorage 持久化 OK`);
     }
 
     if (consoleErrors.length) {
