@@ -185,16 +185,34 @@
 }
 
 // 打印 / 导出 PDF：隐藏交互 chrome，让纸面只剩内容（照片 + 概要 + 隐患列表）。
+// 见 desktop.module.scss 同段注释 —— print-color-adjust:exact + 显式覆盖
+// Photo 的 inline 高度避免在打印态塌成 0、<img> 强制填满容器。
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   .page {
     max-width: none;
     margin: 0;
     border: 0;
     background: #fff !important;
   }
+  .printHide,
   .actbar,
   .iconBtn {
     display: none !important;
+  }
+  .photoWrap {
+    break-inside: avoid;
+  }
+  // Photo 在 mobile 用 ratio="4/3"，aspect-ratio 在 Chrome 打印态多数能解；
+  // 仍兜底给 <img> 强制 100% + cover，避免某些版本 object-fit 失效。
+  .photoWrap img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
   }
   .summaryCard,
   .hazardList {

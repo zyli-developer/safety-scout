@@ -11,6 +11,7 @@
  */
 import Taro from '@tarojs/taro';
 import { View, Text } from '@tarojs/components';
+import { useEffect, useState } from 'react';
 
 import { usePolling } from '../../hooks/usePolling';
 import { getInspection } from '../../api/inspections';
@@ -83,16 +84,29 @@ export default function DesktopReport() {
     return <DesktopErrorView userMessage={ui.userMessage} allowRetry={ui.allowRetry} />;
   }
 
-  return <DesktopSucceededReport report={result.report!} />;
+  // 用 URL 上的 id（上传时 rememberPhoto 就是用它做 key）做照片查找的权威 id；
+  // 旧版后端可能把 LLM 占位符 UUID 写进 report.inspection_id —— 不可信。
+  // created_at 同理：outer 字段来自 DB row、可信；report.created_at 是 LLM 占位符。
+  return (
+    <DesktopSucceededReport
+      report={result.report!}
+      canonicalId={id}
+      createdAt={result.created_at}
+    />
+  );
 }
 
-// 报告页所有"返回首页"入口共享一套逻辑：先 navigateBack，无栈时 reLaunch 重置到 index。
+// 报告页"返回首页" —— 直接 reLaunch 重置页面栈到 index。
+//
+// 之前的实现是 navigateBack ➜ catch reLaunch。坑在 H5 端：Taro.navigateBack 走的是
+// window.history.back()，没有上一项时浏览器是 no-op，但 Promise 依然 resolve、不抛
+// 异常 —— 于是 catch 永远不进，按钮"看似可点但无反应"。打印 / 直接打开报告 URL /
+// 浏览器 back-forward cache 复活页面 时都会触发这个 stuck 状态。
+//
+// 这里干脆放弃 navigateBack 路径：用户点"← 报告" / "巡检"标签的语义就是"回到首页
+// 重新开始一次巡检"，reLaunch 直接清栈跳 /pages/index/index 才是想要的行为。
 async function goHomeReplay(): Promise<void> {
-  try {
-    await Taro.navigateBack();
-  } catch {
-    Taro.reLaunch({ url: '/pages/index/index' });
-  }
+  await Taro.reLaunch({ url: '/pages/index/index' });
 }
 
 function DesktopErrorView({
@@ -125,11 +139,44 @@ function shortId(inspectionId: string): string {
   return inspectionId.slice(0, 12).toUpperCase();
 }
 
-function DesktopSucceededReport({ report }: { report: ReportPayload }) {
+function DesktopSucceededReport({
+  report,
+  canonicalId,
+  createdAt,
+}: {
+  report: ReportPayload;
+  canonicalId: string;
+  createdAt: string;
+}) {
   const sorted = sortBySeverity(report.hazards);
   const severity = report.overall_severity;
-  const no = shortId(report.inspection_id);
-  const photo = getPhotoFor(report.inspection_id);
+  // canonicalId 来自 URL（与上传时 rememberPhoto 用的 key 同源）；
+  // 仅当 URL 丢了 id 时退到 report.inspection_id —— 后者在旧后端上是 LLM 占位符。
+  const idForLookup = canonicalId || report.inspection_id;
+  const no = shortId(idForLookup);
+  // 桌面上传时先存 blob URL 立刻挂屏，FileReader 异步把 data URL 写回 store；
+  // 这里轮询 store 直到拿到 data URL —— blob URL 在 window.print() / 导出 PDF
+  // 时不稳（Chrome 打印管线偶尔取不到 blob 数据，照片在 PDF 里整张消失），
+  // data URL 自带字节流不存在这个问题。命中 data: 即 stop。
+  const [photo, setPhoto] = useState(() => getPhotoFor(idForLookup));
+  useEffect(() => {
+    if (photo?.src?.startsWith('data:')) return;
+    const tick = () => {
+      const fresh = getPhotoFor(idForLookup);
+      if (fresh && fresh.src !== photo?.src) setPhoto(fresh);
+      return fresh?.src?.startsWith('data:') ?? false;
+    };
+    if (tick()) return;
+    const timer = setInterval(() => {
+      if (tick()) clearInterval(timer);
+    }, 500);
+    // 30s 上限够 FileReader 处理 10MB+ 图；之后照片要么已升级、要么留着 blob 也能显示
+    const stop = setTimeout(() => clearInterval(timer), 30000);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(stop);
+    };
+  }, [idForLookup, photo?.src]);
 
   const notImplemented = (label: string) => () =>
     Taro.showToast({ title: `${label}：开发中`, icon: 'none', duration: 2000 });
@@ -145,6 +192,7 @@ function DesktopSucceededReport({ report }: { report: ReportPayload }) {
   return (
     <View className={styles.page}>
       <TopNav
+        className={styles.printHide}
         activeTab="reports"
         onTabChange={(tab) => {
           if (tab === 'inspect') goHomeReplay();
@@ -199,7 +247,7 @@ function DesktopSucceededReport({ report }: { report: ReportPayload }) {
               src={photo?.src ?? ''}
               height="clamp(240px, 36vh, 360px)"
               overlay={!!photo}
-              meta={`NO.${no} · ${report.created_at.slice(0, 19).replace('T', ' ')}`}
+              meta={`NO.${no} · ${createdAt.slice(0, 19).replace('T', ' ')}`}
             />
           </View>
           <View className={styles.heroRight}>

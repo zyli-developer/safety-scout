@@ -356,19 +356,57 @@
 }
 
 // 打印 / 导出 PDF：隐藏导航 / 面包屑 / 操作按钮，纸面只剩报告本体。
+//
+// 关键修复（2026-05-22）：
+//  · 没有 print-color-adjust:exact 时背景色 / rgba / backdrop-filter 都不打印，
+//    .photo 容器的 surface-2 灰底 + .meta 胶囊会变透明（图片本身能打印，但若图
+//    片 src 异常露出灰底就糊成一片）—— 强制 exact 让图片下面的占位也成纸面。
+//  · 屏幕端 .photo 高度走 clamp(240px, 36vh, 360px)；打印时 vh 基于纸面高度，
+//    在 Chrome 某些版本上 vh 解出 0，photo 容器塌成 0 → <img> height:100% 跟着
+//    塌成 0，整张图消失。打印态用显式 px 高度覆盖 inline style（!important
+//    才压得过 inline）。
+//  · TopNav 是 app chrome 不属于报告本体，打印时一并隐去。该组件 className 由
+//    .tsx 传入 styles.printHide，靠下面这条规则统一处理。
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   .page {
     background: #fff !important;
+    min-height: auto;
   }
   .container {
     max-width: none;
-    padding: 24px;
+    padding: 16px 24px;
   }
+
+  // 纸面不需要的 app chrome / 交互入口
+  .printHide,
   .breadcrumb,
   .headerActions,
   .listFilters {
     display: none !important;
   }
+
+  // hero 整块尽量留在第一页内 + 给 Photo 一个确定的纸面高度
+  .hero {
+    break-inside: avoid;
+    margin-bottom: 16px;
+  }
+  // 直接覆盖 Photo 容器（heroLeft 的唯一子节点）的 inline height
+  .heroLeft > * {
+    height: 320px !important;
+  }
+  // 兜底确保 <img> 真填满容器；个别 Chrome 打印管线对 object-fit 处理不一致
+  .heroLeft img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+
   .listCard,
   .signCell {
     break-inside: avoid;

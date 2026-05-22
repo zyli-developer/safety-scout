@@ -10,6 +10,7 @@
  */
 import Taro from '@tarojs/taro';
 import { View, Text } from '@tarojs/components';
+import { useEffect, useState } from 'react';
 
 import { usePolling } from '../../hooks/usePolling';
 import { getInspection } from '../../api/inspections';
@@ -62,7 +63,7 @@ export default function MobileReport() {
     const step = result?.status === 'processing' ? 2 : 1;
     return (
       <View className={styles.page}>
-        <AppBar title="巡检报告" onBack={() => Taro.navigateBack()} />
+        <AppBar title="巡检报告" onBack={() => Taro.reLaunch({ url: '/pages/index/index' })} />
         <View className={styles.processingWrap}>
           <ProgressIndicator currentStep={step} elapsedMs={elapsedMs} />
         </View>
@@ -81,7 +82,15 @@ export default function MobileReport() {
     return <ErrorView userMessage={ui.userMessage} allowRetry={ui.allowRetry} />;
   }
 
-  return <SucceededReport report={result.report!} />;
+  // 见 desktop.tsx 注释：URL 上的 id + outer created_at 才可信，
+  // report.inspection_id / report.created_at 在旧后端上是 LLM 占位符。
+  return (
+    <SucceededReport
+      report={result.report!}
+      canonicalId={id}
+      createdAt={result.created_at}
+    />
+  );
 }
 
 function ErrorView({
@@ -110,14 +119,44 @@ function countBySeverity(hazards: readonly { severity: Severity }[]) {
   );
 }
 
-function SucceededReport({ report }: { report: ReportPayload }) {
+function SucceededReport({
+  report,
+  canonicalId,
+  createdAt,
+}: {
+  report: ReportPayload;
+  canonicalId: string;
+  createdAt: string;
+}) {
   const sorted = sortBySeverity(report.hazards);
   const severity = report.overall_severity;
   const counts = countBySeverity(sorted);
   const total = sorted.length;
-  const shortNo = report.inspection_id.slice(0, 12).toUpperCase();
-  const photoMeta = `NO.${shortNo} · ${report.created_at.slice(0, 16).replace('T', ' ')}`;
-  const photo = getPhotoFor(report.inspection_id);
+  // canonicalId 来自 URL（与上传时 rememberPhoto 同源），
+  // 仅在 URL 丢 id 时退到 report.inspection_id（旧后端为 LLM 占位符）。
+  const idForLookup = canonicalId || report.inspection_id;
+  const shortNo = idForLookup.slice(0, 12).toUpperCase();
+  const photoMeta = `NO.${shortNo} · ${createdAt.slice(0, 16).replace('T', ' ')}`;
+  // 见 desktop.tsx 同段注释：blob URL → data URL 升级轮询，
+  // 让 PDF 导出时拿到的是 data: src，避免 Chrome 打印管线取不到 blob 数据。
+  const [photo, setPhoto] = useState(() => getPhotoFor(idForLookup));
+  useEffect(() => {
+    if (photo?.src?.startsWith('data:')) return;
+    const tick = () => {
+      const fresh = getPhotoFor(idForLookup);
+      if (fresh && fresh.src !== photo?.src) setPhoto(fresh);
+      return fresh?.src?.startsWith('data:') ?? false;
+    };
+    if (tick()) return;
+    const timer = setInterval(() => {
+      if (tick()) clearInterval(timer);
+    }, 500);
+    const stop = setTimeout(() => clearInterval(timer), 30000);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(stop);
+    };
+  }, [idForLookup, photo?.src]);
 
   const notImplemented = (label: string) => () =>
     Taro.showToast({ title: `${label}：开发中`, icon: 'none', duration: 2000 });
@@ -133,8 +172,9 @@ function SucceededReport({ report }: { report: ReportPayload }) {
   return (
     <View className={styles.page}>
       <AppBar
+        className={styles.printHide}
         title="巡检报告"
-        onBack={() => Taro.navigateBack()}
+        onBack={() => Taro.reLaunch({ url: '/pages/index/index' })}
         right={
           <>
             <View
