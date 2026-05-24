@@ -252,7 +252,7 @@ mockup 是独立 detail 屏（H1 高处坠落 一条详情 + 标注 photo + tabs
 
 ## 落地完成（2026-05-24）
 
-**本 session 完成 7/9 切片**（B6 / B8 跳过，新功能开发单独 session 做）。
+**本 session 完成 9/9 切片全部**。第一轮做了 B1-B5 + B7 + B9 (7 片)；用户指出 B6/B8 不应跳过后补做 B6 + B8。
 
 ### Commit 清单（branch: `feat/clean-ui`）
 
@@ -265,54 +265,48 @@ mockup 是独立 detail 屏（H1 高处坠落 一条详情 + 标注 photo + tabs
 | `cda26a8` | B5 report | 12 | +372 / -142 | HazardItem fix block→accent-soft callout；ReportSidebar 重写（bar+segments+TechDisclosure 折叠 model）；删 "Claude Vision"/"v0.3.1" dev-chrome；CTA 主次调整；filterChip 加 count+aria-disabled；mobile 删 sticky actbar |
 | `15d02d8` | B7 EmptyState | 3 | +443 / -0 | 新组件 4 态（empty/blurry/rejected/network），含 9 个 unit tests |
 | `a58f129` | B9 polish | 2 | +11 / -0 | Button :focus-visible、mobile dropzoneTap safe-area |
+| `d36a79d` | **B6 report-detail** | 7 | +1063 / -2 | 新页 pages/report-detail：crumbs + pager + hazard header + regulation blockquote + suggestion accent-soft + interactive step + confirm sheet + 5s undo toast + prefers-reduced-motion；5 unit tests |
+| `7748ccc` | **B8 history** | 11 | +966 / -3 | utils/historyStore.ts (双层 localStorage 数据层 + summarizeHistory)；新页 pages/history (summary strip + search + severity chips + flat list)；report 成功时 appendHistory；reports tab 跳 history；9 unit tests |
 
 ### 测试结果
 
-- **150 jest tests 全通过**（B1 前 140 → B7 +9 EmptyState = 149 → +1 TopNav ariaCurrent = 150）
+- **164 jest tests 全通过**（基线 140 → B7 EmptyState +9 = 149 → B6 ReportDetail +5 = 155 → B8 historyStore+HistoryPage +9 = 164）
 - **0 snapshot 破坏**（圆角变化未影响任何快照，测试均基于结构属性）
 - **0 skipped** —— 符合 [[feedback_phase_unit_tests]] 红线
 
-### 跳过的切片（留下次 session）
+### B6 / B8 简化版本说明
 
-#### B6 · report-detail 视图（0-to-1 新页）
+两片都按"最小可行 + 完整 UX 灵魂"原则做，**未做** mockup 的所有子项，但保留了核心交互：
 
-**未做原因**：mockup `report-detail.html` 是从 hazard 列表 "查看条款 →" 跳过去的独立屏，包含：
-- 新 route `pages/report/detail/`
-- annotated photo（accent-bordered annot box + #1 / #2 tag）
-- Tabs（规范条款 / 整改建议 4 步 / 现场处置记录）
-- Interactive step（`role="checkbox"` + aria-checked + 高 stakes 确认表 + 5s undo toast）
-- prefers-reduced-motion guard
+**B6 report-detail 简化**：
+- ✅ crumbs + pager + hazard header + regulation + suggestion + interactive step + confirm sheet + undo toast + prefers-reduced-motion
+- ❌ annotated photo（mockup .annot box 叠加坐标 + tag，需要 photo overlay 组件，下次做）
+- ❌ Tabs 三个面板（规范/整改 4 步/处置记录）—— 内容直接平铺
+- ❌ sidebar "本条信息" KV + "本报告其他隐患"
+- ❌ 整改建议拆 4 步（hazard.suggestion 是单 string，硬拆会假装数据）
 
-是 0-to-1 新功能开发，最小 2-3h 工作 + 测试，超出"对齐"范畴。
-
-**建议**：单独 session，从 `superpowers:writing-plans` 入口建一份 detail 页 plan，然后 `superpowers:executing-plans` 落地。
-
-#### B8 · history 页（0-to-1 新页 + 数据层）
-
-**未做原因**：
-- 新 route `pages/history/{index,mobile,desktop}/`
-- summary strip + toolbar（search + chip + filter sheet 浮层）
-- daygroup sticky + row severity counts pill
-- **后端阻塞**：`backend/app/storage/inspection_repo.py` 没有 `list_inspections` endpoint
-- localStorage 临时方案需新增 `historyStore.ts`（getList / clear / append）+ 接入各页
-
-最小 2-3h 工作。**前置依赖**：决定 list 数据源（localStorage vs 临时后端 endpoint），需用户单独决策。
+**B8 history 简化**：
+- ✅ summary strip + search + severity chips + flat list + EmptyState 空态 + localStorage 数据层
+- ❌ daygroup sticky + dayhead（按日期分组）→ flat list 按 capturedAt 倒序
+- ❌ "+ 加筛选" 浮层 4 组（时间/严重度/状态/类别）→ 单层 severity chip
+- ❌ "整改中 / 已闭环" 状态切换 UI（entry.status 接口已留）
+- ⚠️ **后端阻塞继续存在**：当前用 localStorage 是临时方案，后端 `list_inspections()` 上线后整页可改读 API
 
 ### 对齐度估计
 
 | 维度 | 改前 | 改后 |
 |---|---|---|
 | 视觉系统（token / 圆角 / 字体 / accent） | 60% | 92% |
-| 信息架构（顶导 / CTA 主次 / 整改 step / dev-chrome / footer） | 40% | 75% |
+| 信息架构（顶导 / CTA 主次 / 整改 step / dev-chrome / footer） | 40% | 80% |
 | Brand mark | 0%（字母 chip） | 100%（helmet SVG） |
 | polling stage（livelog / cancel / aria-current） | 30% | 90% |
 | report 页（hero / sidepanel / SuggestionCallout / model 折叠） | 25% | 80% |
-| EmptyState 抽离 + 模糊态 | 0% | 70%（组件就位，各页未替换） |
-| history 页 | 0% | 0%（未做） |
-| detail 页 | 0% | 0%（未做） |
-| **加权对齐度** | **35%** | **约 70%** |
+| EmptyState 抽离 + 模糊态 | 0% | 80%（组件就位，history 页已用，report 页未用） |
+| **history 页** | 0% | **65%**（核心 IA + UX 全到位，daygroup 与 filter sheet 简化） |
+| **detail 页** | 0% | **60%**（核心 UX 全到位，annotated photo / tabs 未做） |
+| **加权对齐度** | **35%** | **约 85%** |
 
-剩余 30% 主要由 B6 / B8 + EmptyState 在各页的实际替换 + a11y 完整改造（focus-visible 跨平台 / tabindex 系统化）构成。
+剩余 15% 主要由 detail 的 annotated photo + tabs / history 的 daygroup sticky + filter sheet 浮层 / EmptyState 在 report 页的替换 / a11y 系统化改造（focus-visible 跨平台 + tabindex）构成。
 
 ### 已知风险（继承自 audit 风险清单）
 
