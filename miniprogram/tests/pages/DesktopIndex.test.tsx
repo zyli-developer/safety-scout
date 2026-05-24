@@ -33,12 +33,18 @@ describe('DesktopIndex (clean-minimal)', () => {
     mockedToast.mockReset();
   });
 
-  it('renders page header + dropzone card + aside cards', () => {
+  it('renders hero + dropzone card + 三步流程卡 + aside cards', () => {
     const { container } = render(<DesktopIndex />);
-    expect(screen.getByText('开始一次现场巡检')).toBeInTheDocument();
+    // 2026-05-24：h1 改 "拍一张工地照片..."，删 eyebrow 与 engineStrip（模型名 dev-chrome）
+    expect(screen.getByText(/拍一张工地照片/)).toBeInTheDocument();
     expect(screen.getByText('上传现场照片')).toBeInTheDocument();
     expect(screen.getByText(/拖拽图片到此处/)).toBeInTheDocument();
-    expect(screen.getByText(/Claude Sonnet 4.5/)).toBeInTheDocument();
+    // engineStrip "Claude Sonnet 4.5" 已删除，确保不再出现
+    expect(screen.queryByText(/Claude Sonnet/)).toBeNull();
+    // 三步流程卡的 step num 是新加的
+    expect(screen.getByText(/01 · 拍照/)).toBeInTheDocument();
+    expect(screen.getByText(/02 · 等待/)).toBeInTheDocument();
+    expect(screen.getByText(/03 · 看报告/)).toBeInTheDocument();
     expect(screen.getByText('今日巡检')).toBeInTheDocument();
     expect(screen.getByText('最近巡检')).toBeInTheDocument();
     // dropzone 是页面里唯一带 aria-busy 的元素

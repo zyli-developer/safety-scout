@@ -1,25 +1,25 @@
 /**
- * DesktopIndex — PC web 首页桌面布局（Clean & Minimal）。
+ * DesktopIndex — PC web 首页桌面布局（unified-modern-minimal · 2026-05-22）。
  *
- * 结构：TopNav / 页头(eyebrow + h1 + body + 右侧两按钮) / 1.5fr+1fr 两栏。
- *   左：UploadDropzone 卡（上传现场照片 · JPG/PNG/HEIC · 15MB + dropzone + 模型可用性条）
- *   右：今日卡（4 宫格 Stat）+ 最近巡检卡（暂为空态，待 history API）
+ * 结构：TopNav / Hero(无 eyebrow, h1 + sub) / 1.4fr+1fr 两栏。
+ *   左：UploadDropzone 卡（上传现场照片 · JPG/PNG · ≤10MB + dropzone + 三步流程卡）
+ *   右：今日卡（4 宫格 Stat）+ 最近巡检卡（待 history API）
  *
- * 整页 max-width 1280px、左右 32px gutter；视口 <1024px 时由 dispatcher 切回 MobileIndex。
+ * 2026-05-24 改动（按 docs/plans/2026-05-24-ui-parity-audit.md B3）：
+ * - 删 eyebrow "AI 现场巡检"（mockup 无）
+ * - 删头部右侧 "历史报告 / 新建巡检" 双按钮（mockup 无）
+ * - 删 engineStrip "Claude Sonnet 4.5 · 平均 29s · v0.3.1"（dev-chrome）
+ * - Hero 文案 + lede 对齐 home.html
+ * - dropzoneSpec 改"JPG / PNG · 单张 ≤ 10 MB · 不会上传到任何第三方"
+ * - 新增三步流程卡（拍照 / 等待 / 看报告）
  *
- * 上传流：UploadDropzone → handleFile → createInspection(File) → Taro.navigateTo
- * 跳报告页；错误归一为 mapApiError(err).userMessage，弹 Taro.showToast。
- *
- * "历史报告" / "新建巡检" / "查看全部" 是 placeholder action —— 后端尚未实现，
- * 按下走 toast 提示。
+ * 整页 max-width 1240、左右 32px gutter；视口 <1024px 时由 dispatcher 切回 MobileIndex。
  */
 import Taro from '@tarojs/taro';
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 
 import { TopNav } from '../../components/TopNav';
-import { Button } from '../../components/Button';
-import { Icon } from '../../components/Icon';
 import { Stat } from '../../components/Stat';
 import { UploadDropzone } from '../../components/desktop/UploadDropzone';
 import { createInspection } from '../../api/inspections';
@@ -40,14 +40,12 @@ export default function DesktopIndex() {
       // 双轨保存：
       // 1) blob URL 立即同步进内存 —— 不阻塞 navigateTo、报告页挂载时即可读到
       // 2) data URL 异步转换写 sessionStorage —— 给"刷新 / HMR / 新 tab"持久化
-      // 单独失败都不致命（catch 静默吞掉，最多回退到灰底占位）
       try {
         const blobUrl = URL.createObjectURL(file);
         rememberPhoto(resp.inspection_id, blobUrl);
       } catch (e) {
         console.warn('[upload] createObjectURL 失败，photo 同步预览不可用', e);
       }
-      // 不 await：FileReader 在大图上可能慢，让它在背景跑；首次显示已由 blob URL 兜底
       rememberPhotoFromFile(resp.inspection_id, file).catch((e) => {
         console.warn('[upload] FileReader → data URL 失败，reload 后 photo 会丢', e);
       });
@@ -71,43 +69,40 @@ export default function DesktopIndex() {
       <TopNav activeTab="inspect" />
 
       <View className={styles.container}>
-        <View className={styles.header}>
-          <View className={styles.headerLeft}>
-            <Text className={styles.eyebrow}>AI 现场巡检</Text>
-            <Text className={styles.h1}>开始一次现场巡检</Text>
-            <Text className={styles.lede}>
-              上传一张施工现场照片，AI 会在 30 秒内识别隐患、引用规范条款、给出可执行的整改建议。
-            </Text>
-          </View>
-          <View className={styles.headerActions}>
-            <Button variant="secondary" onTap={notImplemented('历史报告')}>
-              <Icon name="image" size={16} color="var(--ink)" />
-              <Text className={styles.btnText}>历史报告</Text>
-            </Button>
-            <Button variant="primary" onTap={notImplemented('新建巡检')}>
-              <Text className={styles.btnText}>新建巡检</Text>
-            </Button>
-          </View>
+        <View className={styles.hero}>
+          <Text className={styles.h1}>拍一张工地照片，AI 立刻找出隐患。</Text>
+          <Text className={styles.lede}>
+            面向安全员的隐患识别工具。识别高处坠落、临边洞口、用电、消防、个人防护等十类常见隐患，给出可执行的整改建议与规范条款引用。平均 29 秒出报告。
+          </Text>
         </View>
 
         <View className={styles.grid}>
           <View className={styles.dropzoneCard}>
             <View className={styles.dropzoneHeader}>
               <Text className={styles.dropzoneTitle}>上传现场照片</Text>
-              <Text className={styles.dropzoneSpec}>JPG · PNG · HEIC · 最大 15MB</Text>
+              <Text className={styles.dropzoneSpec}>JPG / PNG · 单张 ≤ 10 MB · 不会上传到任何第三方</Text>
             </View>
             <UploadDropzone
               onSelect={handleFile}
               uploading={uploading}
               onQRRequest={notImplemented('手机扫码')}
             />
-            <View className={styles.engineStrip}>
-              <View className={styles.engineLeft}>
-                <View className={styles.engineDot} />
-                <Text className={styles.engineModel}>Claude Sonnet 4.5</Text>
-                <Text className={styles.engineMeta}>· 平均 29s · 服务可用</Text>
+            <View className={styles.uploadSteps} aria-label="使用流程">
+              <View className={styles.uploadStep}>
+                <Text className={styles.stepNum}>01 · 拍照</Text>
+                <Text className={styles.stepLabel}>对准隐患拍清楚</Text>
+                <Text className={styles.stepSub}>支持现场拍 / 历史照</Text>
               </View>
-              <Text className={styles.engineVer}>v0.3.1</Text>
+              <View className={styles.uploadStep}>
+                <Text className={styles.stepNum}>02 · 等待</Text>
+                <Text className={styles.stepLabel}>AI 识别 · 平均 29 秒</Text>
+                <Text className={styles.stepSub}>不离开页面也行</Text>
+              </View>
+              <View className={styles.uploadStep}>
+                <Text className={styles.stepNum}>03 · 看报告</Text>
+                <Text className={styles.stepLabel}>隐患清单 + 整改建议</Text>
+                <Text className={styles.stepSub}>可直接转发给班组</Text>
+              </View>
             </View>
           </View>
 
@@ -126,7 +121,7 @@ export default function DesktopIndex() {
               <View className={styles.recentHead}>
                 <Text className={styles.cardTitle}>最近巡检</Text>
                 <Text className={styles.recentLink} onClick={notImplemented('查看全部')}>
-                  查看全部 →
+                  全部 →
                 </Text>
               </View>
               <View className={styles.recentBody}>

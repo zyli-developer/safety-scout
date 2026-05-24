@@ -1,5 +1,5 @@
-// 首页（Clean & Minimal）：品牌栏 / hero / CTA / 今日数据。
-// 旧 dossier 的刻度尺 / CAD 边距 / dossier section rule 全删。
+// MobileIndex (unified-modern-minimal 2026-05-22)：TopNav / hero / 大橙 tap target。
+// 2026-05-24 重排：删 brandBar / eyebrow / today / photoWrap，主 CTA 改 dropzone__tap 风格。
 
 .page {
   display: flex;
@@ -8,49 +8,18 @@
   background: var(--bg);
 }
 
-.brandBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px 8px;
-}
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--r-pill);
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
-}
-
 .hero {
-  padding: 32px 24px 24px;
+  padding: 36px 24px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.eyebrow {
-  font-family: var(--f-mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 1.5px;
-  color: var(--ink-3);
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
 .h1 {
-  font-size: 44px;
+  font-size: clamp(28px, 7.2vw, 36px);
   font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -1.2px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
   color: var(--ink);
 }
 
@@ -58,34 +27,67 @@
   font-size: 15px;
   line-height: 1.55;
   color: var(--ink-2);
-  margin-top: 8px;
+  margin-top: 4px;
+  max-width: 60ch;
 }
 
-.ctaBlock {
+.tapWrap {
   padding: 8px 24px 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  align-items: center;
 }
 
-.ghostWrap {
-  margin-top: 4px;
-}
-
-.ghostText {
-  margin-left: 6px;
-}
-
-.photoWrap {
-  padding: 0 24px;
-  margin-top: 4px;
-}
-
-.today {
-  padding: 32px 24px 24px;
+// 大橙整块 tap target：mockup .dropzone__tap
+.dropzoneTap {
+  width: 100%;
+  padding: 36px 24px;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 10px 30px rgba(232, 93, 44, 0.28);
+  cursor: pointer;
+  transition: background 120ms, transform 120ms;
+}
+
+.dropzoneTap:active {
+  transform: translateY(1px);
+  background: var(--accent-hover);
+}
+
+.dropzoneTapBusy {
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.dropzoneTapTitle {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--on-accent);
+}
+
+.dropzoneTapSub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 400;
+}
+
+.albumLink {
+  padding: 6px 8px;
+  color: var(--ink-3);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.albumLink:hover {
+  color: var(--ink-2);
 }
 
 .spacer {
@@ -93,32 +95,7 @@
   min-height: 24px;
 }
 
-.todayHead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-}
-
-.todayTitle {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--ink);
-  letter-spacing: -0.2px;
-}
-
-.todayCard {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  padding: 20px;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-}
-
-// IMPLEMENT.md §10.2 自适应：≥600px tablet 把 mobile shell 居中、左右露 backdrop。
-// 不重新设计布局，只是更窄居中，避免 H5 平板宽屏下行长成"恐怖文本墙"。
-// 选 600 作为分水岭：与 @container page (min-width:600px) 在原型 clean.css 保持一致。
+// ≥600px tablet 居中露 backdrop（IMPLEMENT.md §10.2）
 @media (min-width: 600px) {
   .page {
     max-width: 640px;
@@ -127,9 +104,4 @@
     border-right: 1px solid var(--line);
     background: var(--surface);
   }
-}
-
-// §10.4 流体字号：phone 36 → tablet/超宽 44。weapp 不识 clamp()，会 fallback 到第一个值。
-.h1 {
-  font-size: clamp(36px, 9vw, 44px);
 }

@@ -1,30 +1,34 @@
 /**
- * 移动端首页 — Clean & Minimal 重排：品牌栏 / hero 文案 / 主 CTA / 副 CTA / 今日数据。
+ * 移动端首页 — unified-modern-minimal (2026-05-22) 对齐。
  *
- * 数据：暂无后端"今日数据"接口，Stat 显示 "—"；接入后改为读取真实计数。
- * 同样地，"上次巡检照片"是设计稿里的视觉锚，但未有数据模型 → 当前不渲染。
+ * 结构：TopNav / Hero(h1 + lede) / 大橙色整块 dropzone__tap "拍照" tap target / 小灰链接"或从相册选择"。
+ *
+ * 2026-05-24 改动（按 docs/plans/2026-05-24-ui-parity-audit.md B3）：
+ * - 顶导从独立 brandBar 改 TopNav (mobile 自动隐藏 navlinks，保 brand + avatar)
+ * - 删 eyebrow "AI 现场巡检"（mockup 无）
+ * - Hero 文案对齐 mockup
+ * - 主 CTA 从 BigButton 改为 mockup .dropzone__tap 风格的整块橙色 tap target
+ * - 删 today stats 区（移动 mockup 没有）
+ * - 删上次巡检 Photo 锚（移动 mockup 没有）
+ *
+ * Tap target 行为：保留 captureImage() hook —— 真接相机 intent，不是单纯跳页。
+ * 这一点代码做得比 mockup 还对（mockup .dropzone__tap 是 <a href> 跳页占位）。
  */
 import Taro from '@tarojs/taro';
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 
-import { BigButton } from '../../components/BigButton';
-import { Button } from '../../components/Button';
-import { Brand } from '../../components/Brand';
-import { Stat } from '../../components/Stat';
+import { TopNav } from '../../components/TopNav';
 import { Icon } from '../../components/Icon';
-import { Photo } from '../../components/Photo';
 import { captureImage } from '../../hooks/useImageCapture';
 import { createInspection } from '../../api/inspections';
 import { mapApiError } from '../../utils/errorMessage';
-import { getLastPhoto, rememberPhoto } from '../../utils/lastPhotoStore';
-import { relativeTime } from '../../utils/relativeTime';
+import { rememberPhoto } from '../../utils/lastPhotoStore';
 
 import styles from './mobile.module.scss';
 
 export default function MobileIndex() {
   const [uploading, setUploading] = useState(false);
-  const lastPhoto = getLastPhoto();
 
   const handleTap = async () => {
     if (uploading) return;
@@ -51,62 +55,44 @@ export default function MobileIndex() {
 
   return (
     <View className={styles.page}>
-      <View className={styles.brandBar}>
-        <Brand />
-        <View className={styles.avatar}>
-          <Text>用</Text>
-        </View>
-      </View>
+      <TopNav activeTab="inspect" />
 
       <View className={styles.hero}>
-        <Text className={styles.eyebrow}>AI 现场巡检</Text>
-        <Text className={styles.h1}>拍一张</Text>
-        <Text className={styles.h1}>AI 找隐患</Text>
-        <Text className={styles.lede}>上传施工现场照片，30 秒内得到结构化安全报告</Text>
+        <Text className={styles.h1}>拍一张工地照片，AI 立刻找出隐患。</Text>
+        <Text className={styles.lede}>
+          面向安全员的隐患识别工具。识别十类常见隐患，给出可执行的整改建议。平均 29 秒出报告。
+        </Text>
       </View>
 
-      {/* 工地照片视觉锚 —— 仅当本 session 内有上传过才渲染，避免首次进入看到空灰底。
-          src 来自 lastPhotoStore（内存缓存的 tempFilePath / blob:URL）；接入后端 photo_url 后改读。 */}
-      {lastPhoto && (
-        <View className={styles.photoWrap}>
-          <Photo
-            src={lastPhoto.src}
-            ratio="4/3"
-            overlay
-            meta={`上次巡检 · ${relativeTime(new Date(lastPhoto.capturedAt).toISOString())}`}
-          />
+      <View className={styles.tapWrap}>
+        {/* 大橙色整块 tap target：mockup .dropzone__tap 风格。
+            uploading 时半透明 + 文案变化，给用户即时反馈。 */}
+        <View
+          className={[styles.dropzoneTap, uploading ? styles.dropzoneTapBusy : '']
+            .filter(Boolean)
+            .join(' ')}
+          role="button"
+          aria-label={uploading ? '正在上传' : '拍照开始巡检'}
+          aria-busy={uploading}
+          onClick={handleTap}
+        >
+          <Icon name="camera" size={42} color="var(--on-accent)" />
+          <Text className={styles.dropzoneTapTitle}>{uploading ? '上传中…' : '拍照'}</Text>
+          <Text className={styles.dropzoneTapSub}>
+            {uploading ? '正在送往 AI 分析' : '对准隐患区域，AI 越靠近识别越准'}
+          </Text>
         </View>
-      )}
 
-      <View className={styles.ctaBlock}>
-        <BigButton
-          text="开始巡检"
-          subtitle="拍照 · 上传 · 等待报告"
-          prefixGlyph="camera"
-          onTap={handleTap}
-          loading={uploading}
-        />
-        <View className={styles.ghostWrap}>
-          <Button variant="ghost" block onTap={handleTap} disabled={uploading}>
-            <Icon name="image" size={18} color="var(--ink-2)" />
-            <Text className={styles.ghostText}>从相册选择</Text>
-          </Button>
-        </View>
-      </View>
-
-      <View className={styles.today}>
-        <View className={styles.todayHead}>
-          <Text className={styles.todayTitle}>今日巡检</Text>
-        </View>
-        <View className={styles.todayCard}>
-          <Stat num="—" label="次巡检" />
-          <Stat num="—" label="高风险" tone="high" />
-          <Stat num="—" label="中风险" tone="med" />
+        <View
+          className={styles.albumLink}
+          role="button"
+          aria-label="从相册选择已有照片"
+          onClick={handleTap}
+        >
+          <Text>或从相册选择已有照片 →</Text>
         </View>
       </View>
 
-      {/* 把剩余空间放在 today 之后 —— hero/photo/CTA/today 自然顶部对齐，
-          底部 spacer 兜住短内容场景，避免 today 被 margin-top:auto 顶到屏底。 */}
       <View className={styles.spacer} />
     </View>
   );
