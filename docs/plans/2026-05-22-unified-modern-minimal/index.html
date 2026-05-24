@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Safety Scout · 统一视觉系统 · Modern-Minimal · 2026-05-22</title>
+<style>
+:root{
+  --bg: oklch(99% 0.002 240);
+  --surface: oklch(100% 0 0);
+  --surface-2: oklch(97% 0.004 250);
+  --fg: oklch(18% 0.012 250);
+  --fg-soft: oklch(32% 0.012 250);
+  --muted: oklch(54% 0.012 250);
+  --border: oklch(92% 0.005 250);
+  --border-strong: oklch(80% 0.008 250);
+  --accent: oklch(66% 0.17 50);
+  --accent-hover: oklch(60% 0.18 48);
+  --accent-soft: oklch(95% 0.04 60);
+  --sev-high: oklch(58% 0.20 28);
+  --sev-high-soft: oklch(95% 0.04 28);
+  --sev-medium: oklch(70% 0.15 70);
+  --sev-medium-soft: oklch(96% 0.04 75);
+  --sev-low: oklch(60% 0.13 155);
+  --sev-low-soft: oklch(95% 0.025 155);
+  --font-display: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Display", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Text", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, monospace;
+  --radius: 10px; --radius-lg: 14px;
+  --container: 1240px; --gutter: clamp(16px, 3vw, 32px);
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none} button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+.shell{max-width:var(--container);margin:0 auto;padding:0 var(--gutter)}
+
+/* TopNav (compact, this is a launcher) */
+.topnav{position:sticky;top:0;z-index:50;background:oklch(100% 0 0 / .92);backdrop-filter:saturate(140%) blur(12px);border-bottom:1px solid var(--border)}
+.topnav__inner{display:flex;align-items:center;gap:18px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-0.01em}
+.brand__mark{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.brand__name{font-size:15px}
+.brand__sub{color:var(--muted);font-size:13px;font-weight:400}
+.topnav__tag{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.06em;padding:5px 10px;border:1px dashed var(--border-strong);border-radius:999px}
+
+.t-mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.t-muted{color:var(--muted)}
+.t-eyebrow{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+
+/* HERO */
+.hero{padding:64px 0 28px;display:grid;gap:18px;max-width:780px}
+.hero__title{font-family:var(--font-display);font-size:clamp(32px,4.8vw,52px);line-height:1.05;letter-spacing:-0.025em;font-weight:600;margin:0}
+.hero__sub{color:var(--fg-soft);font-size:17px;line-height:1.6;margin:0;max-width:62ch}
+.hero__meta{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:0.02em}
+.hero__meta b{color:var(--fg-soft);font-weight:500}
+
+/* System summary */
+.system{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;
+  margin:24px 0 36px;
+}
+@media (max-width:880px){.system{grid-template-columns:1fr}}
+.sysc{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:18px 20px;display:grid;gap:8px;
+}
+.sysc__label{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase}
+.sysc__main{font-size:15px;font-weight:500;line-height:1.45}
+.sysc__swatches{display:flex;gap:4px;margin-top:6px}
+.sysc__swatches span{width:18px;height:18px;border-radius:4px;border:1px solid var(--border)}
+
+/* Section header */
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;margin:8px 0 16px;gap:12px;flex-wrap:wrap}
+.sec-head__h{font-family:var(--font-display);font-size:22px;font-weight:600;letter-spacing:-0.01em;margin:0}
+.sec-head__sub{color:var(--muted);font-size:13px}
+
+/* CARDS GRID */
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding-bottom:24px}
+@media (max-width:1080px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.cards{grid-template-columns:1fr}}
+
+.scard{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden;display:flex;flex-direction:column;
+  transition:transform 160ms ease,border-color 160ms ease,box-shadow 160ms ease;
+  position:relative;
+}
+.scard:hover{border-color:var(--border-strong);transform:translateY(-2px);box-shadow:0 12px 30px oklch(15% 0.02 250 / .06)}
+.scard__preview{
+  aspect-ratio: 16 / 10;background:var(--surface-2);
+  border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+  padding:14px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;
+}
+.scard__body{padding:18px 20px 20px;display:grid;gap:6px}
+.scard__num{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.08em}
+.scard__title{font-size:17px;font-weight:600;letter-spacing:-0.01em;margin:0}
+.scard__sub{font-size:13px;color:var(--muted);line-height:1.55;margin:0}
+.scard__cta{margin-top:10px;display:flex;justify-content:space-between;align-items:center}
+.scard__open{font-size:13px;font-weight:500;color:var(--accent);display:inline-flex;align-items:center;gap:4px}
+.scard__tag{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.04em}
+
+/* ===== mini previews for each card (CSS art) ===== */
+
+/* Home preview */
+.p-home{background:linear-gradient(180deg, oklch(98% 0.003 250), oklch(95% 0.005 250))}
+.p-home__drop{
+  margin:auto;width:80%;height:60%;border:1.5px dashed var(--border-strong);
+  border-radius:10px;background:var(--surface);display:grid;place-items:center;
+  position:relative;
+}
+.p-home__btn{
+  position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);
+  background:var(--accent);color:#fff;font-size:11px;font-weight:600;
+  padding:6px 12px;border-radius:6px;
+}
+.p-home__cam{width:24px;height:24px;color:var(--muted)}
+
+/* Polling preview */
+.p-poll{background:linear-gradient(180deg, var(--surface), var(--surface-2));display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;padding:18px}
+.p-poll__track{display:flex;align-items:center;gap:6px;width:100%;max-width:240px}
+.p-poll__dot{width:18px;height:18px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border);flex:none}
+.p-poll__dot--done{background:var(--sev-low);border-color:var(--sev-low)}
+.p-poll__dot--active{background:var(--accent-soft);border-color:var(--accent);box-shadow:0 0 0 4px oklch(66% 0.17 50 / .15);animation:p-pulse 1.4s infinite}
+@keyframes p-pulse{50%{box-shadow:0 0 0 8px oklch(66% 0.17 50 / .04)}}
+.p-poll__line{flex:1;height:1.5px;background:var(--border);border-radius:999px}
+.p-poll__line--done{background:var(--sev-low)}
+.p-poll__txt{font-family:var(--font-mono);font-size:10px;color:var(--accent);letter-spacing:0.04em}
+
+/* Report preview */
+.p-rep{background:linear-gradient(135deg, oklch(75% 0.05 60), oklch(58% 0.07 35));padding:14px}
+.p-rep__card{background:var(--surface);border-radius:8px;padding:10px 12px;margin-top:auto;display:grid;gap:6px;width:fit-content;max-width:100%}
+.p-rep__pill{display:inline-flex;font-size:9px;font-weight:600;padding:2px 6px;border-radius:999px;background:var(--sev-high-soft);color:var(--sev-high);align-items:center;gap:3px;width:fit-content}
+.p-rep__pill::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--sev-high)}
+.p-rep__warn{font-size:12px;font-weight:600;color:var(--fg);line-height:1.3}
+.p-rep__meta{font-family:var(--font-mono);font-size:9px;color:var(--muted)}
+
+/* Detail preview */
+.p-det{background:linear-gradient(135deg, oklch(72% 0.05 60), oklch(55% 0.07 35));padding:14px;display:flex;align-items:center;justify-content:center}
+.p-det__box{
+  width:55%;height:55%;border:2px solid var(--accent);border-radius:6px;
+  background:oklch(66% 0.17 50 / .12);
+  box-shadow:0 0 0 4px oklch(66% 0.17 50 / .2);
+  position:relative;
+}
+.p-det__box::before{
+  content:"H1 · 立网松弛";
+  position:absolute;left:-2px;top:-22px;
+  background:var(--accent);color:#fff;font-family:var(--font-mono);font-size:10px;font-weight:600;
+  padding:3px 7px;border-radius:4px 4px 4px 0;letter-spacing:0.02em;
+  white-space:nowrap;
+}
+
+/* History preview */
+.p-hist{background:var(--surface);padding:10px;display:grid;gap:6px;justify-content:stretch}
+.p-hist__row{display:grid;grid-template-columns:24px 1fr auto;gap:8px;align-items:center;padding:6px;border-radius:6px;background:var(--surface-2)}
+.p-hist__th{width:24px;height:24px;border-radius:5px}
+.p-hist__txt{font-size:10px;font-weight:500;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-hist__pill{display:inline-flex;font-size:8px;font-weight:600;padding:1px 5px;border-radius:999px}
+.p-hist__pill--h{background:var(--sev-high-soft);color:var(--sev-high)}
+.p-hist__pill--m{background:var(--sev-medium-soft);color:oklch(45% 0.14 70)}
+.p-hist__pill--l{background:var(--sev-low-soft);color:var(--sev-low)}
+
+/* Error preview */
+.p-err{background:linear-gradient(180deg, var(--sev-high-soft), oklch(96% 0.025 28));display:grid;place-items:center}
+.p-err__art{
+  width:60px;height:60px;border-radius:14px;
+  background:var(--surface);display:grid;place-items:center;
+  color:var(--sev-high);border:1px solid var(--border);
+}
+.p-err__art svg{width:30px;height:30px}
+
+/* Notes section */
+.notes{
+  margin:24px 0 0;
+  padding:22px 26px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+}
+.notes h2{font-family:var(--font-display);font-size:18px;font-weight:600;letter-spacing:-0.01em;margin:0 0 12px}
+.notes ul{margin:0;padding:0 0 0 18px;display:grid;gap:6px;font-size:14px;color:var(--fg-soft);line-height:1.6}
+.notes ul li::marker{color:var(--accent)}
+.notes ul b{color:var(--fg);font-weight:600}
+
+/* Footer */
+.metaftr{border-top:1px solid var(--border);margin-top:48px;padding:18px 0 28px;display:flex;flex-wrap:wrap;gap:8px 24px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.metaftr__live::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:var(--sev-low);box-shadow:0 0 0 4px oklch(60% 0.13 155 / .18);vertical-align:1px}
+
+@media (max-width:640px){
+  .topnav__inner{height:54px;gap:12px}
+  .brand__sub{display:none}
+  .hero{padding:32px 0 16px}
+  .topnav__tag{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="shell topnav__inner">
+    <a href="index.html" class="brand">
+      <span class="brand__mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 5.5c-4.1 0-7.5 3.4-7.5 7.5v.5h15v-.5c0-4.1-3.4-7.5-7.5-7.5z"/><rect fill="currentColor" x="3" y="14" width="18" height="2.4" rx="1.2"/></svg></span>
+      <span class="brand__name">Safety Scout</span>
+      <span class="brand__sub">/ 统一视觉系统</span>
+    </a>
+    <span class="topnav__tag">原型 · 2026-05-22</span>
+  </div>
+</header>
+
+<main class="shell">
+
+  <section class="hero">
+    <div class="t-eyebrow">Modern-Minimal · 安全橙 accent · 已统一首页/轮询/报告</div>
+    <h1 class="hero__title">一套白底 + 橙强调贯穿全流程，<br>把"换了一个 App"的撕裂感修掉。</h1>
+    <p class="hero__sub">原状是 modern-minimal 首页 + editorial-monocle 报告页两套漂亮但割裂的视觉。这版把 6 个核心屏（首页 / 轮询 / 报告 / 详情 / 历史 / 错误态）放进同一套设计语言，并把架构里被埋掉的 3 状态进度做成了轮询页的主角。</p>
+    <div class="hero__meta">
+      <span>调色板 <b>modern-minimal + safety-orange</b></span>
+      <span>字体 <b>系统 Sans · JetBrains Mono</b></span>
+      <span>断点 <b>390 / 768 / 1280 / 1440 / 1920</b></span>
+      <span>导航 <b>巡检 / 报告（仅 2 项）</b></span>
+    </div>
+  </section>
+
+  <section class="system">
+    <div class="sysc">
+      <span class="sysc__label">Background System</span>
+      <div class="sysc__main">白底 + 浅冷灰二级面 + 暖橙 accent。<span class="t-muted">暖米编辑风全面替换。</span></div>
+      <div class="sysc__swatches">
+        <span style="background:oklch(100% 0 0)"></span>
+        <span style="background:oklch(99% 0.002 240)"></span>
+        <span style="background:oklch(97% 0.004 250)"></span>
+        <span style="background:oklch(92% 0.005 250)"></span>
+        <span style="background:oklch(66% 0.17 50);border-color:transparent"></span>
+        <span style="background:oklch(18% 0.012 250);border-color:transparent"></span>
+      </div>
+    </div>
+    <div class="sysc">
+      <span class="sysc__label">Severity Palette</span>
+      <div class="sysc__main">红 / 琥珀 / 绿三档严重度，色 + 标签 + 圆点三重冗余，色盲也可分辨。</div>
+      <div class="sysc__swatches">
+        <span style="background:oklch(58% 0.20 28);border-color:transparent"></span>
+        <span style="background:oklch(95% 0.04 28)"></span>
+        <span style="background:oklch(70% 0.15 70);border-color:transparent"></span>
+        <span style="background:oklch(96% 0.04 75)"></span>
+        <span style="background:oklch(60% 0.13 155);border-color:transparent"></span>
+        <span style="background:oklch(95% 0.025 155)"></span>
+      </div>
+    </div>
+    <div class="sysc">
+      <span class="sysc__label">Layout System</span>
+      <div class="sysc__main">max-width 1240 居中收紧 Wide；平板/小桌面塌方为单列；细线 border 取代阴影。</div>
+      <div class="sysc__swatches">
+        <span style="background:transparent;border:1px solid var(--border);width:60px"></span>
+        <span style="background:transparent;border:1.5px dashed var(--border-strong);width:60px"></span>
+      </div>
+    </div>
+  </section>
+
+  <header class="sec-head">
+    <h2 class="sec-head__h">六个核心屏</h2>
+    <span class="sec-head__sub">点开任一卡片即可看高保真原型 · 屏与屏之间已串联跳转</span>
+  </header>
+
+  <div class="cards">
+
+    <a href="home.html" class="scard">
+      <div class="scard__preview p-home">
+        <div class="p-home__drop">
+          <svg class="p-home__cam" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6l1.5-2h5L16 6"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <span class="p-home__btn">拍照</span>
+        </div>
+      </div>
+      <div class="scard__body">
+        <span class="scard__num">01 · 入口</span>
+        <h3 class="scard__title">首页 · 拍一张照片</h3>
+        <p class="scard__sub">大照片区 + 今日统计 + 最近 3 条巡检；导航砍到只剩"巡检 / 报告"。</p>
+        <div class="scard__cta">
+          <span class="scard__open">打开 →</span>
+          <span class="scard__tag">home.html</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="polling.html" class="scard">
+      <div class="scard__preview p-poll">
+        <div class="p-poll__track">
+          <span class="p-poll__dot p-poll__dot--done"></span>
+          <span class="p-poll__line p-poll__line--done"></span>
+          <span class="p-poll__dot p-poll__dot--active"></span>
+          <span class="p-poll__line"></span>
+          <span class="p-poll__dot"></span>
+        </div>
+        <span class="p-poll__txt">0:12 / ~0:29</span>
+      </div>
+      <div class="scard__body">
+        <span class="scard__num">02 · 等待</span>
+        <h3 class="scard__title">轮询 · 3 状态进度做主角</h3>
+        <p class="scard__sub">"拍照成功 → AI 分析中 → 报告就绪"放屏幕中央，配实时分析 log 与平均耗时。</p>
+        <div class="scard__cta">
+          <span class="scard__open">打开 →</span>
+          <span class="scard__tag">polling.html</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="report.html" class="scard">
+      <div class="scard__preview p-rep">
+        <div class="p-rep__card">
+          <span class="p-rep__pill">整体高风险</span>
+          <span class="p-rep__warn">外架安全网松弛破损<br>高处坠落风险极高</span>
+          <span class="p-rep__meta">3 项隐患 · 27.4s</span>
+        </div>
+      </div>
+      <div class="scard__body">
+        <span class="scard__num">03 · 报告</span>
+        <h3 class="scard__title">报告 · 严重度 + 整改建议</h3>
+        <p class="scard__sub">原 editorial-monocle 米黄稿换成白底数据卡片；每条隐患含规范条款 + 建议 callout。</p>
+        <div class="scard__cta">
+          <span class="scard__open">打开 →</span>
+          <span class="scard__tag">report.html</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="report-detail.html" class="scard">
+      <div class="scard__preview p-det">
+        <div class="p-det__box"></div>
+      </div>
+      <div class="scard__body">
+        <span class="scard__num">04 · 详情</span>
+        <h3 class="scard__title">隐患详情 · 规范条款 + 整改步骤</h3>
+        <p class="scard__sub">单条隐患进入：照片框选 + 完整规范引用 + 4 步整改清单 + 处置时间线。</p>
+        <div class="scard__cta">
+          <span class="scard__open">打开 →</span>
+          <span class="scard__tag">report-detail.html</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="history.html" class="scard">
+      <div class="scard__preview p-hist">
+        <div class="p-hist__row">
+          <span class="p-hist__th" style="background:linear-gradient(135deg, oklch(75% 0.05 60), oklch(58% 0.07 35))"></span>
+          <span class="p-hist__txt">外架安全网松弛破损…</span>
+          <span class="p-hist__pill p-hist__pill--h">H×3</span>
+        </div>
+        <div class="p-hist__row">
+          <span class="p-hist__th" style="background:linear-gradient(135deg, oklch(82% 0.04 240), oklch(70% 0.05 230))"></span>
+          <span class="p-hist__txt">楼梯无扶手，临边…</span>
+          <span class="p-hist__pill p-hist__pill--h">H×1</span>
+        </div>
+        <div class="p-hist__row">
+          <span class="p-hist__th" style="background:linear-gradient(135deg, oklch(82% 0.05 145), oklch(70% 0.06 160))"></span>
+          <span class="p-hist__txt">配电箱开门带电作业…</span>
+          <span class="p-hist__pill p-hist__pill--m">M×1</span>
+        </div>
+      </div>
+      <div class="scard__body">
+        <span class="scard__num">05 · 历史</span>
+        <h3 class="scard__title">巡检历史 · 按天分组</h3>
+        <p class="scard__sub">本周统计 + 搜索 + 多维筛选；列表行密集而不拥挤，移动端自适应折叠。</p>
+        <div class="scard__cta">
+          <span class="scard__open">打开 →</span>
+          <span class="scard__tag">history.html</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="empty-error.html" class="scard">
+      <div class="scard__preview p-err">
+        <div class="p-err__art">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+        </div>
+      </div>
+      <div class="scard__body">
+        <span class="scard__num">06 · 边界</span>
+        <h3 class="scard__title">空状态 / AI 拒识 / 网络失败</h3>
+        <p class="scard__sub">三种边界场景共享同一套骨架；可在页内切换查看，每种都给出真正可操作的恢复路径。</p>
+        <div class="scard__cta">
+          <span class="scard__open">打开 →</span>
+          <span class="scard__tag">empty-error.html</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <article class="notes">
+    <h2>这版做了什么</h2>
+    <ul>
+      <li><b>统一视觉系统：</b>白底 + 浅冷灰二级面 + 安全橙 accent。原报告页的米黄/衬线/Mono 编辑风改成 modern-minimal 工具感，与首页同源。</li>
+      <li><b>轮询页改造：</b>原本只是个右上角小指示器，现在升级为屏幕中央的横向 3 状态 tracker + 实时分析日志 + 已用/预计耗时进度条，兑现架构 §4 的不变量。</li>
+      <li><b>导航瘦身：</b>顶部从「巡检 / 报告 / 班组 / 设置」四项砍到「巡检 / 报告」两项，回到 CLAUDE.md 的 3 步主张。</li>
+      <li><b>Wide(1920) 收紧：</b>容器 <code style="font-family:var(--font-mono);font-size:13px">max-width: 1240px</code>，2 列布局 + 右侧 sticky 信息栏，避免大屏两侧空旷。</li>
+      <li><b>断点重新校准：</b>980 / 820 / 680 / 640 都做了局部调整；最重要的是 1100 这档桌面 CTA 不再悬浮。</li>
+      <li><b>避坑：</b>无紫色渐变、无 emoji 图标、无圆角卡 + 左竖条彩色模板；色温和 hierarchy 一致，安全橙仅用于主要 CTA、进度活动态、规范引言竖线、整改建议 callout 四处。</li>
+    </ul>
+  </article>
+
+  <footer class="metaftr">
+    <span class="metaftr__live">服务可用</span>
+    <span>原型 v0.1 · 6 屏 · 4 断点</span>
+    <span style="flex:1"></span>
+    <span>docs/plans/2026-05-22-unified-modern-minimal/</span>
+  </footer>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>隐患详情 · H1 高处坠落 · Safety Scout</title>
+<style>
+:root{
+  --bg: oklch(99% 0.002 240);
+  --surface: oklch(100% 0 0);
+  --surface-2: oklch(97% 0.004 250);
+  --fg: oklch(18% 0.012 250);
+  --fg-soft: oklch(32% 0.012 250);
+  --muted: oklch(54% 0.012 250);
+  --border: oklch(92% 0.005 250);
+  --border-strong: oklch(80% 0.008 250);
+  --accent: oklch(66% 0.17 50);
+  --accent-hover: oklch(60% 0.18 48);
+  --accent-soft: oklch(95% 0.04 60);
+  --sev-high: oklch(58% 0.20 28);
+  --sev-high-soft: oklch(95% 0.04 28);
+  --sev-medium: oklch(70% 0.15 70);
+  --sev-medium-soft: oklch(96% 0.04 75);
+  --sev-low: oklch(60% 0.13 155);
+  --sev-low-soft: oklch(95% 0.025 155);
+  --font-display: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Display", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Text", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, monospace;
+  --radius: 10px; --radius-lg: 14px;
+  --container: 1240px; --gutter: clamp(16px, 3vw, 32px);
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none} button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+.shell{max-width:var(--container);margin:0 auto;padding:0 var(--gutter)}
+
+/* TopNav */
+.topnav{position:sticky;top:0;z-index:50;background:oklch(100% 0 0 / .92);backdrop-filter:saturate(140%) blur(12px);border-bottom:1px solid var(--border)}
+.topnav__inner{display:flex;align-items:center;gap:24px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-0.01em}
+.brand__mark{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.brand__name{font-size:15px}
+.brand__sub{color:var(--muted);font-size:13px;font-weight:400}
+.navlinks{display:flex;gap:2px;margin-left:8px}
+.navlinks a{padding:8px 12px;border-radius:8px;font-size:14px;color:var(--fg-soft)}
+.navlinks a[aria-current="page"]{background:var(--surface-2);color:var(--fg);font-weight:500}
+.navlinks a:hover{background:var(--surface-2)}
+.topnav__spacer{flex:1}
+.useravatar{width:32px;height:32px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);display:grid;place-items:center;font-size:13px;color:var(--fg-soft);font-weight:500}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:var(--radius);font-size:14px;font-weight:500;border:1px solid transparent;transition:all 120ms}
+.btn--primary{background:var(--accent);color:#fff}
+.btn--primary:hover{background:var(--accent-hover)}
+.btn--ghost{border-color:var(--border);color:var(--fg);background:var(--surface)}
+.btn--ghost:hover{border-color:var(--border-strong);background:var(--surface-2)}
+.btn--block{width:100%}
+.btn__icon{width:16px;height:16px;flex:none}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 3px oklch(66% 0.17 50 / .35);border-color:var(--accent)}
+.tab:focus-visible{outline:none;color:var(--fg);background:var(--surface-2);border-radius:6px 6px 0 0}
+
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--fg-soft)}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.pill--high{color:var(--sev-high);background:var(--sev-high-soft);border-color:transparent}
+.pill--high::before{background:var(--sev-high)}
+
+.t-mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.t-muted{color:var(--muted)}
+.t-eyebrow{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+
+/* ===========================================================
+   DETAIL
+   =========================================================== */
+.head{padding:28px 0 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+.crumbs{font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:0.04em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.crumbs a:hover{color:var(--fg)}
+.crumbs__sep{opacity:.5}
+.pager{display:flex;gap:6px}
+.pager .btn{padding:8px 12px}
+.pager .btn[disabled]{opacity:.4;cursor:not-allowed}
+
+.layout{
+  display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);
+  gap:32px;align-items:start;
+}
+@media (max-width:980px){.layout{grid-template-columns:1fr;gap:18px}}
+
+/* Photo with annotation */
+.photo-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden;
+}
+.photo-frame{
+  position:relative;aspect-ratio: 16 / 10;
+  background:
+    linear-gradient(135deg, oklch(72% 0.05 60), oklch(55% 0.07 35));
+}
+.photo-frame::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 28% 32%, oklch(100% 0 0 / .22), transparent 50%),
+    radial-gradient(circle at 70% 75%, oklch(0% 0 0 / .18), transparent 60%);
+}
+.annot{
+  position:absolute;
+  border:2px solid var(--accent);
+  border-radius:8px;
+  box-shadow:0 0 0 4px oklch(66% 0.17 50 / .18);
+  background:oklch(66% 0.17 50 / .05);
+  pointer-events:none;
+  animation:annot-blink 2.4s ease-in-out infinite;
+}
+@keyframes annot-blink{
+  0%,100%{box-shadow:0 0 0 4px oklch(66% 0.17 50 / .18)}
+  50%{box-shadow:0 0 0 10px oklch(66% 0.17 50 / .06)}
+}
+.annot__tag{
+  position:absolute;left:-2px;top:-26px;
+  background:var(--accent);color:#fff;
+  font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.04em;
+  padding:3px 8px;border-radius:6px 6px 6px 0;
+  white-space:nowrap;
+}
+.photo-meta{
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px 18px;
+  padding:14px 18px;font-family:var(--font-mono);font-size:12px;color:var(--muted);
+  border-top:1px solid var(--border);
+}
+
+/* Hazard header */
+.hh{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:22px 24px;display:grid;gap:12px;
+}
+.hh__top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hh__code{font-family:var(--font-mono);font-size:12px;color:var(--muted);background:var(--surface-2);padding:4px 8px;border-radius:6px;letter-spacing:0.04em}
+.hh__name{font-family:var(--font-display);font-size:24px;font-weight:600;letter-spacing:-0.01em;margin:0}
+.hh__desc{color:var(--fg-soft);font-size:15px;line-height:1.6;margin:0}
+
+/* Tabs */
+.tabs{
+  display:flex;gap:2px;border-bottom:1px solid var(--border);
+  margin-bottom:0;padding:0 8px;
+}
+.tab{
+  padding:12px 14px;border-bottom:2px solid transparent;
+  font-size:14px;color:var(--muted);font-weight:500;
+  margin-bottom:-1px;
+  transition:color 120ms,border-color 120ms;
+}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent);font-weight:600}
+.tab:hover{color:var(--fg)}
+
+.tabpanel{padding:20px 0 4px;display:none}
+.tabpanel.is-active{display:grid;gap:16px}
+
+/* Regulation block */
+.reg{
+  border:1px solid var(--border);border-radius:var(--radius-lg);
+  background:var(--surface);
+  overflow:hidden;
+}
+.reg__head{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface-2);
+}
+.reg__title{font-family:var(--font-mono);font-size:13px;font-weight:600;letter-spacing:0.02em}
+.reg__source{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.reg__body{padding:18px 22px;display:grid;gap:10px}
+.reg__quote{
+  border-left:3px solid var(--accent);padding-left:14px;
+  color:var(--fg-soft);font-size:14px;line-height:1.7;
+  /* No display font — the H1 (hazard name) already owns top-weight typography.
+     Putting display on the quote inverts hierarchy: it elevates '被引用' above 'integral action'. */
+}
+.reg__interp{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* Suggestion checklist */
+.steps{display:grid;gap:10px}
+.step{
+  display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:start;
+  padding:14px 16px;
+  /* 与 report.html 列表里的橙色 .suggestion-callout 建立视觉同源 ——
+     下钻应展开同色调，4% alpha 是极浅渗透，不喧宾夺主 */
+  background:oklch(66% 0.17 50 / .035);
+  border:1px solid oklch(66% 0.17 50 / .12);
+  border-radius:var(--radius);
+  /* row no longer interactive — only the checkbox toggles state */
+}
+.step--done{
+  /* 已完成步骤回到中性面，让待办的 4% accent tint 形成"待做才热"的进度感 */
+  background:var(--surface);border-color:var(--border);
+}
+.step__check{
+  width:24px;height:24px;border-radius:6px;
+  border:1.5px solid var(--border-strong);background:var(--surface);
+  margin-top:-1px;flex:none;display:grid;place-items:center;color:transparent;
+  cursor:pointer;padding:0;
+  transition:background 120ms,border-color 120ms,box-shadow 120ms;
+}
+.step__check:hover{border-color:var(--fg-soft)}
+.step__check:focus-visible{outline:none;box-shadow:0 0 0 3px oklch(66% 0.17 50 / .35);border-color:var(--accent)}
+.step__check[data-confirmable="true"]:not([aria-checked="true"])::after{
+  content:"";position:relative;width:6px;height:6px;border-radius:50%;
+  background:var(--sev-high);color:transparent;
+  /* tiny dot to telegraph "high-stakes — confirm first" */
+}
+.step--done .step__check{background:var(--sev-low);border-color:var(--sev-low);color:#fff}
+.step--done .step__check::after{display:none}
+.step--done .step__check svg{display:block}
+.step__check svg{width:13px;height:13px;display:none}
+.step__body{display:grid;gap:3px}
+.step__act{font-family:var(--font-display);font-size:14px;font-weight:600;letter-spacing:-0.005em;line-height:1.45}
+.step--done .step__act{text-decoration:line-through;color:var(--muted);font-weight:500}
+.step__when{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.04em}
+.step__assignee{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+
+/* Confirm sheet for high-stakes step toggles */
+.confirm-sheet{
+  position:fixed;inset:0;z-index:200;
+  display:none;align-items:center;justify-content:center;
+  padding:20px;
+  background:oklch(15% 0.02 250 / .42);
+  backdrop-filter:blur(2px);
+}
+.confirm-sheet[data-open="true"]{display:flex}
+.confirm-sheet__inner{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  max-width:420px;width:100%;padding:24px;
+  display:grid;gap:14px;
+  box-shadow:0 20px 60px oklch(15% 0.02 250 / .25);
+  animation:cs-pop 180ms ease-out;
+}
+@keyframes cs-pop{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+.confirm-sheet__title{
+  font-family:var(--font-display);font-size:18px;font-weight:600;margin:0;letter-spacing:-0.01em;
+  display:flex;align-items:center;gap:8px;
+}
+.confirm-sheet__title::before{
+  content:"";width:10px;height:10px;border-radius:50%;background:var(--sev-high);
+  box-shadow:0 0 0 4px oklch(58% 0.20 28 / .15);flex:none;
+}
+.confirm-sheet__body{font-size:14px;color:var(--fg-soft);line-height:1.6;margin:0}
+.confirm-sheet__act{
+  background:var(--surface-2);border:1px solid var(--border);
+  padding:10px 12px;border-radius:8px;
+  font-size:13px;color:var(--fg);line-height:1.5;
+  font-style:normal;
+}
+.confirm-sheet__act b{font-weight:600;color:var(--sev-high);display:block;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px}
+.confirm-sheet__btns{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.confirm-sheet__btns .btn{padding:10px 16px}
+
+/* Undo toast */
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+  z-index:180;display:flex;align-items:center;gap:14px;
+  background:var(--fg);color:var(--surface);
+  padding:12px 14px 12px 18px;border-radius:10px;
+  box-shadow:0 12px 30px oklch(15% 0.02 250 / .25);
+  font-size:14px;
+  opacity:0;pointer-events:none;
+  transition:opacity 180ms ease,transform 180ms ease;
+  max-width:calc(100% - 32px);
+}
+.toast[data-open="true"]{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast__text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toast__undo{
+  background:transparent;border:1px solid oklch(70% 0.012 250 / .4);
+  color:var(--surface);padding:5px 12px;border-radius:7px;
+  font-size:13px;font-weight:600;cursor:pointer;
+  transition:background 120ms;flex:none;
+}
+.toast__undo:hover{background:oklch(100% 0 0 / .12)}
+.toast__close{
+  background:transparent;border:0;color:oklch(75% 0.012 250);
+  cursor:pointer;padding:4px;line-height:0;flex:none;
+}
+.toast__close:hover{color:var(--surface)}
+
+@media (prefers-reduced-motion: reduce){
+  .annot,.confirm-sheet__inner,.toast{animation:none !important;transition:none !important}
+}
+
+/* Sidebar — sticky only on desktop so mobile screen readers don't treat it as a sticky region */
+.aside{display:grid;gap:14px}
+@media (min-width:981px){.aside{position:sticky;top:80px}}
+.acard{padding:18px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);display:grid;gap:14px}
+.acard__title{font-size:13px;font-weight:600}
+
+.statusbox{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
+  background:var(--sev-high-soft);border-radius:10px;color:var(--sev-high);font-weight:600;font-size:14px;
+}
+.statusbox__dot{width:10px;height:10px;border-radius:50%;background:var(--sev-high);box-shadow:0 0 0 4px oklch(58% 0.20 28 / .18)}
+
+.kv{display:grid;gap:6px;font-size:13px}
+.kv__row{display:flex;justify-content:space-between;gap:12px}
+.kv__row dt{color:var(--muted);font-weight:400}
+.kv__row dd{margin:0;color:var(--fg-soft);font-family:var(--font-mono);font-size:12px}
+
+.timeline{display:grid;gap:0;font-size:13px}
+.tl{display:grid;grid-template-columns:60px 16px 1fr;gap:8px;padding:8px 0;position:relative}
+.tl__time{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.04em}
+.tl__pip{position:relative;display:flex;justify-content:center;align-items:flex-start}
+.tl__pip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--border-strong);margin-top:5px;position:relative;z-index:2}
+.tl__pip::after{content:"";position:absolute;top:8px;bottom:-8px;width:1.5px;background:var(--border);left:50%;transform:translateX(-50%)}
+.tl:last-child .tl__pip::after{display:none}
+.tl--accent .tl__pip::before{background:var(--accent);box-shadow:0 0 0 3px oklch(66% 0.17 50 / .2)}
+.tl__text{color:var(--fg-soft);line-height:1.5}
+.tl__text b{color:var(--fg);font-weight:500}
+
+/* Footer */
+.metaftr{border-top:1px solid var(--border);margin-top:48px;padding:18px 0 28px;display:flex;flex-wrap:wrap;gap:8px 24px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.metaftr__live::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:var(--sev-low);box-shadow:0 0 0 4px oklch(60% 0.13 155 / .18);vertical-align:1px}
+
+@media (max-width:640px){
+  .topnav__inner{height:54px;gap:12px}
+  .navlinks{display:none}
+  .brand__sub{display:none}
+  .hh{padding:18px}
+}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="shell topnav__inner">
+    <a href="index.html" class="brand">
+      <span class="brand__mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 5.5c-4.1 0-7.5 3.4-7.5 7.5v.5h15v-.5c0-4.1-3.4-7.5-7.5-7.5z"/><rect fill="currentColor" x="3" y="14" width="18" height="2.4" rx="1.2"/></svg></span>
+      <span class="brand__name">Safety Scout</span>
+      <span class="brand__sub">/ 工地安全巡检</span>
+    </a>
+    <nav class="navlinks">
+      <a href="home.html">巡检</a>
+      <a href="history.html" aria-current="page">报告</a>
+    </nav>
+    <div class="topnav__spacer"></div>
+    <div class="useravatar" title="安全员 · 张工">张</div>
+  </div>
+</header>
+
+<main class="shell">
+
+  <div class="head">
+    <div class="crumbs">
+      <a href="history.html">报告</a>
+      <span class="crumbs__sep">/</span>
+      <a href="report.html">14:08 外架巡检</a>
+      <span class="crumbs__sep">/</span>
+      <span>隐患 #1 · H1 高处坠落</span>
+    </div>
+    <div class="pager">
+      <button class="btn btn--ghost" disabled>← 上一条</button>
+      <button class="btn btn--ghost">下一条 →</button>
+    </div>
+  </div>
+
+  <section class="layout" data-screen-label="04 Report Detail">
+
+    <div style="display:grid;gap:14px">
+
+      <!-- Photo with annotation -->
+      <article class="photo-card">
+        <div class="photo-frame">
+          <!-- 照片标注为画面序号 1/2（不与 sidebar 报告内 # 编号体系混用）；
+               H2 物体打击在画面里无明确锚点，故不标 —— hazard 仍在报告中可见。 -->
+          <div class="annot" style="left:22%;top:30%;width:36%;height:38%">
+            <span class="annot__tag">1 · H1 立网松弛</span>
+          </div>
+          <div class="annot" style="left:62%;top:18%;width:18%;height:24%">
+            <span class="annot__tag">2 · H9 未系安全带</span>
+          </div>
+        </div>
+        <div class="photo-meta">
+          <span>外架立面 · 第 12 层 ↑</span>
+          <span>2026-05-22 14:08:11</span>
+          <span>3008 × 4000 · 2.4MB</span>
+        </div>
+      </article>
+
+      <!-- Hazard header -->
+      <article class="hh">
+        <div class="hh__top">
+          <span class="hh__code">H1</span>
+          <h1 class="hh__name">高处坠落</h1>
+          <span class="pill pill--high">高风险</span>
+          <span class="t-eyebrow" style="margin-left:auto">置信度 0.94</span>
+        </div>
+        <p class="hh__desc">外架与建筑结构间密目式安全立网松弛下垂，绳扣非标，存在明显缝隙；临边未设 ≥ 1.2m 刚性防护栏。属典型未整改高处作业临边失效场景。</p>
+      </article>
+
+      <!-- Tabs -->
+      <div>
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" aria-selected="true" data-tab="regulation">规范条款</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="suggestion">整改建议 · 4 步</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="history">现场处置记录</button>
+        </div>
+
+        <!-- 规范条款 -->
+        <div class="tabpanel is-active" data-panel="regulation">
+
+          <article class="reg">
+            <header class="reg__head">
+              <span class="reg__title">JGJ80-2016 第 4.3.1 条</span>
+              <span class="reg__source">《建筑施工高处作业安全技术规范》</span>
+            </header>
+            <div class="reg__body">
+              <blockquote class="reg__quote">
+                "临边作业的防护栏杆必须由横杆、立杆及挡脚板组成。防护栏杆应符合下列规定：上杆离地面高度应为 1.2m，下杆应在上杆和挡脚板中间设置；挡脚板高度不应小于 180mm。"
+              </blockquote>
+              <p class="reg__interp">本次现场实测：临边无任何刚性防护栏（既无上杆也无下杆），仅依赖安全立网，违反 4.3.1 强制要求。</p>
+            </div>
+          </article>
+
+          <article class="reg">
+            <header class="reg__head">
+              <span class="reg__title">JGJ59-2011 安全网设置章节</span>
+              <span class="reg__source">《建筑施工安全检查标准》</span>
+            </header>
+            <div class="reg__body">
+              <blockquote class="reg__quote">
+                "密目式安全立网张挂时，应保证网体平整、绷紧，固定绳之间的水平和垂直间距不应大于 450mm。"
+              </blockquote>
+              <p class="reg__interp">本次现场实测：立网中部下垂量明显，固定绳扣间距目测 60-80cm，超过 45cm 限值。</p>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- 整改建议 -->
+        <div class="tabpanel" data-panel="suggestion">
+          <div class="steps">
+            <div class="step step--done">
+              <button class="step__check" type="button" role="checkbox" aria-checked="true" data-confirmable="true" aria-label="切换：疏散临边作业人员"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+              <div class="step__body">
+                <div class="step__act">疏散临边作业人员，禁止该面 12-15 层临边作业</div>
+                <div class="step__when">立即 · 已完成 14:32</div>
+              </div>
+              <div class="step__assignee">张工 ↓</div>
+            </div>
+            <div class="step">
+              <button class="step__check" type="button" role="checkbox" aria-checked="false" aria-label="标记完成：重新张紧立网"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+              <div class="step__body">
+                <div class="step__act">重新张紧立网，绳扣间距 ≤45cm，消除缝隙</div>
+                <div class="step__when">2 小时内 · 截止 16:08</div>
+              </div>
+              <div class="step__assignee">李班组 ↓</div>
+            </div>
+            <div class="step">
+              <button class="step__check" type="button" role="checkbox" aria-checked="false" aria-label="标记完成：临边补设刚性防护栏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+              <div class="step__body">
+                <div class="step__act">临边补设 ≥1.2m 双横杆刚性防护栏杆 + 180mm 挡脚板</div>
+                <div class="step__when">24 小时内 · 截止 5-23 14:08</div>
+              </div>
+              <div class="step__assignee">脚手架班 ↓</div>
+            </div>
+            <div class="step">
+              <button class="step__check" type="button" role="checkbox" aria-checked="false" data-confirmable="true" aria-label="标记完成：复核拍照闭环"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+              <div class="step__body">
+                <div class="step__act">复核拍照 → 上传 Safety Scout 二次识别，确认已无 H1 隐患</div>
+                <div class="step__when">整改后 · 闭环</div>
+              </div>
+              <div class="step__assignee">张工 ↓</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 处置记录 -->
+        <div class="tabpanel" data-panel="history">
+          <div class="timeline">
+            <div class="tl tl--accent">
+              <div class="tl__time">14:08</div>
+              <div class="tl__pip"></div>
+              <div class="tl__text"><b>张工</b> 上传现场照片 · AI 识别出 H1 高处坠落隐患</div>
+            </div>
+            <div class="tl">
+              <div class="tl__time">14:32</div>
+              <div class="tl__pip"></div>
+              <div class="tl__text"><b>张工</b> 已组织疏散 · 临边作业暂停</div>
+            </div>
+            <div class="tl">
+              <div class="tl__time">14:40</div>
+              <div class="tl__pip"></div>
+              <div class="tl__text"><b>张工</b> 转派李班组 + 脚手架班执行整改</div>
+            </div>
+            <div class="tl">
+              <div class="tl__time">—</div>
+              <div class="tl__pip"></div>
+              <div class="tl__text t-muted">等待整改后复核拍照</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="aside">
+      <div class="acard">
+        <div class="statusbox">
+          <span class="statusbox__dot"></span>
+          整改进行中 · 1/4 已完成
+        </div>
+        <button class="btn btn--primary btn--block">
+          <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6l1.5-2h5L16 6"/><circle cx="12" cy="13" r="3.5"/></svg>
+          上传整改后复核照片
+        </button>
+        <button class="btn btn--ghost btn--block">
+          <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11l5 5v11a2 2 0 0 1-2 2H4z"/><polyline points="14 4 14 9 19 9"/></svg>
+          导出整改单 PDF
+        </button>
+      </div>
+
+      <div class="acard">
+        <div class="acard__title">本条信息</div>
+        <dl class="kv">
+          <div class="kv__row"><dt>类别</dt><dd>H1 高处坠落</dd></div>
+          <div class="kv__row"><dt>严重度</dt><dd style="color:var(--sev-high);font-weight:600">高风险</dd></div>
+          <div class="kv__row"><dt>识别置信度</dt><dd>0.94</dd></div>
+          <div class="kv__row"><dt>所属报告</dt><dd><a href="report.html" style="color:var(--accent)">14:08 外架巡检</a></dd></div>
+          <div class="kv__row"><dt>识别时间</dt><dd>14:08:38</dd></div>
+        </dl>
+      </div>
+
+      <div class="acard">
+        <div class="acard__title">本报告其他隐患</div>
+        <div style="display:grid;gap:8px;font-size:13px">
+          <a href="report-detail.html" style="display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface-2)">
+            <span><span class="t-mono t-muted">#2</span> H2 物体打击</span>
+            <span class="pill pill--high">高</span>
+          </a>
+          <a href="report-detail.html" style="display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:8px">
+            <span><span class="t-mono t-muted">#3</span> H9 个人防护缺失</span>
+            <span class="pill pill--high">高</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+  </section>
+
+  <footer class="metaftr">
+    <span class="metaftr__live">服务可用</span>
+    <span class="topnav__spacer"></span>
+    <a href="index.html" class="t-muted">所有页面 →</a>
+  </footer>
+
+</main>
+
+<!-- Confirm sheet for high-stakes step toggles (疏散人员 / 闭环复核) -->
+<div class="confirm-sheet" id="confirmSheet" role="presentation">
+  <div class="confirm-sheet__inner" role="alertdialog" aria-modal="true" aria-labelledby="confirmSheetTitle" aria-describedby="confirmSheetBody">
+    <h2 class="confirm-sheet__title" id="confirmSheetTitle">确认现场已完成？</h2>
+    <p class="confirm-sheet__body" id="confirmSheetBody">这一条涉及人员安全，错误标记可能误导班组停工或闭环判定。请先确认现场已落实。</p>
+    <div class="confirm-sheet__act"><b>当前整改</b><span id="confirmSheetAct">—</span></div>
+    <div class="confirm-sheet__btns">
+      <button class="btn btn--ghost" type="button" data-confirm-action="cancel">再想想</button>
+      <button class="btn btn--primary" type="button" data-confirm-action="confirm">确认完成</button>
+    </div>
+  </div>
+</div>
+
+<!-- Undo toast -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="toast__text" id="toastText">—</span>
+  <button class="toast__undo" type="button" id="toastUndo">撤销</button>
+  <button class="toast__close" type="button" id="toastClose" aria-label="关闭">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>
+  </button>
+</div>
+
+<script>
+  // tabs
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      var name = t.dataset.tab;
+      document.querySelectorAll('.tab').forEach(function(x){ x.setAttribute('aria-selected', x === t ? 'true':'false') });
+      document.querySelectorAll('.tabpanel').forEach(function(p){
+        p.classList.toggle('is-active', p.dataset.panel === name);
+      });
+    });
+  });
+
+  // Step toggle — checkbox only; high-stakes steps require confirm; every change shows 5s undo toast
+  (function(){
+    var sheet = document.getElementById('confirmSheet');
+    var sheetAct = document.getElementById('confirmSheetAct');
+    var toast = document.getElementById('toast');
+    var toastText = document.getElementById('toastText');
+    var toastUndo = document.getElementById('toastUndo');
+    var toastClose = document.getElementById('toastClose');
+
+    var toastTimer = null;
+    var pendingUndo = null;
+
+    function truncate(s, n){ return s.length > n ? s.slice(0, n) + '…' : s; }
+
+    function showToast(message, undoFn){
+      toastText.textContent = message;
+      pendingUndo = undoFn;
+      toast.setAttribute('data-open', 'true');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(hideToast, 5000);
+    }
+    function hideToast(){
+      toast.setAttribute('data-open', 'false');
+      pendingUndo = null;
+      clearTimeout(toastTimer);
+    }
+    toastUndo.addEventListener('click', function(){
+      if (pendingUndo) pendingUndo();
+      hideToast();
+    });
+    toastClose.addEventListener('click', hideToast);
+
+    var sheetResolver = null;
+    function openSheet(actText){
+      sheetAct.textContent = actText;
+      sheet.setAttribute('data-open', 'true');
+      return new Promise(function(resolve){ sheetResolver = resolve; });
+    }
+    function closeSheet(answer){
+      sheet.setAttribute('data-open', 'false');
+      if (sheetResolver){ sheetResolver(answer); sheetResolver = null; }
+    }
+    sheet.addEventListener('click', function(e){
+      var action = e.target.closest('[data-confirm-action]');
+      if (action) closeSheet(action.dataset.confirmAction === 'confirm');
+      else if (e.target === sheet) closeSheet(false);
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape'){
+        if (sheet.getAttribute('data-open') === 'true') closeSheet(false);
+        else if (toast.getAttribute('data-open') === 'true') hideToast();
+      }
+    });
+
+    document.querySelectorAll('.step__check').forEach(function(btn){
+      btn.addEventListener('click', async function(e){
+        e.stopPropagation();
+        var step = btn.closest('.step');
+        var wasChecked = btn.getAttribute('aria-checked') === 'true';
+        var willCheck = !wasChecked;
+        var actText = step.querySelector('.step__act').textContent.trim();
+        var needsConfirm = btn.dataset.confirmable === 'true' && willCheck;
+
+        if (needsConfirm){
+          var ok = await openSheet(actText);
+          if (!ok) return;
+        }
+
+        btn.setAttribute('aria-checked', String(willCheck));
+        step.classList.toggle('step--done', willCheck);
+
+        var shortAct = truncate(actText, 18);
+        showToast(
+          (willCheck ? '已标记完成 · ' : '已恢复待办 · ') + shortAct,
+          function(){
+            btn.setAttribute('aria-checked', String(wasChecked));
+            step.classList.toggle('step--done', wasChecked);
+          }
+        );
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>
