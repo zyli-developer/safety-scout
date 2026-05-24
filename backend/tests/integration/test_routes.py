@@ -196,3 +196,39 @@ def test_healthz(client: TestClient) -> None:
     resp = client.get("/api/v1/healthz")
     assert resp.status_code == 200
     assert resp.json() == {"status": "ok"}
+
+
+def test_post_emits_queued_log_with_inspection_id(
+    client: TestClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    """运维可见性回归：POST 成功后必须有一条带 inspection_id 的结构化日志。"""
+    import logging as _logging
+
+    with caplog.at_level(_logging.INFO, logger="app.routes.inspections"):
+        resp = client.post(
+            "/api/v1/inspections",
+            files={"image": ("test.jpg", _VALID_JPEG_BYTES, "image/jpeg")},
+        )
+    assert resp.status_code == 202
+    inspection_id = resp.json()["inspection_id"]
+
+    queued = [r for r in caplog.records if r.message == "inspection queued"]
+    assert queued, "POST 成功后应记录 'inspection queued'"
+    assert getattr(queued[0], "inspection_id", None) == inspection_id
+    assert getattr(queued[0], "provider", None) == "fake"
+
+
+def test_get_404_emits_warning(
+    client: TestClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    """GET 404 必须打 warning —— 排查"前端拿到 404"时能从日志反查 id。"""
+    import logging as _logging
+
+    with caplog.at_level(_logging.WARNING, logger="app.routes.inspections"):
+        resp = client.get(
+            "/api/v1/inspections/00000000-0000-0000-0000-000000000000"
+        )
+    assert resp.status_code == 404
+    warnings = [r for r in caplog.records if r.message == "GET /inspections not found"]
+    assert warnings, "GET 404 应记录 warning"
+    assert getattr(warnings[0], "error_code", None) == "NOT_FOUND"

@@ -47,6 +47,24 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger = logging.getLogger(__name__)
 
     settings = get_settings()
+    # 启动总览：生产排查第一步看这条 —— 一眼确认挂的是哪个 provider / 模型 /
+    # 数据目录 / 限流值。所有敏感字段（doubao_api_key）按 mask 处理。
+    logger.info(
+        "safety-scout backend starting",
+        extra={
+            "llm_provider": settings.llm_provider,
+            "claude_model": settings.claude_model,
+            "claude_timeout_s": settings.claude_timeout_seconds,
+            "doubao_model": settings.doubao_model,
+            "doubao_api_key_set": bool(settings.doubao_api_key),
+            "sqlite_path": settings.sqlite_path,
+            "upload_dir": settings.upload_dir,
+            "max_image_mb": settings.max_image_mb,
+            "rate_limit_per_minute": settings.rate_limit_per_minute,
+            "backend_hard_timeout_s": settings.backend_hard_timeout_s,
+        },
+    )
+
     conn = connect(settings.sqlite_path)
     try:
         init_schema(conn)
@@ -73,7 +91,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             )
     finally:
         conn.close()
+
+    logger.info("safety-scout backend ready")
     yield
+    logger.info("safety-scout backend shutting down")
 
 
 def create_app() -> FastAPI:
@@ -105,6 +126,20 @@ def create_app() -> FastAPI:
     ) -> JSONResponse:
         # 架构 §2.4：所有 SafetyScoutError 子类统一映射成
         # {"error":{code, message, user_message}}，http_status 由子类 ClassVar 决定。
+        # 5xx 走 error 级别（需要立刻关注）、4xx 走 warning（业务校验失败，正常流量）。
+        log = logging.getLogger("app.main.errors")
+        log_method = log.error if exc.http_status >= 500 else log.warning
+        log_method(
+            "request rejected by SafetyScoutError",
+            extra={
+                "error_code": exc.code,
+                "http_status": exc.http_status,
+                "path": request.url.path,
+                "method": request.method,
+                "client_ip": request.client.host if request.client else None,
+                "detail": str(exc),
+            },
+        )
         return JSONResponse(
             status_code=exc.http_status,
             content={
@@ -123,6 +158,16 @@ def create_app() -> FastAPI:
         # slowapi 抛 RateLimitExceeded —— 强制套上和 SafetyScoutError 一致的
         # error envelope，避免前端见到两种 4xx shape。code/user_message 与
         # errors.RateLimitedError 同步。
+        logging.getLogger("app.main.errors").warning(
+            "rate limit exceeded",
+            extra={
+                "error_code": RateLimitedError.code,
+                "path": request.url.path,
+                "method": request.method,
+                "client_ip": request.client.host if request.client else None,
+                "limit": str(exc.detail),
+            },
+        )
         return JSONResponse(
             status_code=RateLimitedError.http_status,
             content={
