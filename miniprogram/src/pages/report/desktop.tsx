@@ -27,10 +27,11 @@ import { ReportSidebar } from '../../components/desktop/ReportSidebar';
 import { sortBySeverity } from '../../utils/severity';
 import { mapApiError } from '../../utils/errorMessage';
 import { getPhotoFor } from '../../utils/lastPhotoStore';
+import { appendHistory } from '../../utils/historyStore';
 import { ApiError } from '../../api/client';
 import { DEFAULT_POLL_INTERVAL_MS, DEFAULT_TIMEOUT_MS } from '../../config';
 import type { GetInspectionResponse } from '../../types/inspection';
-import type { ReportPayload } from '../../types/report';
+import type { ReportPayload, Severity } from '../../types/report';
 
 import styles from './desktop.module.scss';
 
@@ -67,6 +68,7 @@ export default function DesktopReport() {
           ariaCurrent="step"
           onTabChange={(tab) => {
             if (tab === 'inspect') goHomeReplay();
+            if (tab === 'reports') Taro.navigateTo({ url: '/pages/history/index' });
           }}
         />
         <View className={styles.processing}>
@@ -129,6 +131,7 @@ function DesktopErrorView({
         activeTab="reports"
         onTabChange={(tab) => {
           if (tab === 'inspect') goHomeReplay();
+          if (tab === 'reports') Taro.navigateTo({ url: '/pages/history/index' });
         }}
       />
       <View className={styles.centered}>
@@ -160,6 +163,23 @@ function DesktopSucceededReport({
   // canonicalId 来自 URL（与上传时 rememberPhoto 用的 key 同源）；
   // 仅当 URL 丢了 id 时退到 report.inspection_id —— 后者在旧后端上是 LLM 占位符。
   const idForLookup = canonicalId || report.inspection_id;
+
+  // 2026-05-24 B8：成功获取报告时记录到本地 history store（localStorage 临时方案，
+  // 后端无 list endpoint。一次性 append，不阻塞渲染。）
+  useEffect(() => {
+    const counts = { high: 0, medium: 0, low: 0 } as Record<Severity, number>;
+    for (const h of sorted) counts[h.severity] += 1;
+    appendHistory({
+      inspectionId: idForLookup,
+      capturedAt: Date.parse(createdAt) || Date.now(),
+      summary: report.summary,
+      overallSeverity: severity,
+      hazardCount: sorted.length,
+      breakdown: counts,
+      status: 'pending',
+    });
+    // 只在 inspection 切换时重新登记
+  }, [idForLookup]);
   const no = shortId(idForLookup);
   // 桌面上传时先存 blob URL 立刻挂屏，FileReader 异步把 data URL 写回 store；
   // 这里轮询 store 直到拿到 data URL —— blob URL 在 window.print() / 导出 PDF
@@ -203,6 +223,7 @@ function DesktopSucceededReport({
         activeTab="reports"
         onTabChange={(tab) => {
           if (tab === 'inspect') goHomeReplay();
+          if (tab === 'reports') Taro.navigateTo({ url: '/pages/history/index' });
         }}
       />
 

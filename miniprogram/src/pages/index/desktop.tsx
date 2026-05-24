@@ -66,7 +66,13 @@ export default function DesktopIndex() {
 
   return (
     <View className={styles.page}>
-      <TopNav activeTab="inspect" />
+      <TopNav
+        activeTab="inspect"
+        onTabChange={(tab) => {
+          // 2026-05-24 B8：reports tab 跳 history 页（localStorage 数据源）
+          if (tab === 'reports') Taro.navigateTo({ url: '/pages/history/index' });
+        }}
+      />
 
       <View className={styles.container}>
         <View className={styles.hero}>

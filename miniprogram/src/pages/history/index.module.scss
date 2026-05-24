@@ -1,0 +1,326 @@
+// HistoryPage (B8 · 2026-05-24 · localStorage 数据源)。
+// 对齐 docs/plans/2026-05-22-unified-modern-minimal/history.html 主要 UX，但简化：
+// flat list 取代 daygroup sticky，单层 severity chip 取代 4 组 filter sheet。
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.container {
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.headLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.h1 {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.sub {
+  color: var(--ink-3);
+  font-size: 14px;
+}
+
+.btnText {
+  margin-left: 6px;
+}
+
+// === summary strip ===
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+@media (max-width: 760px) {
+  .summary {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.summaryCell {
+  background: var(--surface);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summaryLabel {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+}
+
+.summaryNum {
+  font-family: var(--f-mono);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.summaryNumHigh {
+  color: var(--high);
+}
+
+.summaryNumLow {
+  color: var(--low);
+}
+
+// === toolbar ===
+.toolbar {
+  display: flex;
+  gap: 10px 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.searchInput {
+  flex: 1;
+  padding: 9px 0;
+  border: 0;
+  background: transparent;
+  font-family: var(--f-sans);
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--ink-3);
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--ink-2);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+
+.chip:hover {
+  border-color: var(--line-strong);
+}
+
+.chipActive {
+  background: var(--ink);
+  color: var(--surface);
+  border-color: var(--ink);
+}
+
+.chipDisabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.chipCount {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  opacity: 0.7;
+  margin-left: 2px;
+}
+
+.chipActive .chipCount {
+  opacity: 1;
+}
+
+.chipDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.chipDothigh {
+  background: var(--high);
+}
+.chipDotmedium {
+  background: var(--med);
+}
+.chipDotlow {
+  background: var(--low);
+}
+
+// === list ===
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto 16px;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  background: var(--surface);
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+
+.row:hover {
+  border-color: var(--line);
+}
+
+.rowThumb {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  flex: none;
+  background: linear-gradient(135deg, #D4C0AB, #BD9676);
+  position: relative;
+}
+
+.rowBody {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rowWarn {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowMeta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.rowMetaItem {
+  color: var(--ink-3);
+}
+
+.rowMetaB {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.rowMetaTime {
+  color: var(--ink-3);
+}
+
+.rowCounts {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.rowPass {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--low);
+  font-weight: 600;
+}
+
+.emptyFilter {
+  padding: 32px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-3);
+  background: var(--surface);
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r-lg);
+}
+
+// === responsive ===
+@media (max-width: 680px) {
+  .container {
+    padding: 16px 18px 32px;
+  }
+  .row {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+  .rowThumb {
+    width: 56px;
+    height: 56px;
+  }
+  .rowCounts {
+    display: none;
+  }
+  .rowMetaTime {
+    display: none;
+  }
+  .rowWarn {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}

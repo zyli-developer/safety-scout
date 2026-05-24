@@ -25,6 +25,7 @@ import { Photo } from '../../components/Photo';
 import { sortBySeverity } from '../../utils/severity';
 import { mapApiError } from '../../utils/errorMessage';
 import { getPhotoFor } from '../../utils/lastPhotoStore';
+import { appendHistory } from '../../utils/historyStore';
 import { ApiError } from '../../api/client';
 import {
   DEFAULT_POLL_INTERVAL_MS,
@@ -140,6 +141,19 @@ function SucceededReport({
   // canonicalId 来自 URL（与上传时 rememberPhoto 同源），
   // 仅在 URL 丢 id 时退到 report.inspection_id（旧后端为 LLM 占位符）。
   const idForLookup = canonicalId || report.inspection_id;
+
+  // 2026-05-24 B8：记录到本地 history store（localStorage 临时方案）
+  useEffect(() => {
+    appendHistory({
+      inspectionId: idForLookup,
+      capturedAt: Date.parse(createdAt) || Date.now(),
+      summary: report.summary,
+      overallSeverity: severity,
+      hazardCount: total,
+      breakdown: counts,
+      status: 'pending',
+    });
+  }, [idForLookup]);
   const shortNo = idForLookup.slice(0, 12).toUpperCase();
   const photoMeta = `NO.${shortNo} · ${createdAt.slice(0, 16).replace('T', ' ')}`;
   // 见 desktop.tsx 同段注释：blob URL → data URL 升级轮询，
