@@ -1,0 +1,39 @@
+; 把本文件复制到 /etc/systemd/system/safety-scout.service 后启用：
+;   sudo systemctl daemon-reload && sudo systemctl enable --now safety-scout
+; 详细步骤见 docs/deploy.md
+
+[Unit]
+Description=Safety Scout backend (FastAPI + claude CLI)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=scout
+Group=scout
+WorkingDirectory=/opt/safety-scout/backend
+EnvironmentFile=/opt/safety-scout/backend/.env
+
+; PATH 必须能找到 `claude` 二进制（npm 全局装的位置）。
+; 通过 `npm config get prefix` 在 scout 用户下查实际路径。
+Environment="PATH=/usr/local/bin:/usr/bin:/bin:/home/scout/.npm-global/bin"
+; HOME 必须是跑过 `claude login` 的用户家目录，否则子进程读不到 ~/.claude/.credentials.json
+Environment="HOME=/home/scout"
+
+ExecStart=/opt/safety-scout/backend/.venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 --port 8000
+
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+; 简单加固。ReadWritePaths 必须包含 uploads / local_data / ~/.claude（OAuth refresh 写回）
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/opt/safety-scout/backend/uploads /opt/safety-scout/backend/local_data /home/scout/.claude
+
+[Install]
+WantedBy=multi-user.target
