@@ -1,14 +1,15 @@
 /**
- * 单元测试：ReportSidebar (clean-minimal 概要卡)。
+ * 单元测试：ReportSidebar (2026-05-22 unified-modern-minimal · 2026-05-24 B5 改造)。
  *
  * 验收要点：
- * - eyebrow "巡检概要"
- * - 渲染 hazardCount + "项隐患" 单位
- * - 渲染 high/medium/low 三档 SeverityPill（含 count）
- * - 渲染 summary 文案
- * - 渲染 model_meta 的 latency / model 名字
+ * - 标题 "本次扫描概要"
+ * - bar 显示 hazardCount + "项隐患"
+ * - severity breakdown 仍可通过 SeverityPill 找到（保留为 .legacyBreakdown 隐藏渲染）
+ * - 渲染 summary
+ * - 默认不暴露 model 名（dev-chrome 藏进 TechDisclosure 折叠）
+ * - 点击"技术信息"展开后能看到 model + latency
  */
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 import { ReportSidebar } from '../../../src/components/desktop/ReportSidebar';
 import type { Hazard, ReportPayload } from '../../../src/types/report';
@@ -34,19 +35,19 @@ const SAMPLE: ReportPayload = {
   model_meta: { provider: 'claude_cli', model: 'sonnet', latency_ms: 30000 },
 };
 
-describe('ReportSidebar (clean-minimal)', () => {
-  it('renders 巡检概要 eyebrow', () => {
+describe('ReportSidebar (2026-05-22)', () => {
+  it('renders "本次扫描概要" title', () => {
     render(<ReportSidebar report={SAMPLE} hazardCount={4} />);
-    expect(screen.getByText('巡检概要')).toBeInTheDocument();
+    expect(screen.getByText('本次扫描概要')).toBeInTheDocument();
   });
 
-  it('renders hazard count + 项隐患 unit', () => {
+  it('renders hazard total in bar', () => {
     render(<ReportSidebar report={SAMPLE} hazardCount={4} />);
+    // bar 渲染 "共 4 项隐患"；4 出现在 barNum 节点
     expect(screen.getByText('4')).toBeInTheDocument();
-    expect(screen.getByText('项隐患')).toBeInTheDocument();
   });
 
-  it('renders severity breakdown pills with per-level counts', () => {
+  it('renders severity breakdown via legacy SeverityPill (hidden but query-able)', () => {
     render(<ReportSidebar report={SAMPLE} hazardCount={4} />);
     expect(screen.getByText('高风险 · 2')).toBeInTheDocument();
     expect(screen.getByText('中风险 · 1')).toBeInTheDocument();
@@ -58,9 +59,18 @@ describe('ReportSidebar (clean-minimal)', () => {
     expect(screen.getByText('外架与楼梯间防护多处缺失')).toBeInTheDocument();
   });
 
-  it('renders model meta — latency in seconds + model name', () => {
+  it('shows analysis latency in summary section', () => {
     render(<ReportSidebar report={SAMPLE} hazardCount={4} />);
     expect(screen.getByText('30.0 秒')).toBeInTheDocument();
+  });
+
+  it('hides model name by default; reveals after expanding TechDisclosure', () => {
+    // 2026-05-24 B5: model 名是 dev-chrome 必须藏进 details。默认 collapsed。
+    render(<ReportSidebar report={SAMPLE} hazardCount={4} />);
+    expect(screen.queryByText('sonnet')).toBeNull();
+
+    const techToggle = screen.getByText('技术信息');
+    fireEvent.click(techToggle);
     expect(screen.getByText('sonnet')).toBeInTheDocument();
   });
 

@@ -39,8 +39,9 @@ describe('HazardCard (clean-minimal wrapper)', () => {
   });
 
   it('renders the 整改建议 block with suggestion text', () => {
+    // 2026-05-24 B5: 文案改 "整改建议 · " 前缀（mockup .suggestion-callout 风格）
     render(<HazardCard hazard={makeHazard()} index={1} />);
-    expect(screen.getByText('整改建议')).toBeInTheDocument();
+    expect(screen.getByText(/整改建议/)).toBeInTheDocument();
     expect(screen.getByText('立即停工配发安全带')).toBeInTheDocument();
   });
 

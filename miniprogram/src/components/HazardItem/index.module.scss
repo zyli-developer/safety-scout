@@ -62,28 +62,39 @@
   color: var(--line-2);
 }
 
+// 对齐 mockup .suggestion-callout —— accent-soft 橙色块 + 左 icon + 内联"整改建议 ·"前缀。
 .fix {
   margin-top: var(--s1);
-  padding: var(--s2);
-  background: var(--surface-2);
+  padding: 10px 12px;
+  background: var(--accent-soft);
   border-radius: var(--r-sm);
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.fixIcon {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex: none;
+}
+
+.fixContent {
+  font-size: 14px;
+  line-height: 1.55;
+  // 整改建议正文颜色：accent 同色系深一档，跟 mockup oklch(35% 0.06 50) 接近
+  color: #6E3517;
 }
 
 .fixLabel {
-  display: block;
-  font-family: var(--f-mono);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 1.5px;
-  color: var(--accent);
-  text-transform: uppercase;
-  margin-bottom: 4px;
+  font-weight: 600;
+  color: #6E3517;
 }
 
 .fixBody {
-  font-size: 13.5px;
-  color: var(--ink-2);
-  line-height: 1.5;
+  color: #6E3517;
 }
 
 .action {

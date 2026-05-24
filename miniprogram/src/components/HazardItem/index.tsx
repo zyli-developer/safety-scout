@@ -51,9 +51,16 @@ export function HazardItem({
           )}
         </View>
         {showFix && (
+          // 2026-05-24：对齐 mockup .suggestion-callout —— accent-soft 橙色块 + 左 icon，
+          // 与 report.html 列表里的整改建议视觉同源。
           <View className={styles.fix}>
-            <Text className={styles.fixLabel}>整改建议</Text>
-            <Text className={styles.fixBody}>{suggestion}</Text>
+            <View className={styles.fixIcon}>
+              <Icon name="tick" size={16} color="var(--accent)" />
+            </View>
+            <View className={styles.fixContent}>
+              <Text className={styles.fixLabel}>整改建议 · </Text>
+              <Text className={styles.fixBody}>{suggestion}</Text>
+            </View>
           </View>
         )}
       </View>

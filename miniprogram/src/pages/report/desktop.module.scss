@@ -9,10 +9,10 @@
 }
 
 .container {
-  max-width: 1280px;
+  // 2026-05-22 unified-modern-minimal：宽屏统一收紧到 1240，与 home / polling 对齐。
+  max-width: 1240px;
   width: 100%;
   margin: 0 auto;
-  // compact 默认：1280×800 视口要让 hero（页头 + photo + 概要卡）尽量一屏可见。
   padding: 24px 32px 40px;
 }
 
@@ -178,6 +178,25 @@
   border-color: var(--line-2);
 }
 
+// count=0 的 chip 在 high-only 报告里是噪声 —— aria-disabled + opacity 压成背景
+// (critique P6 / minor #2 修复)
+.filterChipDisabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.filterChipCount {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  opacity: 0.7;
+  margin-left: 2px;
+}
+
+.filterChipActive .filterChipCount {
+  opacity: 1;
+}
+
 .listBody {
   padding: 0 24px;
 }
@@ -326,10 +345,9 @@
   }
 }
 
-// 宽屏：≥1600 放宽 container + 还原大间距；≥1920 顶到 1520。
+// 2026-05-22 unified：宽屏只放大 padding/gap，不再放大 container max-width。
 @media (min-width: 1600px) {
   .container {
-    max-width: 1440px;
     padding: 40px 48px 80px;
   }
   .header {
@@ -350,7 +368,6 @@
 }
 @media (min-width: 1920px) {
   .container {
-    max-width: 1520px;
     padding: 56px 48px 96px;
   }
 }

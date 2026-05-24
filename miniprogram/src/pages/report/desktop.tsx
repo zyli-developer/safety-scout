@@ -227,20 +227,20 @@ function DesktopSucceededReport({
               <Text className={styles.headerNo}>NO.{no}</Text>
             </View>
             <Text className={styles.h1}>现场巡检报告</Text>
-            <Text className={styles.lede}>由 Claude Vision 分析 · {report.hazards.length} 项隐患</Text>
+            {/* 2026-05-24：删 "由 Claude Vision 分析" (critique P5 dev-chrome)。
+                改为只显示中性的隐患计数 + 时间。 */}
+            <Text className={styles.lede}>{report.hazards.length} 项隐患 · {createdAt.slice(0, 16).replace('T', ' ')}</Text>
           </View>
           <View className={styles.headerActions}>
+            {/* CTA 主次对齐 mockup：分享 primary（mockup 主推班组流转）+ 导出 PDF ghost。
+                "转派班组" placeholder 删除（与"分享"语义重叠且未实装） */}
+            <Button variant="primary" onTap={notImplemented('分享给班组')}>
+              <Icon name="share" size={16} color="var(--on-accent)" />
+              <Text className={styles.btnText}>分享给班组</Text>
+            </Button>
             <Button variant="secondary" onTap={handleExportPdf}>
               <Icon name="download" size={16} color="var(--ink)" />
               <Text className={styles.btnText}>导出 PDF</Text>
-            </Button>
-            <Button variant="secondary" onTap={notImplemented('分享')}>
-              <Icon name="share" size={16} color="var(--ink)" />
-              <Text className={styles.btnText}>分享</Text>
-            </Button>
-            <Button variant="primary" onTap={notImplemented('转派班组')}>
-              <Icon name="arrow-up" size={16} color="var(--on-accent)" />
-              <Text className={styles.btnText}>转派班组</Text>
             </Button>
           </View>
         </View>
@@ -275,18 +275,38 @@ function DesktopSucceededReport({
               <Text className={styles.listCaption}>按严重程度排序 · 共 {sorted.length} 项</Text>
             </View>
             <View className={styles.listFilters}>
-              <View className={[styles.filterChip, styles.filterChipActive].join(' ')}>
-                <Text>全部</Text>
-              </View>
-              <View className={styles.filterChip}>
-                <Text>高</Text>
-              </View>
-              <View className={styles.filterChip}>
-                <Text>中</Text>
-              </View>
-              <View className={styles.filterChip}>
-                <Text>低</Text>
-              </View>
+              {/* 2026-05-24：chip 加 count；count=0 时 aria-disabled (critique P6 修复) */}
+              {(() => {
+                const high = sorted.filter((h) => h.severity === 'high').length;
+                const med = sorted.filter((h) => h.severity === 'medium').length;
+                const low = sorted.filter((h) => h.severity === 'low').length;
+                const chips: Array<{ key: string; label: string; count: number; active?: boolean }> = [
+                  { key: 'all', label: '全部', count: sorted.length, active: true },
+                  { key: 'high', label: '高', count: high },
+                  { key: 'med', label: '中', count: med },
+                  { key: 'low', label: '低', count: low },
+                ];
+                return chips.map((c) => {
+                  const disabled = c.count === 0 && c.key !== 'all';
+                  return (
+                    <View
+                      key={c.key}
+                      className={[
+                        styles.filterChip,
+                        c.active ? styles.filterChipActive : '',
+                        disabled ? styles.filterChipDisabled : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      aria-disabled={disabled ? 'true' : undefined}
+                    >
+                      <Text>
+                        {c.label} <Text className={styles.filterChipCount}>{c.count}</Text>
+                      </Text>
+                    </View>
+                  );
+                });
+              })()}
             </View>
           </View>
           <View className={styles.listBody}>
@@ -315,7 +335,8 @@ function DesktopSucceededReport({
         </View>
 
         <View className={styles.footer}>
-          <Text className={styles.footerLeft}>Safety Scout · v0.3.1</Text>
+          {/* 2026-05-24：删 "v0.3.1" (critique P5 dev-chrome 版本号)，保留 NO 与"服务可用"指示。 */}
+          <Text className={styles.footerLeft}>服务可用</Text>
           <Text className={styles.footerRight}>NO.{no} · 报告完</Text>
         </View>
       </View>

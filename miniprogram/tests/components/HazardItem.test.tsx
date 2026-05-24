@@ -35,10 +35,11 @@ describe('HazardItem', () => {
   });
 
   it('renders 整改建议 by default and hides on showFix=false', () => {
+    // 2026-05-24 B5: 文案从 "整改建议" → "整改建议 · " 前缀（与 mockup .suggestion-callout 一致）
     const { rerender } = render(<HazardItem hazard={makeHazard()} index={1} />);
-    expect(screen.getByText('整改建议')).toBeInTheDocument();
+    expect(screen.getByText(/整改建议/)).toBeInTheDocument();
     rerender(<HazardItem hazard={makeHazard()} index={1} showFix={false} />);
-    expect(screen.queryByText('整改建议')).not.toBeInTheDocument();
+    expect(screen.queryByText(/整改建议/)).not.toBeInTheDocument();
   });
 
   it('fires onAction when right-side chevron clicked', () => {

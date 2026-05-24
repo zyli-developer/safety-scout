@@ -246,14 +246,17 @@ function SucceededReport({
         </View>
       </View>
 
-      <View className={styles.actbar}>
+      {/* 2026-05-24：删 sticky 底部 actbar (mockup 移动版没有 sticky CTA，
+          主操作在 summaryCard 内或紧跟内容流。改为内联放在隐患列表后。)
+          CTA 主次对齐 mockup：分享 primary + 导出 PDF ghost。"转派班组" placeholder 删除。 */}
+      <View className={styles.inlineActions}>
+        <Button variant="primary" block onTap={notImplemented('分享给班组')}>
+          <Icon name="share" size={16} color="var(--on-accent)" />
+          <Text className={styles.actbarText}>分享给班组</Text>
+        </Button>
         <Button variant="secondary" block onTap={handleExportPdf}>
           <Icon name="download" size={16} color="var(--ink)" />
           <Text className={styles.actbarText}>导出 PDF</Text>
-        </Button>
-        <Button variant="primary" block onTap={notImplemented('转派班组')}>
-          <Icon name="share" size={16} color="var(--on-accent)" />
-          <Text className={styles.actbarText}>转派班组</Text>
         </Button>
       </View>
     </View>
