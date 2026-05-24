@@ -22,7 +22,7 @@ import { Button } from '../../components/Button';
 import { Photo } from '../../components/Photo';
 import { SeverityPill } from '../../components/SeverityPill';
 import { AlarmBox } from '../../components/AlarmBox';
-import { ProgressIndicator } from '../../components/ProgressIndicator';
+import { ProgressTracker } from '../../components/ProgressTracker';
 import { ReportSidebar } from '../../components/desktop/ReportSidebar';
 import { sortBySeverity } from '../../utils/severity';
 import { mapApiError } from '../../utils/errorMessage';
@@ -60,14 +60,21 @@ export default function DesktopReport() {
     const step = result?.status === 'processing' ? 2 : 1;
     return (
       <View className={styles.page}>
+        {/* 轮询是巡检流程中的一步：activeTab=inspect + ariaCurrent=step
+            （nav "巡检" 链接指向 home，当前页不是 home，语义应为 step 而非 page —— critique P0 修复） */}
         <TopNav
-          activeTab="reports"
+          activeTab="inspect"
+          ariaCurrent="step"
           onTabChange={(tab) => {
             if (tab === 'inspect') goHomeReplay();
           }}
         />
         <View className={styles.processing}>
-          <ProgressIndicator currentStep={step} elapsedMs={elapsedMs} />
+          <ProgressTracker
+            currentStep={step}
+            elapsedMs={elapsedMs}
+            onCancel={goHomeReplay}
+          />
         </View>
       </View>
     );

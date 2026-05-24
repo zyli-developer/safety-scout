@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { getInspection } from '../../api/inspections';
 import { HazardItem } from '../../components/HazardItem';
-import { ProgressIndicator } from '../../components/ProgressIndicator';
+import { ProgressTracker } from '../../components/ProgressTracker';
 import { Icon } from '../../components/Icon';
 import { AppBar } from '../../components/AppBar';
 import { Button } from '../../components/Button';
@@ -61,11 +61,16 @@ export default function MobileReport() {
 
   if (!result || result.status === 'queued' || result.status === 'processing') {
     const step = result?.status === 'processing' ? 2 : 1;
+    const cancelToHome = () => Taro.reLaunch({ url: '/pages/index/index' });
     return (
       <View className={styles.page}>
-        <AppBar title="巡检报告" onBack={() => Taro.reLaunch({ url: '/pages/index/index' })} />
+        <AppBar title="巡检报告" onBack={cancelToHome} />
         <View className={styles.processingWrap}>
-          <ProgressIndicator currentStep={step} elapsedMs={elapsedMs} />
+          <ProgressTracker
+            currentStep={step}
+            elapsedMs={elapsedMs}
+            onCancel={cancelToHome}
+          />
         </View>
       </View>
     );
