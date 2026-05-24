@@ -241,7 +241,16 @@ function SucceededReport({
         <Text className={styles.sectionCaption}>按严重程度排序</Text>
         <View className={styles.hazardList}>
           {sorted.map((h, i) => (
-            <HazardItem hazard={h} key={`${h.category_code}-${i}`} index={i + 1} />
+            <HazardItem
+              hazard={h}
+              key={`${h.category_code}-${i}`}
+              index={i + 1}
+              onAction={() =>
+                Taro.navigateTo({
+                  url: `/pages/report-detail/index?id=${canonicalId}&h=${i}`,
+                })
+              }
+            />
           ))}
         </View>
       </View>

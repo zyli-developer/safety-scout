@@ -311,7 +311,16 @@ function DesktopSucceededReport({
           </View>
           <View className={styles.listBody}>
             {sorted.map((h, idx) => (
-              <HazardItem hazard={h} key={`${h.category_code}-${idx}`} index={idx + 1} />
+              <HazardItem
+                hazard={h}
+                key={`${h.category_code}-${idx}`}
+                index={idx + 1}
+                onAction={() =>
+                  Taro.navigateTo({
+                    url: `/pages/report-detail/index?id=${canonicalId}&h=${idx}`,
+                  })
+                }
+              />
             ))}
           </View>
         </View>
