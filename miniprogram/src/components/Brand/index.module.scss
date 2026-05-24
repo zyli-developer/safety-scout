@@ -3,9 +3,10 @@
   align-items: center;
   gap: 10px;
   font-weight: 600;
-  font-size: clamp(15px, 1.15vw, 17px);
+  font-size: 15px;
   color: var(--ink);
-  letter-spacing: -0.2px;
+  letter-spacing: -0.01em;
+  line-height: 1;
 }
 
 .mark {
@@ -13,32 +14,42 @@
   height: 28px;
   border-radius: 8px;
   background: var(--accent);
+  color: var(--on-accent); // SVG currentColor 由这里决定
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.markText {
-  color: var(--on-accent);
-  font-weight: 700;
-  font-size: clamp(13px, 1vw, 15px);
-  font-family: var(--f-mono);
-  line-height: 1;
+  flex: none;
 }
 
 .name {
   color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sub {
+  color: var(--ink-3);
+  font-size: 13px;
+  font-weight: 400;
+  margin-left: 2px; // 跟 .name 之间有 gap:10px 已经够，再补 2px 防视觉粘连
+}
+
+// mobile 下隐藏 "/ 工地安全巡检"；断点跟 TopNav 一致
+@media (max-width: 640px) {
+  .sub {
+    display: none;
+  }
 }
 
 .lg {
   font-size: 17px;
-}
 
-.lg .mark {
-  width: 32px;
-  height: 32px;
-}
+  .mark {
+    width: 32px;
+    height: 32px;
+  }
 
-.lg .markText {
-  font-size: 15px;
+  .name {
+    font-size: 17px;
+  }
 }
