@@ -30,7 +30,12 @@ import { Icon } from '../../components/Icon';
 import { SeverityPill } from '../../components/SeverityPill';
 import { mapApiError } from '../../utils/errorMessage';
 import { sortBySeverity } from '../../utils/severity';
+import { mapV2ReportToV1 } from '../../utils/v2Adapter';
 import type { GetInspectionResponse } from '../../types/inspection';
+import type {
+  GetInspectionV2Response,
+  SchemaVersion,
+} from '../../types/inspection-v2';
 import type { Hazard } from '../../types/report';
 
 import styles from './index.module.scss';
@@ -39,15 +44,35 @@ export default function ReportDetail() {
   const router = Taro.useRouter();
   const id = router.params.id ?? '';
   const hIndex = Number(router.params.h) || 0;
+  // URL ?v=2 决定 GET 走哪条；缺省 v1。
+  const schemaVersion: SchemaVersion = router.params.v === '2' ? 'v2' : 'v1';
 
+  // 状态固定按 v1 shape 存：v2 响应在这里就被 adapter 转回 v1 shape，
+  // 让下游 hazard 渲染（HazardItem / SeverityPill）零修改复用。
   const [data, setData] = useState<GetInspectionResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
-    getInspection(id)
+    getInspection(id, schemaVersion)
       .then((r) => {
-        if (alive) setData(r);
+        if (!alive) return;
+        if (schemaVersion === 'v2' && r.report) {
+          // v2 响应 → v1 shape；其他字段（status/error/created_at/...）已对齐
+          const v2r = r as GetInspectionV2Response;
+          setData({
+            inspection_id: v2r.inspection_id,
+            status: v2r.status,
+            created_at: v2r.created_at,
+            updated_at: v2r.updated_at,
+            report: v2r.report
+              ? mapV2ReportToV1(v2r.report, id, v2r.created_at)
+              : null,
+            error: v2r.error,
+          });
+        } else {
+          setData(r as GetInspectionResponse);
+        }
       })
       .catch((e) => {
         if (alive) setError(mapApiError(e).userMessage);
@@ -55,7 +80,7 @@ export default function ReportDetail() {
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [id, schemaVersion]);
 
   if (error) {
     return (

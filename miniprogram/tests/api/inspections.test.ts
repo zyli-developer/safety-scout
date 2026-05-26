@@ -23,8 +23,9 @@ describe('api/inspections.createInspection', () => {
       opts.success({ statusCode: 200, data: JSON.stringify(payload) });
     });
 
-    const res = await createInspection('/tmp/foo.jpg');
-    expect(res).toEqual(payload);
+    // createInspection 在 wire payload 基础上附加 schema_version（前端决策，非来自服务端）
+    const res = await createInspection('/tmp/foo.jpg', 'v1');
+    expect(res).toEqual({ ...payload, schema_version: 'v1' });
   });
 
   it('rejects with ApiError carrying server error code on 4xx', async () => {
@@ -152,8 +153,8 @@ describe('api/inspections.createInspection — File input (desktop H5)', () => {
     const file = new File([new Uint8Array([0xff, 0xd8, 0xff])], 'photo.jpg', {
       type: 'image/jpeg',
     });
-    const res = await createInspection(file);
-    expect(res).toEqual(payload);
+    const res = await createInspection(file, 'v1');
+    expect(res).toEqual({ ...payload, schema_version: 'v1' });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0];
@@ -191,6 +192,126 @@ describe('api/inspections.createInspection — File input (desktop H5)', () => {
     await expect(createInspection(file)).rejects.toMatchObject({
       code: 'NETWORK_ERROR',
       statusCode: 0,
+    });
+  });
+});
+
+describe('api/inspections — v1/v2 路径分支 (V2_TRAFFIC_SHARE)', () => {
+  beforeEach(() => {
+    mockedUploadFile.mockReset();
+    mockedRequest.mockReset();
+  });
+
+  it('createInspection(versionOverride="v2") 用 tempFilePath 走 /api/v2/analyze', async () => {
+    mockedUploadFile.mockImplementationOnce((opts) => {
+      opts.success({
+        statusCode: 200,
+        data: JSON.stringify({
+          inspection_id: 'v2-id',
+          poll_url: '/api/v2/inspections/v2-id',
+          poll_interval_ms: 2000,
+          timeout_ms: 390_000,
+          status: 'queued',
+        }),
+      });
+    });
+
+    const res = await createInspection('/tmp/x.jpg', 'v2');
+    expect(res.schema_version).toBe('v2');
+    expect(res.poll_url).toBe('/api/v2/inspections/v2-id');
+    expect(mockedUploadFile.mock.calls[0][0].url).toBe(API_BASE_URL + '/api/v2/analyze');
+  });
+
+  it('createInspection(versionOverride="v2") 用 File 走 /api/v2/analyze', async () => {
+    const payload = {
+      inspection_id: 'v2-desk',
+      poll_url: '/api/v2/inspections/v2-desk',
+      poll_interval_ms: 2000,
+      timeout_ms: 390_000,
+      status: 'queued',
+    };
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => payload,
+      text: async () => JSON.stringify(payload),
+    });
+    globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
+
+    const file = new File([new Uint8Array([0xff])], 'p.jpg', { type: 'image/jpeg' });
+    const res = await createInspection(file, 'v2');
+    expect(res.schema_version).toBe('v2');
+    const [url] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe(API_BASE_URL + '/api/v2/analyze');
+  });
+
+  it('getInspection(id, "v2") 命中 /api/v2/inspections/{id}', async () => {
+    mockedRequest.mockResolvedValueOnce({
+      statusCode: 200,
+      data: {
+        inspection_id: 'v2-id',
+        status: 'queued',
+        created_at: '2026-05-26T00:00:00Z',
+        updated_at: '2026-05-26T00:00:00Z',
+        report: null,
+        error: null,
+      },
+    });
+
+    await getInspection('v2-id', 'v2');
+    const call = mockedRequest.mock.calls[0][0];
+    expect(call.url).toBe(API_BASE_URL + '/api/v2/inspections/v2-id');
+  });
+
+  it('getInspection 默认 v1 —— 兼容历史调用', async () => {
+    mockedRequest.mockResolvedValueOnce({
+      statusCode: 200,
+      data: {
+        inspection_id: 'v1-id',
+        status: 'queued',
+        created_at: '',
+        updated_at: '',
+        report: null,
+        error: null,
+      },
+    });
+
+    await getInspection('v1-id');
+    const call = mockedRequest.mock.calls[0][0];
+    expect(call.url).toBe(API_BASE_URL + '/api/v1/inspections/v1-id');
+  });
+});
+
+describe('api/inspections.submitFeedback', () => {
+  beforeEach(() => {
+    mockedRequest.mockReset();
+  });
+
+  it('POSTs to /api/v2/inspections/{id}/feedback with body', async () => {
+    mockedRequest.mockResolvedValueOnce({
+      statusCode: 201,
+      data: {
+        feedback_id: 'fb-1',
+        inspection_id: 'v2-id',
+        created_at: '2026-05-26T00:00:00Z',
+      },
+    });
+
+    // dynamic import to avoid top-of-file import (keeps deltas minimal)
+    const { submitFeedback } = await import('../../src/api/inspections');
+    const res = await submitFeedback('v2-id', {
+      kind: 'false_positive',
+      check_id: 'B01',
+      description: '工人其实戴了安全带',
+    });
+    expect(res.feedback_id).toBe('fb-1');
+    const call = mockedRequest.mock.calls[0][0];
+    expect(call.url).toBe(API_BASE_URL + '/api/v2/inspections/v2-id/feedback');
+    expect(call.method).toBe('POST');
+    expect(call.data).toEqual({
+      kind: 'false_positive',
+      check_id: 'B01',
+      description: '工人其实戴了安全带',
     });
   });
 });

@@ -36,7 +36,13 @@ def connect(db_path: str | Path) -> sqlite3.Connection:
 
 
 def init_schema(conn: sqlite3.Connection) -> None:
-    """幂等：建表 / 索引。首次启动 + 后续启动都跑一遍。"""
+    """幂等：建表 / 索引 / 增量列。首次启动 + 后续启动都跑一遍。
+
+    schema_version 列承载 v1/v2 报告的区分（plan §3 业务集成）：
+    - 'v1' = ReportPayload（旧 hazards 结构）
+    - 'v2' = ReportV2Payload（findings/no_findings/uncertain/summary 结构）
+    既存数据库（pre-v2）会经过 ADD COLUMN 路径补上该列，默认 v1。
+    """
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS inspections (
             id TEXT PRIMARY KEY,            -- uuid v4 string
@@ -46,9 +52,30 @@ def init_schema(conn: sqlite3.Connection) -> None:
             updated_at TEXT NOT NULL,       -- ISO 8601 UTC, ...Z
             report_json TEXT,               -- ReportPayload.model_dump_json()，succeeded 时非空
             error_json TEXT,                -- {code,message,user_message}，failed 时非空
-            model_meta_json TEXT            -- {provider,model,latency_ms}，succeeded 时非空
+            model_meta_json TEXT,           -- {provider,model,latency_ms}，succeeded 时非空
+            schema_version TEXT NOT NULL DEFAULT 'v1'  -- 'v1' | 'v2'
         );
         CREATE INDEX IF NOT EXISTS idx_inspections_status ON inspections(status);
         CREATE INDEX IF NOT EXISTS idx_inspections_created_at ON inspections(created_at);
+
+        -- v2 Badcase 反馈表（plan §5.3）：误报 / 漏报 / 建议不可执行三档。
+        -- 与 inspections 1:N 关系；运营 / 安全工程师聚合后改 safety_skills/*.md。
+        CREATE TABLE IF NOT EXISTS feedbacks (
+            id TEXT PRIMARY KEY,            -- uuid v4
+            inspection_id TEXT NOT NULL REFERENCES inspections(id),
+            kind TEXT NOT NULL,             -- false_positive | missed | bad_action
+            check_id TEXT,                  -- 误报 / 不可执行时必填；漏报时可空
+            description TEXT NOT NULL,      -- 用户说明，≤ 500 字（在 schema 层 enforce）
+            created_at TEXT NOT NULL        -- ISO 8601 UTC, ...Z
+        );
+        CREATE INDEX IF NOT EXISTS idx_feedbacks_inspection ON feedbacks(inspection_id);
+        CREATE INDEX IF NOT EXISTS idx_feedbacks_check_id ON feedbacks(check_id);
     """)
+
+    # SQLite 不支持 ADD COLUMN IF NOT EXISTS，需要先探一下 PRAGMA。
+    existing_cols = {row["name"] for row in conn.execute("PRAGMA table_info(inspections)")}
+    if "schema_version" not in existing_cols:
+        conn.execute(
+            "ALTER TABLE inspections ADD COLUMN schema_version TEXT NOT NULL DEFAULT 'v1'"
+        )
     conn.commit()

@@ -19,8 +19,10 @@ from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 from app.schemas.report import ModelMeta, ReportPayload
+from app.schemas.report_v2 import ReportV2Payload
 
 InspectionStatus = Literal["queued", "processing", "succeeded", "failed"]
+SchemaVersion = Literal["v1", "v2"]
 
 
 @dataclass(frozen=True)
@@ -33,6 +35,7 @@ class InspectionRow:
     report_json: str | None
     error_json: str | None
     model_meta_json: str | None
+    schema_version: str = "v1"  # 与 DB DEFAULT 一致；老库行查出来也是 'v1'
 
 
 @dataclass(frozen=True)
@@ -46,14 +49,17 @@ def _now_iso() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def create(conn: sqlite3.Connection, image_path: str) -> str:
-    """插入 queued 行，返回新 id。"""
+def create(
+    conn: sqlite3.Connection, image_path: str, schema_version: SchemaVersion = "v1"
+) -> str:
+    """插入 queued 行，返回新 id。schema_version 决定该 inspection 走 v1 / v2 路径。"""
     inspection_id = str(uuid.uuid4())
     now = _now_iso()
     conn.execute(
-        "INSERT INTO inspections (id, status, image_path, created_at, updated_at) "
-        "VALUES (?, 'queued', ?, ?, ?)",
-        (inspection_id, image_path, now, now),
+        "INSERT INTO inspections "
+        "(id, status, image_path, created_at, updated_at, schema_version) "
+        "VALUES (?, 'queued', ?, ?, ?, ?)",
+        (inspection_id, image_path, now, now, schema_version),
     )
     conn.commit()
     return inspection_id
@@ -62,7 +68,7 @@ def create(conn: sqlite3.Connection, image_path: str) -> str:
 def get(conn: sqlite3.Connection, inspection_id: str) -> InspectionRow | None:
     row = conn.execute(
         "SELECT id, status, image_path, created_at, updated_at, "
-        "report_json, error_json, model_meta_json "
+        "report_json, error_json, model_meta_json, schema_version "
         "FROM inspections WHERE id = ?",
         (inspection_id,),
     ).fetchone()
@@ -121,11 +127,31 @@ def update_failed(
     conn.commit()
 
 
+def update_succeeded_v2(
+    conn: sqlite3.Connection,
+    inspection_id: str,
+    report: ReportV2Payload,
+    model_meta_json: str,
+) -> None:
+    """v2 路径：写 ReportV2Payload + 任意结构的 meta（含 token 用量/耗时/工具调用统计）。"""
+    conn.execute(
+        "UPDATE inspections SET status='succeeded', updated_at=?, "
+        "report_json=?, model_meta_json=? WHERE id=?",
+        (
+            _now_iso(),
+            report.model_dump_json(),
+            model_meta_json,
+            inspection_id,
+        ),
+    )
+    conn.commit()
+
+
 def list_orphaned_queued(conn: sqlite3.Connection) -> list[InspectionRow]:
     """启动期恢复用：查所有 status='queued' 的孤儿（进程重启前未跑完）。"""
     rows = conn.execute(
         "SELECT id, status, image_path, created_at, updated_at, "
-        "report_json, error_json, model_meta_json "
+        "report_json, error_json, model_meta_json, schema_version "
         "FROM inspections WHERE status='queued'"
     ).fetchall()
     return [InspectionRow(**dict(r)) for r in rows]

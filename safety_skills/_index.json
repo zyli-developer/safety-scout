@@ -1,0 +1,111 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-05-21",
+  "description": "建筑工地安全隐患识别 Skill 库 - 用于 Claude Agent SDK",
+  "scenarios": [
+    {
+      "id": "S01",
+      "name": "基坑工程",
+      "file": "scenarios/S01_基坑工程.md",
+      "trigger_features": ["深坑", "土壁", "支护桩", "降水井", "坑边堆载"],
+      "estimated_tokens": 1200,
+      "priority": "高"
+    },
+    {
+      "id": "S02",
+      "name": "模板支撑",
+      "file": "scenarios/S02_模板支撑.md",
+      "trigger_features": ["满堂支撑架", "立杆林立", "顶托", "未拆模板"],
+      "estimated_tokens": 1400,
+      "priority": "高"
+    },
+    {
+      "id": "S03",
+      "name": "落地式钢管脚手架",
+      "file": "scenarios/S03_落地式脚手架.md",
+      "trigger_features": ["钢管脚手架", "立杆触地", "剪刀撑", "连墙件"],
+      "estimated_tokens": 2200,
+      "priority": "高"
+    },
+    {
+      "id": "S04",
+      "name": "悬挑式/附着式脚手架",
+      "file": "scenarios/S04_悬挑式脚手架.md",
+      "trigger_features": ["工字钢悬挑梁", "爬升装置", "附着支座", "钢丝绳卸荷"],
+      "estimated_tokens": 1800,
+      "priority": "高"
+    },
+    {
+      "id": "S05",
+      "name": "高处作业-临边洞口与上下通道",
+      "file": "scenarios/S05_临边洞口与通道.md",
+      "trigger_features": ["楼层边缘", "电梯井", "洞口", "爬梯", "斜道"],
+      "estimated_tokens": 2100,
+      "priority": "高"
+    },
+    {
+      "id": "S06",
+      "name": "高处作业-攀登悬空",
+      "file": "scenarios/S06_攀登悬空作业.md",
+      "trigger_features": ["移动操作平台", "吊篮", "外墙作业", "悬空安装"],
+      "estimated_tokens": 1300,
+      "priority": "中"
+    },
+    {
+      "id": "S07",
+      "name": "施工用电",
+      "file": "scenarios/S07_施工用电.md",
+      "trigger_features": ["配电箱", "电缆线", "开关", "插座", "临时用电"],
+      "estimated_tokens": 1500,
+      "priority": "高"
+    },
+    {
+      "id": "S08",
+      "name": "起重机械",
+      "file": "scenarios/S08_起重机械.md",
+      "trigger_features": ["塔吊", "施工升降机", "物料提升机", "汽车吊"],
+      "estimated_tokens": 1600,
+      "priority": "中"
+    },
+    {
+      "id": "S09",
+      "name": "中小型机械",
+      "file": "scenarios/S09_中小型机械.md",
+      "trigger_features": ["切割机", "电锯", "电焊机", "搅拌机", "钢筋加工"],
+      "estimated_tokens": 1200,
+      "priority": "中"
+    },
+    {
+      "id": "S10",
+      "name": "文明施工与材料堆放",
+      "file": "scenarios/S10_文明施工.md",
+      "trigger_features": ["材料堆", "围挡", "扬尘", "建筑垃圾"],
+      "estimated_tokens": 1000,
+      "priority": "中"
+    },
+    {
+      "id": "S11",
+      "name": "消防安全",
+      "file": "scenarios/S11_消防安全.md",
+      "trigger_features": ["灭火器", "消防栓", "动火作业", "气瓶", "易燃物"],
+      "estimated_tokens": 1200,
+      "priority": "高"
+    },
+    {
+      "id": "S12",
+      "name": "人员行为",
+      "file": "scenarios/S12_人员行为.md",
+      "trigger_features": ["工人", "操作动作", "防护用品"],
+      "estimated_tokens": 800,
+      "priority": "高",
+      "note": "已合并进 L1 必查项，本场景作为补充强化使用"
+    }
+  ],
+  "shared_modules": [
+    "_shared/role_definition.md",
+    "_shared/output_schema.md",
+    "_shared/fatal_warnings.md",
+    "_shared/cot_instructions.md"
+  ],
+  "l1_core": "_l1_core/L1_必查清单.md"
+}

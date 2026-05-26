@@ -18,28 +18,33 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# repo_root = backend/../ —— config.py 在 backend/app/ 下，往上两级到仓库根
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
     """运行期配置。字段名 = 环境变量名（大写后）。"""
 
-    # === LLM provider 开关 ===
+    # === LLM provider 开关（v1 路径专用）===
     # 业务粒度的二选一：claude_cli | doubao。
     # 默认 claude_cli —— 现有部署不传环境变量也保持原行为。
     # provider 内部具体走哪个模型（sonnet/opus / 火山 endpoint id）各自归各自的字段管。
+    # 注意：v2 路径（/api/v2/analyze）不受此开关影响，固定走 Claude Agent SDK。
     llm_provider: Literal["claude_cli", "doubao"] = "claude_cli"
 
-    # === Claude CLI provider ===
+    # === Claude CLI provider（v1）===
     claude_cli_path: str = "claude"
     # 全名，不用 sonnet alias —— Phase 1 实测 alias 会 fallback 到 Opus
     claude_model: str = "claude-sonnet-4-5"
     # 从 Phase 1 的 180 上调；case_004 实测 266s
     claude_timeout_seconds: int = 300
 
-    # === Doubao (火山方舟) provider ===
+    # === Doubao (火山方舟) provider（v1 alt）===
     # API key 从火山方舟控制台拿；未配置时若选中 doubao，dependencies.get_llm_provider
     # 启动即抛 ValueError，避免请求时才报错。
     doubao_api_key: str = ""
@@ -50,6 +55,19 @@ class Settings(BaseSettings):
     doubao_base_url: str = "https://ark.cn-beijing.volces.com/api/v3"
     # HTTP 调用比 Claude CLI 子进程短得多；120s 已含一次 reprompt 余量
     doubao_timeout_seconds: int = 120
+
+    # === Agent SDK (v2) ===
+    # v2 走 claude-opus-4-7：视觉细节捕获 + 多轮推理。
+    # 不用 sonnet alias —— 同 v1 教训
+    agent_model: str = "claude-opus-4-7"
+    # Agent 多轮 tool 调用比单次慢；smoke 实测 case_001 ~250s（Read image →
+    # ToolSearch → 场景识别 → 5 次 load_scenario_skill → 思考 80s → 输出 105s）。
+    # 默认放到 360s 留余地；单测用 fake 时显式覆盖为短超时。
+    agent_timeout_seconds: int = 360
+    # 最大工具调用回合数；防止死循环
+    agent_max_turns: int = 15
+    # Skill 库根目录；默认 = 仓库根/safety_skills（zip 解压位置）
+    safety_skills_root: Path = _REPO_ROOT / "safety_skills"
 
     # === Storage ===
     sqlite_path: str = "local_data/safety_scout.db"

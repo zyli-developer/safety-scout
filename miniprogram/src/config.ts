@@ -21,3 +21,16 @@ export const API_BASE_URL =
 
 export const DEFAULT_POLL_INTERVAL_MS = 2000;
 export const DEFAULT_TIMEOUT_MS = 330_000;
+
+/**
+ * v2 灰度比例（0.0 ~ 1.0）：决定多少比例的 createInspection 走 /api/v2/analyze。
+ *
+ * 当前 = 0：默认全走 v1，v2 代码就位但不投放真实流量。
+ * 灰度节奏见 `docs/specs/v2-rollout.md` §一：
+ *   0 → 1.0（内部账号试用 1 周）→ 0.1（灰度 1-2 天）→ 0.5 → 1.0（全量）
+ *
+ * MVP 阶段直接改这个常量重新打包；后续可换成远程配置中心动态下发。
+ * v2 timeout 比 v1 大（agent 多轮慢约 2.5×）；createInspection 会按后端
+ * 返回的 timeout_ms 自动覆盖前端默认值，不需要在这里调。
+ */
+export const V2_TRAFFIC_SHARE = 0;

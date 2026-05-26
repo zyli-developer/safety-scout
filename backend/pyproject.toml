@@ -12,6 +12,9 @@ dependencies = [
     "slowapi>=0.1.9",
     # Doubao provider 走 Ark 的 HTTP 接口，httpx 进主 deps
     "httpx>=0.27",
+    # Claude Agent SDK：v2 走 Skill 化 + 多轮 tool 调用，通过本地 Claude Code 复用订阅，
+    # 不需要 ANTHROPIC_API_KEY
+    "claude-agent-sdk>=0.1",
 ]
 
 [project.optional-dependencies]
