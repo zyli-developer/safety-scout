@@ -2,6 +2,24 @@
 
 本文只覆盖一种部署形态：**Linux 长开机服务器 + `LLM_PROVIDER=claude_cli` + systemd 守护**。其他形态（Docker / serverless / 多副本）在当前 provider 模式下都跑不通，详见 README §部署。
 
+## ⚠️ v2 是现行默认路径
+
+自 2026-05-26 起，前端 `V2_TRAFFIC_SHARE = 1.0`，**所有用户请求走 v2 路径 `/api/v2/analyze`**（Claude Agent SDK + Skill 化分析管线），v1 路径 `/api/v1/inspections` 仅作 dormant fallback 保留。
+
+本文档（`deploy.md`）只覆盖 v1 后端的运维基础设施（systemd / nginx / 升级流程），这些 v2 同样要做；**v2 增量部署步骤在两个专题文档里**，新部署 / 升级必读：
+
+| 必读文档 | 覆盖内容 |
+|---|---|
+| **`docs/specs/v2-deployment.md`** | v2 后端增量：`uv sync` 装 `claude-agent-sdk` + 部署 `safety_skills/` 知识库 17 个 md + smoke 验证 + 监控字段 + 排错 |
+| **`docs/specs/v2-rollout.md`** | 前端 `V2_TRAFFIC_SHARE` 灰度策略 + 改常量后必须重新打包 H5 / 小程序的实操（编译期常量，运行时改不了）+ Badcase 闭环 + Skill 维护手册 |
+
+**最小升级清单**（v1 已部署 → 想要 v2 上线）：
+1. 服务器跑 `uv sync --extra dev`（拉 `claude-agent-sdk` 依赖）
+2. 拉到 `safety_skills/` 目录（git pull 自带，或单独解压 zip）
+3. 重新打包前端 H5：`cd miniprogram && pnpm build:h5`（V2_TRAFFIC_SHARE 编译期固化进 bundle）
+4. 重启 backend service：`systemctl restart safety-scout`
+5. smoke 验证：`uv run python scripts/v2_smoke.py 1 --timeout 360`
+
 ## 前提
 
 | 项 | 要求 |
