@@ -34,7 +34,7 @@ from app.config import get_settings
 from app.errors import RateLimitedError, SafetyScoutError
 from app.logging_config import setup_logging
 from app.rate_limit import limiter
-from app.routes import health, inspections, inspections_v2
+from app.routes import feedback, health, inspections, inspections_v2
 from app.storage import inspection_repo
 from app.storage.db import connect, init_schema
 from app.storage.inspection_repo import ErrorPayload
@@ -203,6 +203,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(inspections.router)
     app.include_router(inspections_v2.router)
+    app.include_router(feedback.router)
     return app
 
 

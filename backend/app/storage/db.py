@@ -57,6 +57,19 @@ def init_schema(conn: sqlite3.Connection) -> None:
         );
         CREATE INDEX IF NOT EXISTS idx_inspections_status ON inspections(status);
         CREATE INDEX IF NOT EXISTS idx_inspections_created_at ON inspections(created_at);
+
+        -- v2 Badcase 反馈表（plan §5.3）：误报 / 漏报 / 建议不可执行三档。
+        -- 与 inspections 1:N 关系；运营 / 安全工程师聚合后改 safety_skills/*.md。
+        CREATE TABLE IF NOT EXISTS feedbacks (
+            id TEXT PRIMARY KEY,            -- uuid v4
+            inspection_id TEXT NOT NULL REFERENCES inspections(id),
+            kind TEXT NOT NULL,             -- false_positive | missed | bad_action
+            check_id TEXT,                  -- 误报 / 不可执行时必填；漏报时可空
+            description TEXT NOT NULL,      -- 用户说明，≤ 500 字（在 schema 层 enforce）
+            created_at TEXT NOT NULL        -- ISO 8601 UTC, ...Z
+        );
+        CREATE INDEX IF NOT EXISTS idx_feedbacks_inspection ON feedbacks(inspection_id);
+        CREATE INDEX IF NOT EXISTS idx_feedbacks_check_id ON feedbacks(check_id);
     """)
 
     # SQLite 不支持 ADD COLUMN IF NOT EXISTS，需要先探一下 PRAGMA。
