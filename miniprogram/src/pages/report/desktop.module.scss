@@ -424,9 +424,30 @@
     display: block !important;
   }
 
-  .listCard,
-  .signCell {
+  // 2026-05-25：listCard 屏幕态用 overflow:hidden 给圆角裁剪边缘（line 125），
+  // 打印态必须显式还原成 visible —— 否则内容超出卡片的部分被直接裁掉，浏览器
+  // 不会把被裁的内容翻到下一页。这才是 PDF 只 1/1 页的真正原因（破除了
+  // break-inside:avoid 还不够）。
+  .listCard {
+    overflow: visible !important;
+    box-shadow: none;
+    border-radius: 0; // 既然 overflow:visible，圆角失去意义，避免视觉违和
+  }
+  // HazardItem 渲染出的 root view 是 listBody 的直接子节点；用直接子选择器
+  // 兜住单条不被切。
+  .listBody > * {
     break-inside: avoid;
+    page-break-inside: avoid; // 老 spec 兼容（部分 Chrome 版本仍读这个）
+  }
+  // 短块独立保留 avoid：alarm 一行、签字一格、footer 一行 —— 它们高度小、
+  // 适合整块留在同一页。
+  .alarmRow,
+  .signCell,
+  .footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .signCell {
     box-shadow: none;
   }
 }

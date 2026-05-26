@@ -245,8 +245,14 @@
     object-fit: cover !important;
     display: block !important;
   }
-  .summaryCard,
-  .hazardList {
+  // 2026-05-25：与 desktop 同源修复 —— hazardList 不能整块 avoid，否则 5+ 条
+  // 一页装不下时 Chrome 截断而非翻页。允许列表跨页，单条 hazard 不切两半。
+  .summaryCard {
     break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .hazardList > * {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }

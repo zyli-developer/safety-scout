@@ -59,3 +59,5 @@ backend/.env
 miniprogram/project.private.config.json
 # H5 smoke test 截图：每次跑会变，不入库
 miniprogram/tests/e2e/*.png
+# 一次性打印调试脚本 + 产物（h5-print-debug.mjs / .pdf 等），不入库
+miniprogram/tests/e2e/*-debug.*

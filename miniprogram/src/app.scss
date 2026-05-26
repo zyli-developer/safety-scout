@@ -26,3 +26,24 @@ page {
     margin: 0;
   }
 }
+
+// 2026-05-25：Taro 4 H5 路由器在 loadAnimateStyle() 注入 inline
+// `body { overflow: hidden }`（防 iOS 页面滚动），media:all 默认覆盖 print。
+// 后果：打印态下 body 高度被 viewport (800px) cap 住，DOM scrollHeight 远超 800
+// 时被 overflow:hidden 裁掉，PDF 只剩第 1 页内容。
+// 全局 print 强制 visible（!important 才压得过 inline）。html/page 同步开。
+@media print {
+  html,
+  body {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  // Taro page 容器（H5 SPA 每页一个 .taro_page wrapper）打印时也得放开
+  .taro_page,
+  .taro_router {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
