@@ -160,6 +160,25 @@
   margin-top: 12px;
 }
 
+// 仅 v2 显示：列表底部"我们漏了什么？"反馈入口（kind=missed）。
+.missedRow {
+  margin-top: 12px;
+  padding: 0 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.missedLink {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+
 // 2026-05-24 B5：删除 sticky 底部 actbar（mockup 移动版无 sticky CTA），
 // 改为内联放在隐患列表后。.actbar 类保留为别名（部分 css 代码可能仍引用），
 // 但实际改用 .inlineActions 类承载新布局。

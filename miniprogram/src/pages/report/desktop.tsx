@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { getInspection } from '../../api/inspections';
 import { HazardItem } from '../../components/HazardItem';
+import { FeedbackModal } from '../../components/FeedbackModal';
 import { TopNav } from '../../components/TopNav';
 import { Icon } from '../../components/Icon';
 import { Button } from '../../components/Button';
@@ -113,6 +114,7 @@ export default function DesktopReport() {
       report={v1Report}
       canonicalId={id}
       createdAt={result.created_at}
+      schemaVersion={schemaVersion}
     />
   );
 }
@@ -165,19 +167,25 @@ function DesktopSucceededReport({
   report,
   canonicalId,
   createdAt,
+  schemaVersion,
 }: {
   report: ReportPayload;
   canonicalId: string;
   createdAt: string;
+  schemaVersion: SchemaVersion;
 }) {
   const sorted = sortBySeverity(report.hazards);
   const severity = report.overall_severity;
   // canonicalId 来自 URL（与上传时 rememberPhoto 用的 key 同源）；
   // 仅当 URL 丢了 id 时退到 report.inspection_id —— 后者在旧后端上是 LLM 占位符。
   const idForLookup = canonicalId || report.inspection_id;
+  // 反馈 modal 状态：null=关闭；{checkId?} 形式打开。仅 v2 显示反馈入口。
+  const [feedbackTarget, setFeedbackTarget] = useState<{ checkId?: string } | null>(null);
+  const showFeedback = schemaVersion === 'v2';
 
   // 2026-05-24 B8：成功获取报告时记录到本地 history store（localStorage 临时方案，
   // 后端无 list endpoint。一次性 append，不阻塞渲染。）
+  // schemaVersion 必须持久化 —— history 页跳回此页时按它决定 URL 是否带 ?v=2
   useEffect(() => {
     const counts = { high: 0, medium: 0, low: 0 } as Record<Severity, number>;
     for (const h of sorted) counts[h.severity] += 1;
@@ -189,9 +197,10 @@ function DesktopSucceededReport({
       hazardCount: sorted.length,
       breakdown: counts,
       status: 'pending',
+      schemaVersion,
     });
     // 只在 inspection 切换时重新登记
-  }, [idForLookup]);
+  }, [idForLookup, schemaVersion]);
   const no = shortId(idForLookup);
   // 桌面上传时先存 blob URL 立刻挂屏，FileReader 异步把 data URL 写回 store；
   // 这里轮询 store 直到拿到 data URL —— blob URL 在 window.print() / 导出 PDF
@@ -350,12 +359,28 @@ function DesktopSucceededReport({
                 index={idx + 1}
                 onAction={() =>
                   Taro.navigateTo({
-                    url: `/pages/report-detail/index?id=${canonicalId}&h=${idx}`,
+                    url: `/pages/report-detail/index?id=${canonicalId}&h=${idx}${schemaVersion === 'v2' ? '&v=2' : ''}`,
                   })
+                }
+                onFeedback={
+                  // v2 适配器把 check_id 写进了 category_code，可直接当 check_id
+                  showFeedback ? () => setFeedbackTarget({ checkId: h.category_code }) : undefined
                 }
               />
             ))}
           </View>
+          {showFeedback && (
+            <View className={styles.missedRow}>
+              <View
+                className={styles.missedLink}
+                role="button"
+                aria-label="反馈：我们漏了什么"
+                onClick={() => setFeedbackTarget({})}
+              >
+                <Text>我们漏了什么？提交反馈 →</Text>
+              </View>
+            </View>
+          )}
         </View>
 
         <View className={styles.signoff}>
@@ -382,6 +407,15 @@ function DesktopSucceededReport({
           <Text className={styles.footerRight}>NO.{no} · 报告完</Text>
         </View>
       </View>
+
+      {showFeedback && (
+        <FeedbackModal
+          isOpen={feedbackTarget !== null}
+          onClose={() => setFeedbackTarget(null)}
+          inspectionId={canonicalId}
+          checkId={feedbackTarget?.checkId}
+        />
+      )}
     </View>
   );
 }

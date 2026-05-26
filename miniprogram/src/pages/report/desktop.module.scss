@@ -201,6 +201,24 @@
   padding: 0 24px;
 }
 
+// 仅 v2 显示：列表底部"我们漏了什么？"反馈入口（kind=missed）。
+.missedRow {
+  padding: 16px 24px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.missedLink {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 13.5px;
+  cursor: pointer;
+  user-select: none;
+}
+
 .signoff {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);

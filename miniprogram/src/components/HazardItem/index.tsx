@@ -18,6 +18,11 @@ export interface HazardItemProps {
   /** 是否展开"整改建议"块，默认 true。 */
   showFix?: boolean;
   onAction?: () => void;
+  /**
+   * 反馈入口回调。传入 → 渲染"反馈"小链接（meta 行右侧）；不传 → 不渲染。
+   * 仅在 v2 inspection 上由 caller 传入（v1 后端无 feedback API）。
+   */
+  onFeedback?: () => void;
   className?: string;
 }
 
@@ -26,6 +31,7 @@ export function HazardItem({
   index,
   showFix = true,
   onAction,
+  onFeedback,
   className,
 }: HazardItemProps) {
   const { severity, description, regulation, suggestion, category_name, category_code } = hazard;
@@ -64,6 +70,23 @@ export function HazardItem({
             <>
               <Text className={styles.sep}>·</Text>
               <Text>{regulation}</Text>
+            </>
+          )}
+          {onFeedback && (
+            <>
+              <Text className={styles.sep}>·</Text>
+              <View
+                className={styles.feedbackLink}
+                role="button"
+                aria-label={`对 ${category_code} 提交反馈`}
+                onClick={(e) => {
+                  // 阻止冒泡 —— action 列的"查看详情"是父级 onClick，反馈链接独立行为
+                  e.stopPropagation();
+                  onFeedback();
+                }}
+              >
+                <Text>反馈</Text>
+              </View>
             </>
           )}
         </View>

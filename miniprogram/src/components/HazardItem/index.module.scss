@@ -107,6 +107,17 @@
   color: var(--line-2);
 }
 
+.feedbackLink {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 0.5px;
+  text-underline-offset: 2px;
+  font-size: 11.5px;
+  letter-spacing: 0.2px;
+  user-select: none;
+}
+
 // 对齐 mockup .suggestion-callout —— accent-soft 橙色块 + 左 icon + 内联"整改建议 ·"前缀。
 .fix {
   margin-top: var(--s1);

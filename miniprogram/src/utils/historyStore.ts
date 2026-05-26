@@ -11,6 +11,7 @@
  * 上限 200 条，超过按 capturedAt 升序淘汰最老的。
  */
 import type { Severity } from '../types/report';
+import type { SchemaVersion } from '../types/inspection-v2';
 
 export interface HistoryEntry {
   inspectionId: string;
@@ -22,6 +23,14 @@ export interface HistoryEntry {
   /** 整改状态。当前 schema 不带，本地默认 "pending"；用户在 detail 勾选完成后可升级
       为 "inProgress" / "closed"（暂未做，留接口） */
   status: 'pending' | 'inProgress' | 'closed';
+  /**
+   * 该 inspection 落在 v1 还是 v2 API 路径。
+   *
+   * 缺省视为 'v1'（兼容历史本地缓存条目；老条目都来自 v2 之前）。
+   * 历史页跳回报告页时按 schemaVersion 决定是否在 URL 加 `?v=2` —— 否则
+   * v2 inspection 会被当 v1 调用 GET /api/v1/inspections/{id} → 404。
+   */
+  schemaVersion?: SchemaVersion;
 }
 
 const LS_KEY = 'safety-scout/history';

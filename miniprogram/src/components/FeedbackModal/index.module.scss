@@ -1,0 +1,150 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 20, 20, 0.45);
+}
+
+.sheet {
+  position: relative;
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: var(--s4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.closeBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.kindRow {
+  display: flex;
+  gap: var(--s2);
+}
+
+.kindChip {
+  flex: 1;
+  padding: 10px 12px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: 13.5px;
+  color: var(--ink-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.kindChipActive {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.descWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.desc {
+  width: 100%;
+  min-height: 96px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.desc:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.desc:disabled {
+  opacity: 0.6;
+}
+
+.counter {
+  font-size: 11px;
+  color: var(--ink-3);
+  text-align: right;
+  font-family: var(--f-mono);
+}
+
+.errorMsg {
+  font-size: 12.5px;
+  color: var(--high);
+  padding: 6px 10px;
+  background: var(--high-soft);
+  border-radius: var(--r-sm);
+}
+
+.actions {
+  display: flex;
+  gap: var(--s2);
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.btnGhost {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+.btnPrimary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.btnDisabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

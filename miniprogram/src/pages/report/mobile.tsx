@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { getInspection } from '../../api/inspections';
 import { HazardItem } from '../../components/HazardItem';
+import { FeedbackModal } from '../../components/FeedbackModal';
 import { ProgressTracker } from '../../components/ProgressTracker';
 import { Icon } from '../../components/Icon';
 import { AppBar } from '../../components/AppBar';
@@ -106,6 +107,7 @@ export default function MobileReport() {
       report={v1Report}
       canonicalId={id}
       createdAt={result.created_at}
+      schemaVersion={schemaVersion}
     />
   );
 }
@@ -140,10 +142,12 @@ function SucceededReport({
   report,
   canonicalId,
   createdAt,
+  schemaVersion,
 }: {
   report: ReportPayload;
   canonicalId: string;
   createdAt: string;
+  schemaVersion: SchemaVersion;
 }) {
   const sorted = sortBySeverity(report.hazards);
   const severity = report.overall_severity;
@@ -156,6 +160,8 @@ function SucceededReport({
   const idForLookup = canonicalId || report.inspection_id;
 
   // 2026-05-24 B8：记录到本地 history store（localStorage 临时方案）
+  // schemaVersion 必须持久化 —— history 页跳回此页时按它决定 URL 是否带 ?v=2
+  // （否则 v2 inspection 会被按 v1 调 GET → 404）
   useEffect(() => {
     appendHistory({
       inspectionId: idForLookup,
@@ -165,10 +171,15 @@ function SucceededReport({
       hazardCount: total,
       breakdown: counts,
       status: 'pending',
+      schemaVersion,
     });
-  }, [idForLookup]);
+  }, [idForLookup, schemaVersion]);
   const shortNo = idForLookup.slice(0, 12).toUpperCase();
   const photoMeta = `NO.${shortNo} · ${createdAt.slice(0, 16).replace('T', ' ')}`;
+  // 反馈 modal 状态：null=关闭；{checkId?} 形式打开（checkId 缺省 → 漏报模式）。
+  // 仅 v2 显示反馈入口（v1 没有 feedback API）。
+  const [feedbackTarget, setFeedbackTarget] = useState<{ checkId?: string } | null>(null);
+  const showFeedback = schemaVersion === 'v2';
   // 见 desktop.tsx 同段注释：blob URL → data URL 升级轮询，
   // 让 PDF 导出时拿到的是 data: src，避免 Chrome 打印管线取不到 blob 数据。
   const [photo, setPhoto] = useState(() => getPhotoFor(idForLookup));
@@ -287,12 +298,28 @@ function SucceededReport({
               index={i + 1}
               onAction={() =>
                 Taro.navigateTo({
-                  url: `/pages/report-detail/index?id=${canonicalId}&h=${i}`,
+                  url: `/pages/report-detail/index?id=${canonicalId}&h=${i}${schemaVersion === 'v2' ? '&v=2' : ''}`,
                 })
+              }
+              onFeedback={
+                // v2 适配器把 check_id 写进了 category_code，可直接当 check_id 用
+                showFeedback ? () => setFeedbackTarget({ checkId: h.category_code }) : undefined
               }
             />
           ))}
         </View>
+        {showFeedback && (
+          <View className={styles.missedRow}>
+            <View
+              className={styles.missedLink}
+              role="button"
+              aria-label="反馈：我们漏了什么"
+              onClick={() => setFeedbackTarget({})}
+            >
+              <Text>我们漏了什么？提交反馈 →</Text>
+            </View>
+          </View>
+        )}
       </View>
 
       {/* 2026-05-24：删 sticky 底部 actbar (mockup 移动版没有 sticky CTA，
@@ -308,6 +335,15 @@ function SucceededReport({
           <Text className={styles.actbarText}>导出 PDF</Text>
         </Button>
       </View>
+
+      {showFeedback && (
+        <FeedbackModal
+          isOpen={feedbackTarget !== null}
+          onClose={() => setFeedbackTarget(null)}
+          inspectionId={canonicalId}
+          checkId={feedbackTarget?.checkId}
+        />
+      )}
     </View>
   );
 }

@@ -226,7 +226,13 @@ function Chip({
 function HistoryRow({ entry }: { entry: HistoryEntry }) {
   const photo = getPhotoFor(entry.inspectionId);
   const onTap = () => {
-    Taro.navigateTo({ url: `/pages/report/index?id=${entry.inspectionId}` });
+    // v2 inspection 必须带 ?v=2 —— 否则 report 页按 v1 调 GET /api/v1/...
+    // 后端 v2 路由会 404（schema_version 隔离）。缺省（undefined）按 v1 处理，
+    // 与历史无 schemaVersion 字段的本地缓存条目兼容。
+    const vParam = entry.schemaVersion === 'v2' ? '&v=2' : '';
+    Taro.navigateTo({
+      url: `/pages/report/index?id=${entry.inspectionId}${vParam}`,
+    });
   };
   return (
     <View className={styles.row} role="button" onClick={onTap}>

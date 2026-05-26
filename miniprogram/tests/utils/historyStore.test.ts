@@ -56,6 +56,37 @@ describe('historyStore', () => {
     expect(getHistoryEntry('x')?.inspectionId).toBe('x');
   });
 
+  it('schemaVersion round-trips through localStorage', () => {
+    appendHistory(makeEntry({ inspectionId: 'v2-id', schemaVersion: 'v2' }));
+    appendHistory(makeEntry({ inspectionId: 'v1-id', schemaVersion: 'v1' }));
+    appendHistory(makeEntry({ inspectionId: 'legacy-id' })); // 不带 schemaVersion 字段
+    expect(getHistoryEntry('v2-id')?.schemaVersion).toBe('v2');
+    expect(getHistoryEntry('v1-id')?.schemaVersion).toBe('v1');
+    expect(getHistoryEntry('legacy-id')?.schemaVersion).toBeUndefined();
+  });
+
+  it('schemaVersion 兼容老 localStorage：从 raw JSON parse 出来的老条目不报错', () => {
+    // 模拟旧版本写入的、不带 schemaVersion 的本地存储
+    const raw = JSON.stringify([
+      {
+        inspectionId: 'old-1',
+        capturedAt: Date.now(),
+        summary: '老报告',
+        overallSeverity: 'low',
+        hazardCount: 1,
+        breakdown: { high: 0, medium: 0, low: 1 },
+        status: 'pending',
+      },
+    ]);
+    // 写 raw 到 localStorage，清掉 memory cache 强制走 read() parse 路径
+    window.localStorage.setItem('safety-scout/history', raw);
+    _resetHistoryStore();
+    window.localStorage.setItem('safety-scout/history', raw);
+    const e = getHistoryEntry('old-1');
+    expect(e).not.toBeNull();
+    expect(e?.schemaVersion).toBeUndefined();
+  });
+
   it('summarizeHistory computes total / weekly / highRisk / closed', () => {
     const now = Date.now();
     appendHistory(makeEntry({ inspectionId: 'a', capturedAt: now, overallSeverity: 'high' }));
