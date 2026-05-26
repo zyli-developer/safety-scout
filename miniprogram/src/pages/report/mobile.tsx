@@ -201,9 +201,6 @@ function SucceededReport({
     };
   }, [idForLookup, photo?.src]);
 
-  const notImplemented = (label: string) => () =>
-    Taro.showToast({ title: `${label}：开发中`, icon: 'none', duration: 2000 });
-
   const handleExportPdf = () => {
     if (process.env.TARO_ENV === 'h5' && typeof window !== 'undefined') {
       window.print();
@@ -218,26 +215,9 @@ function SucceededReport({
         className={styles.printHide}
         title="巡检报告"
         onBack={() => Taro.reLaunch({ url: '/pages/index/index' })}
-        right={
-          <>
-            <View
-              className={styles.iconBtn}
-              role="button"
-              aria-label="分享"
-              onClick={notImplemented('分享')}
-            >
-              <Icon name="share" size={16} color="var(--ink-2)" />
-            </View>
-            <View
-              className={styles.iconBtn}
-              role="button"
-              aria-label="更多"
-              onClick={notImplemented('更多')}
-            >
-              <Icon name="dots" size={16} color="var(--ink-2)" />
-            </View>
-          </>
-        }
+        /* 2026-05-26：删除 AppBar 右侧"分享 / 更多"两个 IconBtn ——
+           原本都是 notImplemented toast 桩按钮。Product UI 不在顶部
+           chrome 上放假动作；功能真做完时通过 right={...} 注回。 */
       />
 
       {/* 现场照片大图（4:3）—— 报告即报告，照片永远是核心证据。
@@ -246,6 +226,15 @@ function SucceededReport({
       <View className={styles.photoWrap}>
         <Photo src={photo?.src ?? ''} ratio="4/3" overlay={!!photo} meta={photoMeta} />
       </View>
+
+      {/* 2026-05-26 层级重排：AlarmBox（plain_warning，紧急简短）移到 SummaryCard 之前。
+          安全员第一眼应该看到「问题是什么」（plain_warning），SummaryCard 提供支撑数据。
+          原顺序 SummaryCard→AlarmBox 让两个红色块挤在一起，hierarchy 不清。 */}
+      {report.plain_warning && (
+        <View className={styles.alarmWrap}>
+          <AlarmBox>{report.plain_warning}</AlarmBox>
+        </View>
+      )}
 
       <View className={styles.summaryWrap}>
         <View className={styles.summaryCard}>
@@ -280,12 +269,6 @@ function SucceededReport({
           )}
         </View>
       </View>
-
-      {report.plain_warning && (
-        <View className={styles.alarmWrap}>
-          <AlarmBox>{report.plain_warning}</AlarmBox>
-        </View>
-      )}
 
       <View className={styles.hazardSection}>
         <Text className={styles.sectionTitle}>隐患明细</Text>
@@ -322,16 +305,12 @@ function SucceededReport({
         )}
       </View>
 
-      {/* 2026-05-24：删 sticky 底部 actbar (mockup 移动版没有 sticky CTA，
-          主操作在 summaryCard 内或紧跟内容流。改为内联放在隐患列表后。)
-          CTA 主次对齐 mockup：分享 primary + 导出 PDF ghost。"转派班组" placeholder 删除。 */}
+      {/* 2026-05-26：删除"分享给班组" primary CTA —— 之前是 notImplemented toast 桩，
+          主 CTA 撑桩在 product UI 是信任失败。"导出 PDF" 真做完了（调 window.print），
+          作为唯一动作保留，提升到 primary。后续真做"分享给班组"时通过 primary 注回。 */}
       <View className={styles.inlineActions}>
-        <Button variant="primary" block onTap={notImplemented('分享给班组')}>
-          <Icon name="share" size={16} color="var(--on-accent)" />
-          <Text className={styles.actbarText}>分享给班组</Text>
-        </Button>
-        <Button variant="secondary" block onTap={handleExportPdf}>
-          <Icon name="download" size={16} color="var(--ink)" />
+        <Button variant="primary" block onTap={handleExportPdf}>
+          <Icon name="download" size={16} color="var(--on-accent)" />
           <Text className={styles.actbarText}>导出 PDF</Text>
         </Button>
       </View>

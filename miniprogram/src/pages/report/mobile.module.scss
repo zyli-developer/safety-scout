@@ -71,10 +71,13 @@
 }
 
 .summaryCount {
-  font-size: 56px;
+  // 2026-05-26：56→40 + letter-spacing -1.5→-0.8。
+  // 56px 在 375px 宽手机上占屏宽 ~15%，product UI 不在数字上吼。
+  // 40px 仍是 hero-scale，weight=600 + tnum 维持权威感。
+  font-size: 40px;
   font-weight: 600;
   line-height: 1.05;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.8px;
   color: var(--ink);
   font-feature-settings: 'tnum' on;
 }
@@ -135,7 +138,10 @@
 }
 
 .alarmWrap {
-  padding: 16px 20px 0;
+  // 2026-05-26：AlarmBox 现在在 SummaryCard 之前，紧跟 Photo。
+  // padding 改为 16/20/8（顶 16、左右 20、底 8），让 alarm → summary 间距收紧、
+  // 视觉上 alarm 是头条而非 summary 的"附录"。
+  padding: 16px 20px 8px;
 }
 
 .hazardSection {
@@ -161,20 +167,21 @@
 }
 
 // 仅 v2 显示：列表底部"我们漏了什么？"反馈入口（kind=missed）。
+// 2026-05-26：从灰色 pill 改为小字 underline 链接，与 HazardItem.meta 行内
+// 的"反馈"链接视觉语言统一 —— 同一类操作（badcase 反馈）应该是同一种 affordance。
 .missedRow {
-  margin-top: 12px;
+  margin-top: 16px;
   padding: 0 20px;
   display: flex;
   justify-content: center;
 }
 
 .missedLink {
-  display: inline-block;
-  padding: 8px 14px;
-  border-radius: var(--r-pill);
-  background: var(--surface-2);
-  color: var(--ink-2);
+  color: var(--accent);
   font-size: 13px;
+  text-decoration: underline;
+  text-decoration-thickness: 0.5px;
+  text-underline-offset: 3px;
   cursor: pointer;
   user-select: none;
 }
