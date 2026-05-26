@@ -78,7 +78,7 @@ export default function DesktopIndex() {
         <View className={styles.hero}>
           <Text className={styles.h1}>拍一张工地照片，AI 立刻找出隐患。</Text>
           <Text className={styles.lede}>
-            面向安全员的隐患识别工具。识别高处坠落、临边洞口、用电、消防、个人防护等十类常见隐患，给出可执行的整改建议与规范条款引用。平均 29 秒出报告。
+            面向安全员的隐患识别工具。识别高处坠落、临边洞口、用电、消防、个人防护等十类常见隐患，给出可执行的整改建议与规范条款引用。平均 3 分钟出报告。
           </Text>
         </View>
 
@@ -101,7 +101,7 @@ export default function DesktopIndex() {
               </View>
               <View className={styles.uploadStep}>
                 <Text className={styles.stepNum}>02 · 等待</Text>
-                <Text className={styles.stepLabel}>AI 识别 · 平均 29 秒</Text>
+                <Text className={styles.stepLabel}>AI 识别 · 平均 3 分钟</Text>
                 <Text className={styles.stepSub}>不离开页面也行</Text>
               </View>
               <View className={styles.uploadStep}>

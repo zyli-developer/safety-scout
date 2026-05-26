@@ -43,10 +43,23 @@ describe('ProgressTracker', () => {
     expect(fill).not.toBeNull();
   });
 
-  it('shows the average-time hint footer', () => {
+  it('shows the average-time hint footer in seconds when estimatedSeconds < 60', () => {
     render(<ProgressTracker currentStep={2} estimatedSeconds={29} />);
     expect(
       screen.getByText('不需要等在这页 — 完成后会自动跳转。平均 29 秒出结果。'),
     ).toBeInTheDocument();
+  });
+
+  it('shows minutes formatting when estimatedSeconds >= 60 (180s → 3 分钟)', () => {
+    render(<ProgressTracker currentStep={2} estimatedSeconds={180} />);
+    expect(
+      screen.getByText('不需要等在这页 — 完成后会自动跳转。平均 3 分钟出结果。'),
+    ).toBeInTheDocument();
+  });
+
+  it('defaults estimatedSeconds to 180 (~3 分钟) when prop omitted', () => {
+    render(<ProgressTracker currentStep={2} />);
+    // default hint 走 minutes 分支
+    expect(screen.getByText(/平均 3 分钟出结果/)).toBeInTheDocument();
   });
 });

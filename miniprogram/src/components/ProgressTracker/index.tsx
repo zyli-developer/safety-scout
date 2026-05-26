@@ -28,7 +28,7 @@ export interface ProgressTrackerProps {
   currentStep: 1 | 2 | 3;
   /** 已耗时（毫秒），渲染在 node B 与底部 elapsed 条上。 */
   elapsedMs?: number;
-  /** 预计耗时秒数，默认 29 — 与 README/footer "平均 29s" 对齐。 */
+  /** 预计耗时秒数，默认 180 — 复杂场景 Claude vision 实测 ~3 分钟。 */
   estimatedSeconds?: number;
   /** "取消并返回"链接的点击处理。不传时不渲染该链接。 */
   onCancel?: () => void;
@@ -43,11 +43,12 @@ function fmtMMSS(totalSec: number): string {
 
 // livelog 4 个固定阶段。tag 是预估时间点（秒），用户实际看到的是渐进显现的过程。
 // 文案按 mockup polling.html livelog 抄录，第一行已修复（无 SHA256）。
+// 时间点按 180s 默认预计时长重排：~8% / ~17% / ~44% / ~92% 进度位（保持节奏感）。
 const LIVELOG_PHASES: Array<{ at: number; text: string }> = [
-  { at: 4, text: '照片已收到 · 准备分析' },
-  { at: 6, text: '识别现场场景：外架 / 临边 / 楼层结构' },
-  { at: 12, text: '逐项核查 H1-H10 类别，参照 JGJ80-2016…' },
-  { at: 26, text: '组装 JSON · 校验字段完整性' },
+  { at: 15, text: '照片已收到 · 准备分析' },
+  { at: 30, text: '识别现场场景：外架 / 临边 / 楼层结构' },
+  { at: 80, text: '逐项核查 H1-H10 类别，参照 JGJ80-2016…' },
+  { at: 165, text: '组装 JSON · 校验字段完整性' },
 ];
 
 function livelogStateFor(phaseAt: number, sec: number): 'done' | 'active' | 'pending' {
@@ -59,7 +60,7 @@ function livelogStateFor(phaseAt: number, sec: number): 'done' | 'active' | 'pen
 export function ProgressTracker({
   currentStep,
   elapsedMs = 0,
-  estimatedSeconds = 29,
+  estimatedSeconds = 180,
   onCancel,
 }: ProgressTrackerProps) {
   const sec = Math.floor(elapsedMs / 1000);
@@ -124,7 +125,11 @@ export function ProgressTracker({
       </View>
 
       <Text className={styles.hint}>
-        不需要等在这页 — 完成后会自动跳转。平均 {estimatedSeconds} 秒出结果。
+        {`不需要等在这页 — 完成后会自动跳转。${
+          estimatedSeconds >= 60
+            ? `平均 ${Math.round(estimatedSeconds / 60)} 分钟出结果。`
+            : `平均 ${estimatedSeconds} 秒出结果。`
+        }`}
       </Text>
 
       {onCancel && (
