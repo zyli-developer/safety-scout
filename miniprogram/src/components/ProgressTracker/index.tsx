@@ -134,10 +134,15 @@ export function ProgressTracker({
 
       {onCancel && (
         <View className={styles.cancelRow}>
-          <Text className={styles.cancelText}>不想等？</Text>
+          {/* 2026-05-26：原文案"不想等？取消并返回"撒谎 —— 实际只是 reLaunch
+              回首页，后端 analysis runner 继续跑完、扣订阅额度。改为诚实文案
+              + 副文告知用户后台继续 + 提示可从「报告」里找到。 */}
           <View className={styles.cancelLink} role="button" onClick={onCancel}>
-            <Text>取消并返回</Text>
+            <Text>回到首页继续</Text>
           </View>
+          <Text className={styles.cancelText}>
+            分析在后台继续，完成后可从「报告」里找到
+          </Text>
         </View>
       )}
     </View>

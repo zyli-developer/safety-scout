@@ -31,6 +31,16 @@ export interface HistoryEntry {
    * v2 inspection 会被当 v1 调用 GET /api/v1/inspections/{id} → 404。
    */
   schemaVersion?: SchemaVersion;
+  /**
+   * 分析状态（独立于整改状态 `status`）。
+   *
+   * 'analyzing'：后端 inspection_runner 还在跑（用户在 polling 页时占位写入；
+   *   也覆盖"用户点了回首页但后端在继续"的场景，让 history 仍有入口可回去看结果）。
+   * 'succeeded'：报告 mount 成功时升级；history 行渲染完整数据。
+   * 'failed'：报告 mount 命中 failed 状态时升级；history 行 muted 渲染。
+   * 缺省（undefined）视作 'succeeded'，兼容已有 localStorage 老条目。
+   */
+  analysisStatus?: 'analyzing' | 'succeeded' | 'failed';
 }
 
 const LS_KEY = 'safety-scout/history';

@@ -225,6 +225,8 @@ function Chip({
 
 function HistoryRow({ entry }: { entry: HistoryEntry }) {
   const photo = getPhotoFor(entry.inspectionId);
+  const isAnalyzing = entry.analysisStatus === 'analyzing';
+  const isFailed = entry.analysisStatus === 'failed';
   const onTap = () => {
     // v2 inspection 必须带 ?v=2 —— 否则 report 页按 v1 调 GET /api/v1/...
     // 后端 v2 路由会 404（schema_version 隔离）。缺省（undefined）按 v1 处理，
@@ -247,23 +249,42 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
       <View className={styles.rowBody}>
         <Text className={styles.rowWarn}>{entry.summary}</Text>
         <View className={styles.rowMeta}>
-          <Text className={styles.rowMetaItem}>
-            <Text className={styles.rowMetaB}>{entry.hazardCount}</Text> 项隐患
-          </Text>
+          {!isAnalyzing && !isFailed && (
+            <Text className={styles.rowMetaItem}>
+              <Text className={styles.rowMetaB}>{entry.hazardCount}</Text> 项隐患
+            </Text>
+          )}
           <Text className={styles.rowMetaTime}>{relativeTime(new Date(entry.capturedAt).toISOString())}</Text>
         </View>
       </View>
       <View className={styles.rowCounts}>
-        {entry.breakdown.high > 0 && (
-          <SeverityPill level="high" count={entry.breakdown.high} />
+        {/* analysisStatus 优先于 severity 渲染：分析中 → 旋转点；失败 → 红色 badge；
+            成功（含 undefined 老条目）→ 走原 severity pill 渲染 */}
+        {isAnalyzing && (
+          <View className={styles.analyzingBadge} aria-label="分析中">
+            <View className={styles.analyzingDot} />
+            <Text>分析中</Text>
+          </View>
         )}
-        {entry.breakdown.medium > 0 && (
-          <SeverityPill level="medium" count={entry.breakdown.medium} />
+        {isFailed && (
+          <View className={styles.failedBadge} aria-label="分析失败">
+            <Text>失败</Text>
+          </View>
         )}
-        {entry.breakdown.low > 0 && (
-          <SeverityPill level="low" count={entry.breakdown.low} />
+        {!isAnalyzing && !isFailed && (
+          <>
+            {entry.breakdown.high > 0 && (
+              <SeverityPill level="high" count={entry.breakdown.high} />
+            )}
+            {entry.breakdown.medium > 0 && (
+              <SeverityPill level="medium" count={entry.breakdown.medium} />
+            )}
+            {entry.breakdown.low > 0 && (
+              <SeverityPill level="low" count={entry.breakdown.low} />
+            )}
+            {entry.hazardCount === 0 && <Text className={styles.rowPass}>✓ 通过</Text>}
+          </>
         )}
-        {entry.hazardCount === 0 && <Text className={styles.rowPass}>✓ 通过</Text>}
       </View>
       <Icon name="chevron-right" size={16} color="var(--ink-3)" />
     </View>

@@ -56,6 +56,41 @@ export default function MobileReport() {
       stopWhen: (r) => r.status === 'succeeded' || r.status === 'failed',
     });
 
+  // 2026-05-26：进入轮询页就在 history 里写一条"分析中"占位 ——
+  // 用户中途点"回到首页继续"（前端 reLaunch 但后端继续跑）时，仍能从 history
+  // 找到这次 inspection；后端跑完后 SucceededReport 用相同 inspectionId
+  // 覆写为完整数据 + analysisStatus='succeeded'。
+  useEffect(() => {
+    if (!id) return;
+    appendHistory({
+      inspectionId: id,
+      capturedAt: Date.now(),
+      summary: '分析中…',
+      overallSeverity: 'low',
+      hazardCount: 0,
+      breakdown: { high: 0, medium: 0, low: 0 },
+      status: 'pending',
+      schemaVersion,
+      analysisStatus: 'analyzing',
+    });
+  }, [id, schemaVersion]);
+
+  // 命中 failed 时升级 history 条目为 failed 态
+  useEffect(() => {
+    if (!id || !result || result.status !== 'failed') return;
+    appendHistory({
+      inspectionId: id,
+      capturedAt: Date.parse(result.created_at) || Date.now(),
+      summary: result.error?.user_message ?? '分析失败',
+      overallSeverity: 'low',
+      hazardCount: 0,
+      breakdown: { high: 0, medium: 0, low: 0 },
+      status: 'pending',
+      schemaVersion,
+      analysisStatus: 'failed',
+    });
+  }, [id, schemaVersion, result?.status]);
+
   if (error) {
     const ui = mapApiError(error);
     return <ErrorView userMessage={ui.userMessage} allowRetry={ui.allowRetry} />;
@@ -161,7 +196,7 @@ function SucceededReport({
 
   // 2026-05-24 B8：记录到本地 history store（localStorage 临时方案）
   // schemaVersion 必须持久化 —— history 页跳回此页时按它决定 URL 是否带 ?v=2
-  // （否则 v2 inspection 会被按 v1 调 GET → 404）
+  // 2026-05-26：analysisStatus='succeeded' 升级先前轮询期写入的"分析中"占位
   useEffect(() => {
     appendHistory({
       inspectionId: idForLookup,
@@ -172,6 +207,7 @@ function SucceededReport({
       breakdown: counts,
       status: 'pending',
       schemaVersion,
+      analysisStatus: 'succeeded',
     });
   }, [idForLookup, schemaVersion]);
   const shortNo = idForLookup.slice(0, 12).toUpperCase();

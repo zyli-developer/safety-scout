@@ -55,6 +55,38 @@ export default function DesktopReport() {
     stopWhen: (r) => r.status === 'succeeded' || r.status === 'failed',
   });
 
+  // 2026-05-26：与 mobile 对称 —— 轮询页期间写"分析中"占位到 history，
+  // 命中 failed 时升级；用户中途回首页时仍能从 history 找回这次 inspection。
+  useEffect(() => {
+    if (!id) return;
+    appendHistory({
+      inspectionId: id,
+      capturedAt: Date.now(),
+      summary: '分析中…',
+      overallSeverity: 'low',
+      hazardCount: 0,
+      breakdown: { high: 0, medium: 0, low: 0 },
+      status: 'pending',
+      schemaVersion,
+      analysisStatus: 'analyzing',
+    });
+  }, [id, schemaVersion]);
+
+  useEffect(() => {
+    if (!id || !result || result.status !== 'failed') return;
+    appendHistory({
+      inspectionId: id,
+      capturedAt: Date.parse(result.created_at) || Date.now(),
+      summary: result.error?.user_message ?? '分析失败',
+      overallSeverity: 'low',
+      hazardCount: 0,
+      breakdown: { high: 0, medium: 0, low: 0 },
+      status: 'pending',
+      schemaVersion,
+      analysisStatus: 'failed',
+    });
+  }, [id, schemaVersion, result?.status]);
+
   if (error) {
     const ui = mapApiError(error);
     return <DesktopErrorView userMessage={ui.userMessage} allowRetry={ui.allowRetry} />;
@@ -198,6 +230,7 @@ function DesktopSucceededReport({
       breakdown: counts,
       status: 'pending',
       schemaVersion,
+      analysisStatus: 'succeeded',
     });
     // 只在 inspection 切换时重新登记
   }, [idForLookup, schemaVersion]);
