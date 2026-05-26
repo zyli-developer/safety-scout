@@ -98,6 +98,42 @@
   flex-wrap: wrap;
 }
 
+// 重大事故隐患（建质规〔2024〕5号）行。仅在 majorCount>0 时渲染。
+.majorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--high-soft);
+  border: 1px solid var(--high);
+  border-radius: var(--r-sm);
+}
+
+.majorTag {
+  padding: 2px 8px;
+  background: var(--high);
+  color: #FFF;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.majorCount {
+  font-family: var(--f-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--high);
+}
+
+.majorBasisHint {
+  margin-left: auto;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
 .alarmWrap {
   padding: 16px 20px 0;
 }

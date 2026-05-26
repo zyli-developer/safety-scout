@@ -62,6 +62,36 @@ def test_regulation_can_be_empty_string():
     assert h.regulation == ""
 
 
+def test_is_major_defaults_to_false_and_major_basis_empty():
+    """v7：is_major / major_basis 是可选字段，老响应缺字段时默认 False / "" 。"""
+    h = Hazard(
+        category_code="H1", category_name="高处坠落",
+        description="x", severity="high",
+        regulation="", suggestion="x",
+        # 故意不传 is_major / major_basis
+    )
+    assert h.is_major is False
+    assert h.major_basis == ""
+
+
+def test_is_major_accepts_true_with_basis():
+    """建质规〔2024〕5号 命中场景：is_major=true + major_basis 引用文号。"""
+    basis = (
+        "《房屋市政工程生产安全重大事故隐患判定标准（2024版）》"
+        "建质规〔2024〕5号 第十一条 高处作业 — 临边、洞口防护缺失"
+    )
+    h = Hazard(
+        category_code="H1", category_name="高处坠落",
+        description="临边无 1.2m 防护栏", severity="high",
+        regulation="《建筑施工高处作业安全技术规范》JGJ 80-2016 第 4.2.1 条",
+        suggestion="24 小时内补防护栏",
+        is_major=True,
+        major_basis=basis,
+    )
+    assert h.is_major is True
+    assert "建质规〔2024〕5号" in h.major_basis
+
+
 def test_empty_hazards_list_allowed():
     p = ReportPayload(
         inspection_id="550e8400-e29b-41d4-a716-446655440000",

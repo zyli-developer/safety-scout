@@ -31,6 +31,19 @@ export interface Hazard {
   /** 可为空字符串；不允许编造规范条款。 */
   regulation: string;
   suggestion: string;
+  /**
+   * 重大事故隐患标志，对应《房屋市政工程生产安全重大事故隐患判定标准（2024版）》
+   * 建质规〔2024〕5号。
+   *
+   * Optional：旧后端响应无此字段时视为 false，前端走普通隐患渲染（向后兼容）。
+   * true 时前端必须显著红标 + 在 sidebar 计数。
+   */
+  is_major?: boolean;
+  /**
+   * 当 is_major=true 时引用建质规〔2024〕5号 对应条款（"第 X 条 ... — 现象"格式）；
+   * Optional 同样为兼容老响应。
+   */
+  major_basis?: string;
 }
 
 export interface ModelMeta {

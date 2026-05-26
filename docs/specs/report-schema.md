@@ -38,7 +38,9 @@
       "description": "二层楼板边缘缺失防护栏杆，距离地面约 4 米",
       "severity": "high",
       "regulation": "《建筑施工高处作业安全技术规范》JGJ 80-2016 第 4.2.1 条",
-      "suggestion": "24 小时内设置高度不低于 1.2m 的临边防护栏杆，挂设警示标志"
+      "suggestion": "24 小时内设置高度不低于 1.2m 的临边防护栏杆，挂设警示标志",
+      "is_major": true,
+      "major_basis": "《房屋市政工程生产安全重大事故隐患判定标准（2024版）》建质规〔2024〕5号 第十一条 高处作业 — 临边、洞口防护缺失"
     }
   ],
   "model_meta": {
@@ -73,6 +75,8 @@
 | `severity` | string | 是 | `"high" \| "medium" \| "low"` | 本条隐患的严重等级 |
 | `regulation` | string | 是 | 可为空字符串 `""` | 引用规范条款。**不允许编造**：不确定时必须留空字符串而不是凭空捏造条款号 |
 | `suggestion` | string | 是 | ≤ 100 字，中文 | 可执行的整改建议（"24 小时内…"、"立即…"、"班前会…" 这类动作 + 时限） |
+| `is_major` | boolean | 否（默认 `false`） | — | **重大事故隐患标志**。命中《房屋市政工程生产安全重大事故隐患判定标准（2024版）》建质规〔2024〕5号 任一条款时为 `true`；命中后安全员负有上报义务，前端按红标 + 显著区分渲染。模型不确信时必须留 `false`（与 `regulation` 字段同样的"不编造"原则） |
+| `major_basis` | string | 否（默认 `""`） | — | 当 `is_major=true` 时必填，引用建质规〔2024〕5号 对应条款（如"第十一条 高处作业 — 临边、洞口防护缺失"）；`is_major=false` 时为空字符串 |
 
 ### `model_meta` 字段
 
@@ -90,6 +94,21 @@
 | 新增**必填**字段 / 删除任何字段 / 改字段类型 | 是 | 需同 PR 改 Prompt + 后端 + 前端，并在 commit message 标注 `BREAKING:` |
 | 调整枚举取值（如新增 `H11`） | 是 | 同上；需同步 `hazards.md` 与 Prompt 枚举字符串 |
 | 调整字段长度 / 格式约束（如 `plain_warning` 上限改为 50 字） | 否 | 仅校验层需改 |
+
+## 重大事故隐患（建质规〔2024〕5号）
+
+`is_major` / `major_basis` 两个字段对应《房屋市政工程生产安全重大事故隐患判定标准（2024版）》（住建部 2024-12-13 印发，建质规〔2024〕5号）。
+
+判定标准 docx 附件来源（官方）：
+- https://www.gov.cn/zhengce/zhengceku/202412/content_6995806.htm
+- https://www.mohurd.gov.cn/gongkai/zc/wjk/art/2024/art_38824e639b5e4efa90b878f3d5c0f846.html
+
+**⚠ 数值阈值待 verbatim 校对**：当前 prompt（v7 起）按对该标准的结构性认知 + 行业公认阈值嵌入判定要点；具体的"开挖深度 ≥ N m"、"模板高度 ≥ N m"等数值在 Phase 6 RAG（[issue #7](https://github.com/zyli-developer/safety-scout/issues/7) 知识源参考段）落地前，应以官方 docx 为准做一次 verbatim 校对。
+
+字段使用约束（与上面字段定义表呼应）：
+- `is_major=true` 时 `major_basis` 必填，且必须以"《房屋市政工程生产安全重大事故隐患判定标准（2024版）》建质规〔2024〕5号 第 X 条"开头
+- `is_major=false` 时 `major_basis` 必为 `""`
+- 同一 hazard 的 `severity` 与 `is_major` 独立：重大隐患通常但不必然为 `severity=high`；前端排序当前按 severity，**重大隐患的视觉权重靠红标体现，不改排序**
 
 ## 当前未在 schema 内的（v0.1 不做）
 

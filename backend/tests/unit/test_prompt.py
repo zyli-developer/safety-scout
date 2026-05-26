@@ -29,3 +29,15 @@ def test_prompt_forbids_fabrication() -> None:
 
 def test_prompt_version_set() -> None:
     assert PROMPT_VERSION  # 非空字符串
+
+
+def test_prompt_embeds_major_hazard_criteria() -> None:
+    """v7 起 prompt 必须嵌入建质规〔2024〕5号 重大事故隐患判定要点。
+
+    弱断言：只校验文号 + is_major/major_basis 字段提及 + 触发要点段标题。
+    具体数值阈值（≥5m 等）不在此处断言（参 spec 注的"待 verbatim 校对"事项）。
+    """
+    assert "建质规〔2024〕5号" in ANALYZE_PROMPT, "prompt 必须提及判定标准文号"
+    assert "is_major" in ANALYZE_PROMPT, "prompt 必须示意 is_major 字段"
+    assert "major_basis" in ANALYZE_PROMPT, "prompt 必须示意 major_basis 字段"
+    assert "重大事故隐患触发要点" in ANALYZE_PROMPT, "prompt 必须含触发要点段"

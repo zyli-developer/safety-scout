@@ -11,6 +11,16 @@
   border-bottom: 0;
 }
 
+// 重大事故隐患（建质规〔2024〕5号）行的整行视觉权重：
+// 左侧 4px 红色边条 + 整行底色微染，配合 .majorBadge 一起 ——
+// 安全员在长列表里能一眼定位需要立刻处置 + 上报的条目。
+.rowMajor {
+  border-left: 4px solid var(--high);
+  background: var(--high-soft);
+  padding-left: var(--s2);
+  margin-left: calc(-1 * var(--s2)); // 视觉对齐：边条不破列表外缘
+}
+
 .idx {
   font-family: var(--f-mono);
   font-size: 13px;
@@ -45,6 +55,41 @@
   font-size: 14px;
   color: var(--ink-2);
   line-height: 1.5;
+}
+
+// 重大隐患红色 badge，紧跟 SeverityPill。
+.majorBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--high);
+  color: #FFF;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+}
+
+// 判定依据 —— 建质规〔2024〕5号 条款引用单独一行，区别于普通 regulation。
+.majorBasis {
+  margin-top: 4px;
+  padding: 8px 10px;
+  background: #FFF;
+  border: 1px solid var(--high);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.majorBasisLabel {
+  font-weight: 600;
+  color: var(--high);
+}
+
+.majorBasisText {
+  color: var(--ink);
 }
 
 .meta {

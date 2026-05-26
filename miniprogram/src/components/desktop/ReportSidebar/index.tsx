@@ -53,6 +53,9 @@ export function ReportSidebar({ report, hazardCount }: ReportSidebarProps) {
   const counts = countBySeverity(report.hazards);
   const meta = report.model_meta;
   const [techOpen, setTechOpen] = useState(false);
+  // 重大事故隐患（建质规〔2024〕5号）计数 —— 命中即触发安全员上报义务。
+  // count=0 时不渲染该 row，避免普通巡检报告出现"重大隐患 0 项"的弱化暗示。
+  const majorCount = report.hazards.filter((h) => h.is_major === true).length;
 
   const total = hazardCount;
   const highPct = total > 0 ? (counts.high / total) * 100 : 0;
@@ -87,6 +90,16 @@ export function ReportSidebar({ report, hazardCount }: ReportSidebarProps) {
           <Text>低 {counts.low}</Text>
         </View>
       </View>
+
+      {majorCount > 0 && (
+        <View className={styles.majorRow} role="status" aria-label={`重大事故隐患 ${majorCount} 项`}>
+          <View className={styles.majorTag}>
+            <Text>重大隐患</Text>
+          </View>
+          <Text className={styles.majorCount}>{majorCount} 项</Text>
+          <Text className={styles.majorBasisHint}>建质规〔2024〕5号 命中</Text>
+        </View>
+      )}
 
       <View className={styles.summarySection}>
         <Text className={styles.summaryLabel}>整体判断</Text>

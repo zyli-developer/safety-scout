@@ -103,6 +103,64 @@ async def test_L4_no_reprompt_provided_and_invalid():
         await parse_report(raw, reprompt=None)
 
 
+async def test_is_major_round_trip_when_present():
+    """重大事故隐患（建质规〔2024〕5号）：响应带 is_major + major_basis 时正常通过。"""
+    raw = """
+    {
+      "inspection_id": "550e8400-e29b-41d4-a716-446655440000",
+      "created_at": "2026-05-25T00:00:00Z",
+      "plain_warning": "临边没护栏，要坠人",
+      "summary": "现场存在 1 项重大隐患。",
+      "overall_severity": "high",
+      "hazards": [
+        {
+          "category_code": "H1",
+          "category_name": "高处坠落",
+          "description": "二层楼板临边无防护",
+          "severity": "high",
+          "regulation": "《建筑施工高处作业安全技术规范》JGJ 80-2016 第 4.2.1 条",
+          "suggestion": "24 小时内补 1.2m 防护栏",
+          "is_major": true,
+          "major_basis": "《房屋市政工程生产安全重大事故隐患判定标准（2024版）》建质规〔2024〕5号 第十一条 高处作业 — 临边、洞口防护缺失"
+        }
+      ],
+      "model_meta": {"provider": "claude_cli", "model": "x", "latency_ms": 100}
+    }
+    """
+    payload = await parse_report(raw)
+    assert payload.hazards[0].is_major is True
+    assert "建质规〔2024〕5号" in payload.hazards[0].major_basis
+
+
+async def test_is_major_defaults_to_false_when_absent():
+    """旧响应（无 is_major/major_basis 字段）必须仍可解析；默认 False/空字符串。"""
+    # MINIMAL_VALID_JSON 本身就不含这两个字段，但 hazards 为空，覆盖不全；
+    # 这里造一条 hazard 但显式不带 is_major，确认 Pydantic 走默认值。
+    raw = """
+    {
+      "inspection_id": "550e8400-e29b-41d4-a716-446655440000",
+      "created_at": "2026-05-25T00:00:00Z",
+      "plain_warning": "测试",
+      "summary": "x",
+      "overall_severity": "low",
+      "hazards": [
+        {
+          "category_code": "H10",
+          "category_name": "其他",
+          "description": "x",
+          "severity": "low",
+          "regulation": "",
+          "suggestion": "x"
+        }
+      ],
+      "model_meta": {"provider": "claude_cli", "model": "x", "latency_ms": 100}
+    }
+    """
+    payload = await parse_report(raw)
+    assert payload.hazards[0].is_major is False
+    assert payload.hazards[0].major_basis == ""
+
+
 async def test_pydantic_validation_failure_also_raises():
     """JSON 解析通过但 Pydantic 校验失败（如 category_code=H99），抛 LLMParseError。"""
     bad = """

@@ -77,6 +77,42 @@
   color: var(--ink-3);
 }
 
+// 重大事故隐患 row（建质规〔2024〕5号）—— bar 与 summary 之间，红底白字 tag + 计数。
+// majorCount=0 时父组件不渲染该 row（避免"重大隐患 0 项"的弱化暗示）。
+.majorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--high-soft);
+  border: 1px solid var(--high);
+  border-radius: var(--r-sm);
+}
+
+.majorTag {
+  padding: 2px 8px;
+  background: var(--high);
+  color: #FFF;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.majorCount {
+  font-family: var(--f-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--high);
+}
+
+.majorBasisHint {
+  margin-left: auto;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
 // Summary section（整体判断 / 分析耗时 等）
 .summarySection {
   display: flex;

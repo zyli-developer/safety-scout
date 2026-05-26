@@ -30,8 +30,14 @@ export function HazardItem({
 }: HazardItemProps) {
   const { severity, description, regulation, suggestion, category_name, category_code } = hazard;
   const hasReg = regulation.length > 0;
+  const isMajor = hazard.is_major === true;
+  const majorBasis = hazard.major_basis ?? '';
   return (
-    <View className={[styles.row, className].filter(Boolean).join(' ')} data-severity={severity}>
+    <View
+      className={[styles.row, isMajor ? styles.rowMajor : '', className].filter(Boolean).join(' ')}
+      data-severity={severity}
+      data-major={isMajor ? 'true' : undefined}
+    >
       <View className={styles.idx}>
         <Text>{String(index).padStart(2, '0')}</Text>
       </View>
@@ -39,8 +45,19 @@ export function HazardItem({
         <View className={styles.head}>
           <Text className={styles.cat}>{category_name}</Text>
           <SeverityPill level={severity} />
+          {isMajor && (
+            <View className={styles.majorBadge} role="status" aria-label="重大事故隐患">
+              <Text>重大隐患</Text>
+            </View>
+          )}
         </View>
         <Text className={styles.desc}>{description}</Text>
+        {isMajor && majorBasis.length > 0 && (
+          <View className={styles.majorBasis}>
+            <Text className={styles.majorBasisLabel}>判定依据 · </Text>
+            <Text className={styles.majorBasisText}>{majorBasis}</Text>
+          </View>
+        )}
         <View className={styles.meta}>
           <Text>{category_code}</Text>
           {hasReg && (

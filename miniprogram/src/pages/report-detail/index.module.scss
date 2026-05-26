@@ -163,6 +163,62 @@
   line-height: 1.6;
 }
 
+// === 重大事故隐患（建质规〔2024〕5号）badge + 判定依据 block ===
+// 紧跟 hazardHead，规范条款 reg block 之上，视觉上比 reg 更醒目（红色边框 + 红 tag）。
+.majorBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: var(--high);
+  color: #FFF;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+}
+
+.majorBasisBox {
+  background: var(--high-soft);
+  border: 1px solid var(--high);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.majorBasisHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.majorTag {
+  padding: 2px 10px;
+  background: var(--high);
+  color: #FFF;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.majorBasisLabel {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--high);
+  font-weight: 600;
+}
+
+.majorBasisBody {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
 // === regulation ===
 .reg {
   background: var(--surface);

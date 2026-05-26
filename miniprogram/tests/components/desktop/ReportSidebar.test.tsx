@@ -79,4 +79,43 @@ describe('ReportSidebar (2026-05-22)', () => {
     render(<ReportSidebar report={r} hazardCount={4} />);
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
   });
+
+  // 2026-05-25 重大事故隐患（建质规〔2024〕5号）UI 路径
+  describe('重大事故隐患 row', () => {
+    it('omits major row entirely when no hazard has is_major=true', () => {
+      // 现有 SAMPLE 都不带 is_major，应当不渲染"重大隐患"任何文本
+      render(<ReportSidebar report={SAMPLE} hazardCount={4} />);
+      expect(screen.queryByText('重大隐患')).toBeNull();
+      expect(screen.queryByText(/建质规/)).toBeNull();
+    });
+
+    it('renders major row with count when at least one hazard is major', () => {
+      const reportWithMajor: ReportPayload = {
+        ...SAMPLE,
+        hazards: [
+          { ...makeHazard('high'), is_major: true, major_basis: '建质规〔2024〕5号 第十一条' },
+          { ...makeHazard('high'), is_major: true, major_basis: '建质规〔2024〕5号 第八条' },
+          makeHazard('medium'),
+          makeHazard('low'),
+        ],
+      };
+      render(<ReportSidebar report={reportWithMajor} hazardCount={4} />);
+      expect(screen.getByText('重大隐患')).toBeInTheDocument();
+      expect(screen.getByText('2 项')).toBeInTheDocument();
+      expect(screen.getByText(/建质规〔2024〕5号 命中/)).toBeInTheDocument();
+    });
+
+    it('treats is_major missing / false / undefined as non-major (backward compat)', () => {
+      const reportMixed: ReportPayload = {
+        ...SAMPLE,
+        hazards: [
+          { ...makeHazard('high'), is_major: false },
+          { ...makeHazard('high') }, // 字段未设置（旧后端响应）
+          makeHazard('medium'),
+        ],
+      };
+      render(<ReportSidebar report={reportMixed} hazardCount={3} />);
+      expect(screen.queryByText('重大隐患')).toBeNull();
+    });
+  });
 });

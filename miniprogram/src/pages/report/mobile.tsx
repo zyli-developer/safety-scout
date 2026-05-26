@@ -138,6 +138,8 @@ function SucceededReport({
   const severity = report.overall_severity;
   const counts = countBySeverity(sorted);
   const total = sorted.length;
+  // 重大事故隐患计数（建质规〔2024〕5号）；> 0 时 summaryCard 内插红色 row。
+  const majorCount = sorted.filter((h) => h.is_major === true).length;
   // canonicalId 来自 URL（与上传时 rememberPhoto 同源），
   // 仅在 URL 丢 id 时退到 report.inspection_id（旧后端为 LLM 占位符）。
   const idForLookup = canonicalId || report.inspection_id;
@@ -241,6 +243,19 @@ function SucceededReport({
             <SeverityPill level="medium" count={counts.medium} />
             <SeverityPill level="low" count={counts.low} />
           </View>
+          {majorCount > 0 && (
+            <View
+              className={styles.majorRow}
+              role="status"
+              aria-label={`重大事故隐患 ${majorCount} 项`}
+            >
+              <View className={styles.majorTag}>
+                <Text>重大隐患</Text>
+              </View>
+              <Text className={styles.majorCount}>{majorCount} 项</Text>
+              <Text className={styles.majorBasisHint}>建质规〔2024〕5号</Text>
+            </View>
+          )}
         </View>
       </View>
 

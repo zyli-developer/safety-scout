@@ -211,10 +211,27 @@ function ReportDetailView({
             <Text className={styles.hazardCode}>{hazard.category_code}</Text>
             <Text className={styles.hazardName}>{hazard.category_name}</Text>
             <SeverityPill level={hazard.severity} />
+            {hazard.is_major === true && (
+              <View className={styles.majorBadge} role="status" aria-label="重大事故隐患">
+                <Text>重大隐患</Text>
+              </View>
+            )}
             <Text className={styles.hazardTime}>{createdAt.slice(0, 16).replace('T', ' ')}</Text>
           </View>
           <Text className={styles.hazardDesc}>{hazard.description}</Text>
         </View>
+
+        {hazard.is_major === true && (hazard.major_basis ?? '').length > 0 && (
+          <View className={styles.majorBasisBox}>
+            <View className={styles.majorBasisHead}>
+              <View className={styles.majorTag}>
+                <Text>重大事故隐患</Text>
+              </View>
+              <Text className={styles.majorBasisLabel}>判定依据</Text>
+            </View>
+            <Text className={styles.majorBasisBody}>{hazard.major_basis}</Text>
+          </View>
+        )}
 
         {hazard.regulation && (
           <View className={styles.reg}>
