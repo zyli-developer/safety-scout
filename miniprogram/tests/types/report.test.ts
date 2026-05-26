@@ -29,6 +29,13 @@ describe('ReportPayload 类型 vs report-schema.md', () => {
       expect(['high', 'medium', 'low']).toContain(h.severity);
       expect(typeof h.description).toBe('string');
       expect(typeof h.suggestion).toBe('string');
+      // 2026-05-25 v7: is_major / major_basis 为 optional 字段；存在时类型必须正确。
+      if (h.is_major !== undefined) expect(typeof h.is_major).toBe('boolean');
+      if (h.major_basis !== undefined) expect(typeof h.major_basis).toBe('string');
+      // is_major=true 时 major_basis 必须非空（spec 的硬约束）
+      if (h.is_major === true) {
+        expect(h.major_basis ?? '').not.toBe('');
+      }
     });
     expect(['claude_cli', 'doubao', 'fake']).toContain(example.model_meta.provider);
     expect(typeof example.model_meta.model).toBe('string');

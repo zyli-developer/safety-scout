@@ -130,12 +130,12 @@ async function main() {
     await page.waitForSelector('text=Safety Scout', { timeout: 10_000 }).catch(() => {
       failures.push('首页找不到 "Safety Scout" 标题文案 —— React 可能没挂载');
     });
-    await page.waitForSelector('text=拍摄现场照片', { timeout: 5_000 }).catch(() => {
-      failures.push('找不到 "拍摄现场照片" 按钮 —— BigButton 没渲染');
+    await page.waitForSelector('text=开始巡检', { timeout: 5_000 }).catch(() => {
+      failures.push('找不到 "开始巡检" CTA —— 主按钮没渲染');
     });
-    await page.waitForSelector('text=工地隐患识别', { timeout: 3_000 }).catch(() => {
+    await page.waitForSelector('text=AI 找隐患', { timeout: 3_000 }).catch(() => {
       // 大标题，缺了不算严重，只是 warning
-      console.log(`  [warn] 大标题 "工地隐患识别" 没找到（可能页面结构变了）`);
+      console.log(`  [warn] 大标题 "AI 找隐患" 没找到（可能页面结构变了）`);
     });
 
     // 截图存档
@@ -164,7 +164,7 @@ async function main() {
 
     // 输出 DOM 关键内容简报
     const titleText = await page.locator('text=Safety Scout').first().textContent().catch(() => null);
-    const buttonText = await page.locator('text=拍摄现场照片').first().textContent().catch(() => null);
+    const buttonText = await page.locator('text=开始巡检').first().textContent().catch(() => null);
     console.log(`\n  rendered title:  ${JSON.stringify(titleText)}`);
     console.log(`  rendered button: ${JSON.stringify(buttonText)}`);
   } catch (e) {

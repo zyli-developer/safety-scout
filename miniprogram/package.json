@@ -17,6 +17,8 @@
     "test:watch": "jest --watch",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test:e2e:h5": "node tests/e2e/h5-smoke.mjs",
+    "test:e2e:h5:responsive": "node tests/e2e/h5-responsive.mjs",
+    "test:e2e:h5:photo": "node tests/e2e/h5-photo-flow.mjs",
     "test:e2e:h5:real": "node tests/e2e/h5-real.mjs",
     "test:e2e:h5:desktop:real": "node tests/e2e/h5-desktop.mjs"
   },

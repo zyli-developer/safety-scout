@@ -1,7 +1,8 @@
 # Miniprogram UI Redesign — Site Inspection Dossier
 
 **Date**: 2026-05-20
-**Status**: Approved direction, ready for implementation plan
+**Status**: Superseded by `2026-05-21-clean-ui-prototype/` (review rejected the "工地许可证" aesthetic as cluttered; clean & minimal direction landed instead — see `IMPLEMENT.md` in that folder)
+**Original status**: Approved direction, ready for implementation plan
 **Author**: zyli + Claude (`/frontend-design`)
 **Supersedes**: `2026-05-20-miniprogram-ui-hero-banner-design.md` (the iOS HIG + hero-banner direction it described did not land aesthetically; user reported "ugly" after three rounds of iteration)
 

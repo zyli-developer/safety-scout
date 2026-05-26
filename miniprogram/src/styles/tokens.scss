@@ -1,55 +1,91 @@
-// Dossier design tokens — paper-document aesthetic.
-// Used globally via app.scss import; module SCSS files reference via var(--token).
-// Both H5 (regular CSS) and weapp (WXSS) support CSS custom properties.
+// =============================================================================
+// Safety Scout · Design Tokens
+//
+// 与 docs/plans/2026-05-22-unified-modern-minimal/ 设计稿对齐。
+// 命名表（--ink/--line/--high/--accent…）保持代码端历史命名，不与 mockup 的
+// --fg/--border/--sev-high 等做名字层迁移（代价过高），靠值校准对齐视觉。
+//
+// 全局通过 app.scss 一次性导入到 :root；module SCSS 通过 var(--token) 引用。
+// H5 + 微信小程序均支持 CSS 自定义属性。
+//
+// === 与 mockup 的有意偏离 ===
+//
+// 1) --bg 用 #FAFAF8（暖偏移），mockup 用 oklch(99% 0.002 240) ≈ #FAFAFA 冷白。
+//    保留暖白是产品决策：工地照片暖色为主、安全员长时间盯屏，暖底比冷白更耐看，
+//    冷白 + 暖照片会有色温撕裂感。
+//    若未来要切冷白，把 --bg 改 #FAFAFA、--surface-2 改 #F4F5F6 即可。
+//
+// 2) 颜色用 hex 而非 oklch —— Taro 编译到微信小程序时 oklch() 支持不稳，
+//    部分版本会回退到 transparent 或 fallback color。统一 hex 兼容性最稳。
+//    每个 hex 后保留 mockup 源色（oklch 注释）方便未来切换。
+//
+// =============================================================================
 
 :root {
-  // Palette
-  --color-paper: #F4EFE5;
-  --color-paper-backdrop: #E8E2D4;
-  --color-charcoal: #1A1A1A;
-  --color-eng-red: #C8281C;
-  --color-survey-blue: #1A4B8C;
-  --color-caliper-grey: #A8A096;
-  --color-warning-amber: #E07B1F;
-  --color-pass-green: #3D7C3D;
+  // ---- Neutrals (warm white surface) ----
+  --bg:        #FAFAF8;  // oklch(99% 0.002 240) 偏移到暖白，见上注释 1
+  --surface:   #FFFFFF;  // oklch(100% 0 0)
+  --surface-2: #F4F4F2;  // oklch(97% 0.004 250) 暖偏移
+  --line:      #ECECE8;  // oklch(92% 0.005 250)
+  --line-2:    #DCDCD6;  // oklch(86% 0.006 250)
+  --line-strong: #C9C9C2; // oklch(80% 0.008 250) — dropzone / pill border / hover
 
-  // Spacing (8px base)
-  --space-1: 8px;
-  --space-2: 16px;
-  --space-3: 24px;
-  --space-4: 32px;
-  --space-5: 48px;
-  --space-6: 64px;
+  // ---- Ink ----
+  --ink:       #0E0E0C;  // oklch(18% 0.012 250) 接近黑、留 1% 偏暖
+  --ink-2:     #4D4E4B;  // oklch(32% 0.012 250) — body text
+  --ink-3:     #8A8B86;  // oklch(54% 0.012 250) — muted
+  --ink-4:     #B6B6B0;  // 占位/disabled
 
-  // Type scale — px values; Taro pxtransform handles weapp scaling
-  --fs-eyebrow: 12px;       // Plex Mono labels
-  --fs-meta: 14px;          // Plex Mono identifiers
-  --fs-body: 26px;          // 中文 body text
-  --fs-section: 30px;       // section labels
-  --fs-h2: 40px;            // sub-titles
-  --fs-h1: 56px;            // page large title (H5 desktop)
-  --fs-display: 96px;       // hazard count number
+  // ---- Accent (safety orange) ----
+  --accent:       #E85D2C;  // oklch(66% 0.17 50)
+  --accent-2:     #C44A1F;  // oklch(60% 0.18 48) — alias of accent-hover
+  --accent-hover: #C44A1F;
+  --accent-soft:  #FFF1EA;  // oklch(95% 0.04 60) — suggestion callout 背景
+  --on-accent:    #FFFFFF;
 
-  // Font families — Latin first, Chinese fallback chain.
-  // Source Han Serif is OPTIONAL — if the woff2 isn't loaded, system serif takes over.
-  --font-display: 'IBM Plex Serif', 'Source Han Serif SC', 'STSongti-SC', 'Songti SC', 'SimSun', serif;
-  --font-body: 'IBM Plex Sans', 'Source Han Sans SC', 'PingFang SC', 'Helvetica Neue', sans-serif;
-  --font-mono: 'IBM Plex Mono', 'Sarasa Mono SC', 'Menlo', 'Consolas', monospace;
-  --font-condensed: 'IBM Plex Sans Condensed', 'IBM Plex Sans', 'Helvetica Neue Condensed', sans-serif;
+  // ---- Severity ----
+  --high:      #D7373F;  // oklch(58% 0.20 28)
+  --high-soft: #FCE7E9;  // oklch(95% 0.04 28)
+  --med:       #C77A1F;  // oklch(70% 0.15 70) — 但 chip 文字色用更深 oklch(45% 0.14 70)
+  --med-text:  #8C5814;  // chip / pill 文字用这个，比 --med 沉一些便于阅读
+  --med-soft:  #FBEED6;  // oklch(96% 0.04 75)
+  --low:       #2F8454;  // oklch(60% 0.13 155)
+  --low-soft:  #DEEFE3;  // oklch(95% 0.025 155)
 
-  // Geometry
-  --radius-button: 4px;
-  --radius-card: 0;
-  --border-charcoal: 1px solid var(--color-charcoal);
-  --border-hairline: 1px solid var(--color-caliper-grey);
+  // ---- Typography ----
+  --f-sans: -apple-system, BlinkMacSystemFont, 'Helvetica Neue',
+            'PingFang SC', 'Noto Sans SC', 'Hiragino Sans GB',
+            ui-sans-serif, sans-serif;
+  // mockup 用 JetBrains Mono，本项目对齐
+  --f-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
-  // Desktop-only type scale + spacing (consumed by pages/*/desktop.module.scss)
-  // Defined here (single source of truth) rather than in each desktop SCSS module:
-  // :root inside a CSS module is :global, so per-module declarations would race in
-  // the global cascade under MiniCssExtractPluginOption.ignoreOrder=true.
-  --fs-body-desktop: 16px;
-  --fs-h1-desktop: 48px;
-  --fs-eyebrow-desktop: 11px;
-  --fs-meta-desktop: 13px;
-  --space-desktop-gutter: 48px;
+  // ---- Spacing (8px 基准) ----
+  --s-1: 4px;
+  --s0:  8px;
+  --s1:  12px;
+  --s2:  16px;
+  --s3:  24px;
+  --s4:  32px;
+  --s5:  48px;
+  --s6:  64px;
+  --s7:  96px;
+
+  // ---- Radius — 校准到 mockup 数值 ----
+  // 2026-05-24：从 10/14/20 改回 6/10/14（mockup .radius-sm/--radius/--radius-lg），
+  // 整套卡片/pill/dropzone 视觉变更"紧"。如有快照测试断裂，jest -u 重新生成。
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   14px;
+  --r-pill: 999px;
+
+  // ---- Shadows ----
+  --shadow-sm: 0 1px 2px rgba(20, 20, 16, 0.04);
+  --shadow:    0 6px 24px rgba(20, 20, 16, 0.06);
+  --shadow-lg: 0 16px 48px rgba(20, 20, 16, 0.10);
+
+  // ---- Container & gutter ----
+  // mockup 容器宽 1240，对齐
+  --container:      1240px;
+  --container-wide: 1440px;
+  --gutter: clamp(16px, 3vw, 32px);
 }

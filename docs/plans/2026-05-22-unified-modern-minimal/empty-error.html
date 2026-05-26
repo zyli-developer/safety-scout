@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>空状态 / 错误态 · Safety Scout</title>
+<style>
+:root{
+  --bg: oklch(99% 0.002 240);
+  --surface: oklch(100% 0 0);
+  --surface-2: oklch(97% 0.004 250);
+  --fg: oklch(18% 0.012 250);
+  --fg-soft: oklch(32% 0.012 250);
+  --muted: oklch(54% 0.012 250);
+  --border: oklch(92% 0.005 250);
+  --border-strong: oklch(80% 0.008 250);
+  --accent: oklch(66% 0.17 50);
+  --accent-hover: oklch(60% 0.18 48);
+  --accent-soft: oklch(95% 0.04 60);
+  --sev-high: oklch(58% 0.20 28);
+  --sev-high-soft: oklch(95% 0.04 28);
+  --sev-medium: oklch(70% 0.15 70);
+  --sev-medium-soft: oklch(96% 0.04 75);
+  --sev-low: oklch(60% 0.13 155);
+  --sev-low-soft: oklch(95% 0.025 155);
+  --font-display: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Display", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Text", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, monospace;
+  --radius: 10px; --radius-lg: 14px;
+  --container: 1240px; --gutter: clamp(16px, 3vw, 32px);
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none} button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+.shell{max-width:var(--container);margin:0 auto;padding:0 var(--gutter)}
+
+/* TopNav */
+.topnav{position:sticky;top:0;z-index:50;background:oklch(100% 0 0 / .92);backdrop-filter:saturate(140%) blur(12px);border-bottom:1px solid var(--border)}
+.topnav__inner{display:flex;align-items:center;gap:24px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-0.01em}
+.brand__mark{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.brand__name{font-size:15px}
+.brand__sub{color:var(--muted);font-size:13px;font-weight:400}
+.navlinks{display:flex;gap:2px;margin-left:8px}
+.navlinks a{padding:8px 12px;border-radius:8px;font-size:14px;color:var(--fg-soft)}
+.navlinks a[aria-current="page"]{background:var(--surface-2);color:var(--fg);font-weight:500}
+.navlinks a:hover{background:var(--surface-2)}
+.topnav__spacer{flex:1}
+.useravatar{width:32px;height:32px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);display:grid;place-items:center;font-size:13px;color:var(--fg-soft);font-weight:500}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:var(--radius);font-size:14px;font-weight:500;border:1px solid transparent;transition:all 120ms}
+.btn--primary{background:var(--accent);color:#fff}
+.btn--primary:hover{background:var(--accent-hover)}
+.btn--ghost{border-color:var(--border);color:var(--fg);background:var(--surface)}
+.btn--ghost:hover{border-color:var(--border-strong);background:var(--surface-2)}
+.btn--big{padding:14px 22px;font-size:15px;border-radius:12px;font-weight:600}
+.btn__icon{width:16px;height:16px;flex:none}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 3px oklch(66% 0.17 50 / .35);border-color:var(--accent)}
+.swbtn:focus-visible{outline:none;box-shadow:0 0 0 3px oklch(66% 0.17 50 / .25);border-color:var(--accent)}
+
+.t-mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.t-muted{color:var(--muted)}
+.t-eyebrow{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+
+/* ===========================================================
+   STATE SWITCHER
+   =========================================================== */
+.label-strip{
+  padding:18px 0;display:flex;gap:8px;flex-wrap:wrap;
+  border-bottom:1px solid var(--border);
+  align-items:center;
+}
+.label-strip__title{font-family:var(--font-mono);font-size:11px;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;margin-right:8px}
+.swbtn{
+  padding:7px 12px;border-radius:999px;font-size:13px;font-weight:500;
+  border:1px solid var(--border);background:var(--surface);color:var(--fg-soft);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.swbtn[aria-pressed="true"]{background:var(--fg);color:var(--surface);border-color:var(--fg)}
+.swbtn .dot{width:6px;height:6px;border-radius:50%}
+.swbtn .dot--empty{background:var(--muted)}
+.swbtn .dot--blurry{background:var(--sev-low)}
+.swbtn .dot--reject{background:var(--sev-medium)}
+.swbtn .dot--net{background:var(--sev-high)}
+
+/* state shell */
+.state{padding:60px 0 24px;display:grid;place-items:center;gap:24px;text-align:center}
+.state__art{
+  width:140px;height:140px;border-radius:24px;
+  display:grid;place-items:center;position:relative;
+}
+.state__art--empty{background:linear-gradient(135deg, var(--surface-2), oklch(94% 0.012 250));color:var(--fg-soft)}
+.state__art--blurry{background:linear-gradient(135deg, var(--sev-low-soft), oklch(93% 0.03 160));color:var(--sev-low)}
+.state__art--reject{background:linear-gradient(135deg, var(--sev-medium-soft), oklch(92% 0.05 60));color:oklch(45% 0.14 70)}
+.state__art--net{background:linear-gradient(135deg, var(--sev-high-soft), oklch(93% 0.04 28));color:var(--sev-high)}
+.state__art svg{width:64px;height:64px}
+.state__art .ring{position:absolute;inset:0;border-radius:24px;border:1px dashed var(--border-strong);transform:rotate(2deg)}
+/* blurry 态：让 SVG 自身带轻微模糊，强化"照片有点糊"的隐喻 */
+.state__art--blurry svg{filter:blur(0.8px)}
+
+.state__head{display:grid;gap:10px;max-width:520px}
+.state__eyebrow{display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.state__title{font-family:var(--font-display);font-size:clamp(24px,3vw,30px);font-weight:600;letter-spacing:-0.02em;line-height:1.2;margin:0}
+.state__sub{color:var(--muted);font-size:15px;line-height:1.6}
+
+.state__actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding-top:4px}
+.state__hint{
+  margin-top:14px;
+  font-family:var(--font-mono);font-size:12px;color:var(--muted);
+  padding:10px 16px;background:var(--surface-2);border-radius:8px;
+  max-width:520px;line-height:1.65;text-align:left;
+}
+.state__hint b{color:var(--fg-soft);font-weight:500}
+
+.state__details{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  max-width:520px;width:100%;
+}
+@media (max-width:540px){.state__details{grid-template-columns:1fr}}
+.state__detail{
+  padding:10px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--border);
+  font-size:12px;color:var(--fg-soft);text-align:left;display:grid;gap:2px;
+}
+.state__detail span{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase}
+
+.tips{
+  margin-top:28px;width:100%;max-width:680px;
+  border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);
+  padding:16px 20px;text-align:left;
+}
+.tips__title{font-size:13px;font-weight:600;margin:0 0 8px}
+.tips ul{margin:0;padding:0 0 0 16px;font-size:13px;color:var(--fg-soft);line-height:1.7}
+.tips ul li::marker{color:var(--accent)}
+
+/* state visibility */
+[data-state]{display:none}
+[data-state].is-active{display:grid}
+
+/* Footer */
+.metaftr{border-top:1px solid var(--border);margin-top:48px;padding:18px 0 28px;display:flex;flex-wrap:wrap;gap:8px 24px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.metaftr__live::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:var(--sev-low);box-shadow:0 0 0 4px oklch(60% 0.13 155 / .18);vertical-align:1px}
+
+@media (max-width:640px){
+  .topnav__inner{height:54px;gap:12px}
+  .navlinks{display:none}
+  .brand__sub{display:none}
+  .state{padding:40px 0 16px}
+}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="shell topnav__inner">
+    <a href="index.html" class="brand">
+      <span class="brand__mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 5.5c-4.1 0-7.5 3.4-7.5 7.5v.5h15v-.5c0-4.1-3.4-7.5-7.5-7.5z"/><rect fill="currentColor" x="3" y="14" width="18" height="2.4" rx="1.2"/></svg></span>
+      <span class="brand__name">Safety Scout</span>
+      <span class="brand__sub">/ 工地安全巡检</span>
+    </a>
+    <nav class="navlinks">
+      <a href="home.html">巡检</a>
+      <a href="history.html">报告</a>
+    </nav>
+    <div class="topnav__spacer"></div>
+    <div class="useravatar" title="安全员 · 张工">张</div>
+  </div>
+</header>
+
+<main class="shell" data-screen-label="06 Empty + Error">
+
+  <div class="label-strip">
+    <span class="label-strip__title">原型 · 切换状态</span>
+    <button class="swbtn" aria-pressed="true" data-go="empty"><span class="dot dot--empty"></span>空状态 / 冷启动</button>
+    <button class="swbtn" aria-pressed="false" data-go="blurry"><span class="dot dot--blurry"></span>照片模糊 / 低质量</button>
+    <button class="swbtn" aria-pressed="false" data-go="reject"><span class="dot dot--reject"></span>AI 拒识 / 不是工地图</button>
+    <button class="swbtn" aria-pressed="false" data-go="net"><span class="dot dot--net"></span>网络 / 服务失败</button>
+  </div>
+
+  <!-- 1. EMPTY -->
+  <section class="state is-active" data-state="empty">
+    <div class="state__art state__art--empty">
+      <span class="ring"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="6" width="18" height="14" rx="2"/>
+        <path d="M8 6l1.5-2h5L16 6"/>
+        <circle cx="12" cy="13" r="3.5"/>
+      </svg>
+    </div>
+    <div class="state__head">
+      <div class="state__eyebrow t-eyebrow">还没拍过照片</div>
+      <h1 class="state__title">拍下第一张现场照片，开始第一次巡检</h1>
+      <p class="state__sub">Safety Scout 不需要注册，不需要选项目 — 拍一张就开始。识别全程在国内服务器内完成。</p>
+    </div>
+    <div class="state__actions">
+      <a href="home.html" class="btn btn--primary btn--big">
+        <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6l1.5-2h5L16 6"/><circle cx="12" cy="13" r="3.5"/></svg>
+        拍第一张
+      </a>
+      <button class="btn btn--ghost btn--big">看示例报告</button>
+    </div>
+    <div class="state__hint">
+      <b>提示 · </b>对准外架、临边、楼层洞口、用电箱、个人防护这类区域拍清楚效果最好；同时入镜多个隐患，AI 可一次性识别。
+    </div>
+  </section>
+
+  <!-- 2. BLURRY / 低质量 -->
+  <section class="state" data-state="blurry">
+    <div class="state__art state__art--blurry">
+      <span class="ring"></span>
+      <!-- motion-blur 隐喻：相机抖动轨迹 -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="6" width="18" height="14" rx="2"/>
+        <path d="M8 6l1.5-2h5L16 6"/>
+        <circle cx="12" cy="13" r="3.5"/>
+        <line x1="7" y1="16" x2="11" y2="12" opacity=".5"/>
+        <line x1="13" y1="14" x2="17" y2="10" opacity=".35"/>
+      </svg>
+    </div>
+    <div class="state__head">
+      <div class="state__eyebrow t-eyebrow">画面模糊 · 抖动 / 失焦</div>
+      <h1 class="state__title">这张照片有点糊</h1>
+      <p class="state__sub">AI 在画面里识别到明显抖动 / 失焦，关键细节（绳扣、栏杆、人员防护）看不清，强行分析容易漏检或误判。重拍一张更清楚的，识别准得多。</p>
+    </div>
+
+    <div class="state__details">
+      <div class="state__detail">
+        <span>清晰度评分</span>
+        0.31 · 偏低
+      </div>
+      <div class="state__detail">
+        <span>主要原因</span>
+        手部抖动 · 边缘失焦
+      </div>
+    </div>
+
+    <div class="state__actions">
+      <a href="home.html" class="btn btn--primary btn--big">重拍</a>
+      <button class="btn btn--ghost btn--big">强制分析 · 结果将标记低置信度</button>
+    </div>
+
+    <article class="tips">
+      <h3 class="tips__title">下一张这样拍更清楚</h3>
+      <ul>
+        <li>双手持机、轻触快门 — 工地常因单手拍 + 手套触屏导致抖动</li>
+        <li>对准隐患区域后停 1 秒再按快门，让自动对焦先锁定</li>
+        <li>逆光 / 雨雾下手机会优先对焦背景，挪一步避开强光源再拍</li>
+      </ul>
+    </article>
+  </section>
+
+  <!-- 3. REJECT -->
+  <section class="state" data-state="reject">
+    <div class="state__art state__art--reject">
+      <span class="ring"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <line x1="9" y1="9" x2="15" y2="15"/>
+        <line x1="15" y1="9" x2="9" y2="15"/>
+      </svg>
+    </div>
+    <div class="state__head">
+      <div class="state__eyebrow t-eyebrow">AI 拒识 · 不像建筑工地</div>
+      <h1 class="state__title">这张照片似乎不是工地现场</h1>
+      <p class="state__sub">AI 在画面中没有识别出脚手架、楼层结构、临时用电箱或工地常见要素，因此没有给出隐患报告。</p>
+    </div>
+
+    <div class="state__details">
+      <div class="state__detail">
+        <span>识别置信度</span>
+        非工地场景 0.86
+      </div>
+      <div class="state__detail">
+        <span>识别要素</span>
+        室内 / 家具 / 自然光
+      </div>
+    </div>
+
+    <div class="state__actions">
+      <a href="home.html" class="btn btn--primary btn--big">重新拍一张</a>
+      <button class="btn btn--ghost btn--big">强制分析 · 结果将标记低置信度</button>
+    </div>
+
+    <article class="tips">
+      <h3 class="tips__title">拍得更清楚的几个要点</h3>
+      <ul>
+        <li>对准隐患区域（外架、临边、人员），不要把整个工地拍进去导致细节丢失</li>
+        <li>逆光、雨雾、夜间无光照都会显著降低识别置信度</li>
+        <li>如确认是工地图但被误拒，可点 "强制分析"，结果会附带「低置信度」标记</li>
+      </ul>
+    </article>
+  </section>
+
+  <!-- 4. NETWORK -->
+  <section class="state" data-state="net">
+    <div class="state__art state__art--net">
+      <span class="ring"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+        <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+        <line x1="12" y1="20" x2="12.01" y2="20"/>
+        <line x1="2" y1="2" x2="22" y2="22"/>
+      </svg>
+    </div>
+    <div class="state__head">
+      <div class="state__eyebrow t-eyebrow">连接失败 · 请稍后重试</div>
+      <h1 class="state__title">上传超时，AI 分析未能开始</h1>
+      <p class="state__sub">已为你保留这张照片在本地。等网络恢复后可一键重传，不需要重新拍。</p>
+    </div>
+
+    <div class="state__details">
+      <div class="state__detail">
+        <span>错误码</span>
+        UPLOAD_TIMEOUT · 30s
+      </div>
+      <div class="state__detail">
+        <span>本地保存</span>
+        ✓ 1 张待上传
+      </div>
+    </div>
+
+    <div class="state__actions">
+      <a href="polling.html" class="btn btn--primary btn--big">
+        <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        重试上传
+      </a>
+      <button class="btn btn--ghost btn--big">仅保存本地，稍后再传</button>
+    </div>
+
+    <article class="tips">
+      <h3 class="tips__title">先做这几件事</h3>
+      <ul>
+        <li>检查工地 Wi-Fi 或 4G 信号；移动到信号更稳的位置再点 "重试"</li>
+        <li>本地待传队列里的照片，回到网络后会自动顺序上传 — 不会丢失</li>
+        <li>多次重试仍失败，可联系工地数字化负责人或 <a href="#" style="color:var(--accent);text-decoration:underline;text-underline-offset:3px">查看服务状态页</a></li>
+      </ul>
+    </article>
+  </section>
+
+  <footer class="metaftr">
+    <span class="metaftr__live">服务可用</span>
+    <span class="topnav__spacer"></span>
+    <a href="index.html" class="t-muted">所有页面 →</a>
+  </footer>
+
+</main>
+
+<script>
+  document.querySelectorAll('.swbtn').forEach(function(b){
+    b.addEventListener('click', function(){
+      var key = b.dataset.go;
+      document.querySelectorAll('.swbtn').forEach(function(x){ x.setAttribute('aria-pressed', x === b ? 'true':'false') });
+      document.querySelectorAll('[data-state]').forEach(function(s){
+        s.classList.toggle('is-active', s.dataset.state === key);
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

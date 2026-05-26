@@ -33,9 +33,16 @@ pnpm-debug.log*
 # ===== 编辑器 / 系统 =====
 .idea/
 .vscode/
+.claude/
 *.swp
 .DS_Store
 Thumbs.db
+
+# ===== 临时分析产物（runtime artifacts） =====
+backend/scripts/_ab_results/
+backend/scripts/_v2_smoke_last.json
+safety-scout-latest-ui-launcher.html
+safety-scout-latest-ui-launcher.html.artifact.json
 
 # ===== 项目特定 =====
 # 上传的工地照片与本地分析结果，不入库
@@ -52,3 +59,5 @@ backend/.env
 miniprogram/project.private.config.json
 # H5 smoke test 截图：每次跑会变，不入库
 miniprogram/tests/e2e/*.png
+# 一次性打印调试脚本 + 产物（h5-print-debug.mjs / .pdf 等），不入库
+miniprogram/tests/e2e/*-debug.*

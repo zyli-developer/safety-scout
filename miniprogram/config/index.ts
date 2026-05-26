@@ -74,6 +74,14 @@ export default defineConfig(async (merge, { command, mode }) => {
         chunkFilename: 'css/[name].[chunkhash].css',
       },
       postcss: {
+        // H5 关掉 pxtransform：clean-minimal 桌面 H5 需要 viewport-相关的 clamp()
+        // 直接生效。Taro 默认把 px → rem，但 H5 没设 html font-size，rem 接 16px →
+        // 字号被压扁；clamp(40px, 3.6vw, 56px) 一旦被转 rem，vw 计算也走样。
+        // 关掉后 px 留原值，clamp / @media 都按真实 viewport 行事。
+        // weapp 端的 pxtransform 仍由 mini.postcss 保留（按 designWidth 750 缩放）。
+        pxtransform: {
+          enable: false,
+        },
         autoprefixer: {
           enable: true,
           config: {},

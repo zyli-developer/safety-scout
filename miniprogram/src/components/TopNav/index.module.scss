@@ -1,0 +1,90 @@
+// TopNav 跟 mockup .topnav 1:1：sticky / 60px / backdrop-blur / 2-tab。
+// mobile 下高度 54px、隐藏 navlinks（移动端不显示导航 tabs，留 brand + avatar）。
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 60px;
+  // 跟全屏 .shell 的 gutter 一致
+  padding: 0 var(--gutter, 32px);
+  max-width: var(--container, 1240px);
+  margin: 0 auto;
+}
+
+.links {
+  display: flex;
+  gap: 2px;
+  margin-left: 8px;
+  align-items: center;
+}
+
+.link {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+  line-height: 1.4;
+}
+
+.link:hover {
+  background: var(--surface-2);
+}
+
+// page / step 都视为"当前节点"，与 mockup polling.html 的双状态匹配
+.active {
+  color: var(--ink);
+  background: var(--surface-2);
+  font-weight: 500;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  cursor: pointer;
+  flex: none;
+}
+
+@media (max-width: 640px) {
+  .inner {
+    height: 54px;
+    gap: 12px;
+  }
+
+  // mobile 下不显示 nav tabs（"巡检 / 报告"），由底部 tab 或别的导航方式承担
+  .links {
+    display: none;
+  }
+}
+
+// 打印时整条 nav 不要进纸。
+@media print {
+  .nav {
+    display: none !important;
+  }
+}

@@ -1,20 +1,31 @@
+/**
+ * 移动端首页 — unified-modern-minimal (2026-05-22) 对齐。
+ *
+ * 结构：TopNav / Hero(h1 + lede) / 大橙色整块 dropzone__tap "拍照" tap target / 小灰链接"或从相册选择"。
+ *
+ * 2026-05-24 改动（按 docs/plans/2026-05-24-ui-parity-audit.md B3）：
+ * - 顶导从独立 brandBar 改 TopNav (mobile 自动隐藏 navlinks，保 brand + avatar)
+ * - 删 eyebrow "AI 现场巡检"（mockup 无）
+ * - Hero 文案对齐 mockup
+ * - 主 CTA 从 BigButton 改为 mockup .dropzone__tap 风格的整块橙色 tap target
+ * - 删 today stats 区（移动 mockup 没有）
+ * - 删上次巡检 Photo 锚（移动 mockup 没有）
+ *
+ * Tap target 行为：保留 captureImage() hook —— 真接相机 intent，不是单纯跳页。
+ * 这一点代码做得比 mockup 还对（mockup .dropzone__tap 是 <a href> 跳页占位）。
+ */
 import Taro from '@tarojs/taro';
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 
-import { BigButton } from '../../components/BigButton';
-import { HeaderBand } from '../../components/HeaderBand';
+import { TopNav } from '../../components/TopNav';
+import { Icon } from '../../components/Icon';
 import { captureImage } from '../../hooks/useImageCapture';
 import { createInspection } from '../../api/inspections';
 import { mapApiError } from '../../utils/errorMessage';
+import { rememberPhoto } from '../../utils/lastPhotoStore';
 
 import styles from './mobile.module.scss';
-
-const SHOT_TIPS = [
-  '贴近隐患位置，保持光线充足',
-  '画面含工人 / 护栏 / 电箱 等关键元素',
-  '距离 1–3m 为佳',
-];
 
 export default function MobileIndex() {
   const [uploading, setUploading] = useState(false);
@@ -22,10 +33,15 @@ export default function MobileIndex() {
   const handleTap = async () => {
     if (uploading) return;
     let image;
-    try { image = await captureImage(); } catch (_e) { return; }
+    try {
+      image = await captureImage();
+    } catch (_e) {
+      return;
+    }
     setUploading(true);
     try {
       const resp = await createInspection(image.tempFilePath);
+      rememberPhoto(resp.inspection_id, image.tempFilePath);
       Taro.navigateTo({
         url: `/pages/report/index?id=${resp.inspection_id}&pi=${resp.poll_interval_ms}&to=${resp.timeout_ms}`,
       });
@@ -37,47 +53,52 @@ export default function MobileIndex() {
     }
   };
 
-  // 边距 CAD 刻度尺仅 H5 桌面 ≥1024px 显示。
-  // process.env.TARO_ENV 在 Taro webpack 构建时被替换为字面量字符串 ('h5' / 'weapp')，
-  // weapp 编译时 isH5 === false，下方两个 JSX 节点会被 tree-shake 掉，weapp 包零负担。
-  const isH5 = process.env.TARO_ENV === 'h5';
-
   return (
     <View className={styles.page}>
-      {/* H5-only 边距刻度尺（机制 1 演示：process.env.TARO_ENV 运行时分支） */}
-      {isH5 && <View className={styles.rulerLeft} />}
-      {isH5 && <View className={styles.rulerRight} />}
-
-      <HeaderBand subtitle="拍照即查 · AI 30s 出报告" />
-
-      <View className={styles.titleBlock}>
-        <Text className={styles.h1}>工地隐患识别</Text>
-        <Text className={styles.h1Latin}>AI · SITE HAZARD INSPECTION</Text>
-      </View>
-
-      <BigButton
-        text="拍摄现场照片"
-        subtitle="CAPTURE INSPECTION PHOTO"
-        prefixGlyph="plus-square"
-        onTap={handleTap}
-        loading={uploading}
+      <TopNav
+        activeTab="inspect"
+        onTabChange={(tab) => {
+          if (tab === 'reports') Taro.navigateTo({ url: '/pages/history/index' });
+        }}
       />
 
-      <View className={styles.section}>
-        <View className={styles.sectionRule}>
-          <Text className={styles.sectionLabel}>拍摄要点</Text>
-        </View>
-        {SHOT_TIPS.map((tip, i) => (
-          <View key={i} className={styles.tipRow}>
-            <Text className={styles.tipIndex}>{String(i + 1).padStart(2, '0')}</Text>
-            <Text className={styles.tipText}>{tip}</Text>
-          </View>
-        ))}
+      <View className={styles.hero}>
+        <Text className={styles.h1}>拍一张工地照片，AI 立刻找出隐患。</Text>
+        <Text className={styles.lede}>
+          面向安全员的隐患识别工具。识别十类常见隐患，给出可执行的整改建议。平均 3 分钟出报告。
+        </Text>
       </View>
 
-      <View className={styles.footer}>
-        <Text className={styles.footerText}>⌖ AI ENGINE v3 · Claude Vision · ~30s/帧</Text>
+      <View className={styles.tapWrap}>
+        {/* 大橙色整块 tap target：mockup .dropzone__tap 风格。
+            uploading 时半透明 + 文案变化，给用户即时反馈。 */}
+        <View
+          className={[styles.dropzoneTap, uploading ? styles.dropzoneTapBusy : '']
+            .filter(Boolean)
+            .join(' ')}
+          role="button"
+          aria-label={uploading ? '正在上传' : '拍照开始巡检'}
+          aria-busy={uploading}
+          onClick={handleTap}
+        >
+          <Icon name="camera" size={42} color="var(--on-accent)" />
+          <Text className={styles.dropzoneTapTitle}>{uploading ? '上传中…' : '拍照'}</Text>
+          <Text className={styles.dropzoneTapSub}>
+            {uploading ? '正在送往 AI 分析' : '对准隐患区域，AI 越靠近识别越准'}
+          </Text>
+        </View>
+
+        <View
+          className={styles.albumLink}
+          role="button"
+          aria-label="从相册选择已有照片"
+          onClick={handleTap}
+        >
+          <Text>或从相册选择已有照片 →</Text>
+        </View>
       </View>
+
+      <View className={styles.spacer} />
     </View>
   );
 }

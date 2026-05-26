@@ -48,7 +48,15 @@ const server = createServer(async (req, res) => {
     }
     const content = await readFile(filePath);
     const ct = MIME[extname(filePath).toLowerCase()] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': ct, 'Cache-Control': 'no-cache' });
+    // 开发环境完全禁缓存：no-cache 仍允许浏览器缓存 + revalidate，没有 ETag /
+    // Last-Modified 时 revalidate 不工作 → 用户硬刷新仍可能拿到旧 chunk。
+    // no-store + max-age=0 双保险，每次都重拉。
+    res.writeHead(200, {
+      'Content-Type': ct,
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      Pragma: 'no-cache',
+      Expires: '0',
+    });
     res.end(content);
     console.log(`200 ${urlPath} (${Date.now() - t0}ms)`);
   } catch (e) {

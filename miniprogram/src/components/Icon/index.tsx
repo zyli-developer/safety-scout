@@ -11,6 +11,7 @@ import { View } from '@tarojs/components';
 export type IconName =
   | 'camera'
   | 'chevron-right'
+  | 'chevron-left'
   | 'chevron-down'
   | 'chevron-up'
   | 'alert-triangle'
@@ -19,11 +20,18 @@ export type IconName =
   | 'document'
   | 'lightbulb'
   | 'arrow-right'
+  | 'arrow-up'
   | 'stamp'
   | 'plus-square'
   | 'crosshair'
   | 'slash-circle'
-  | 'tick';
+  | 'tick'
+  | 'search'
+  | 'dots'
+  | 'upload'
+  | 'image'
+  | 'share'
+  | 'download';
 
 interface IconProps {
   name: IconName;
@@ -37,6 +45,7 @@ const PATHS: Record<IconName, string> = {
   camera:
     'M3 9a2 2 0 0 1 2-2h1.5L8 5h8l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9zm9 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9z',
   'chevron-right': 'm9 6 6 6-6 6',
+  'chevron-left': 'm15 18-6-6 6-6',
   'chevron-down': 'm6 9 6 6 6-6',
   'chevron-up': 'm6 15 6-6 6 6',
   'alert-triangle': 'M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z',
@@ -47,6 +56,13 @@ const PATHS: Record<IconName, string> = {
   lightbulb:
     'M12 2a7 7 0 0 0-4 12.71V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.29A7 7 0 0 0 12 2zM9 21h6',
   'arrow-right': 'M5 12h14m-7-7 7 7-7 7',
+  'arrow-up': 'M12 19V5m-7 7 7-7 7 7',
+  search: 'm21 21-5.2-5.2M17 10A7 7 0 1 1 3 10a7 7 0 0 1 14 0z',
+  dots: 'M6 12a1.5 1.5 0 1 0 0-.001M12 12a1.5 1.5 0 1 0 0-.001M18 12a1.5 1.5 0 1 0 0-.001',
+  upload: 'M12 16V4m-5 5 5-5 5 5M4 20h16',
+  image: 'M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6zm0 11 5-5 5 5 3-3 5 5',
+  share: 'M8 12V6a4 4 0 1 1 8 0v6M5 12h14l-1 8H6l-1-8z',
+  download: 'M12 4v12m-5-5 5 5 5-5M4 20h16',
   stamp:
     'M6 4h12v8H6z M4 16h16v2H4z M9 12v4 M15 12v4', // 印章 + 底座 + 两条挂绳
   'plus-square':

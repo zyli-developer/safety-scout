@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Safety Scout · 开始巡检</title>
+<style>
+/* ============================================================
+   DESIGN KIT — modern-minimal · safety-orange accent
+   Shared across home / polling / report / detail / history / error
+   ============================================================ */
+:root{
+  --bg: oklch(99% 0.002 240);
+  --surface: oklch(100% 0 0);
+  --surface-2: oklch(97% 0.004 250);
+  --fg: oklch(18% 0.012 250);
+  --fg-soft: oklch(32% 0.012 250);
+  --muted: oklch(54% 0.012 250);
+  --border: oklch(92% 0.005 250);
+  --border-strong: oklch(80% 0.008 250);
+  --accent: oklch(66% 0.17 50);
+  --accent-hover: oklch(60% 0.18 48);
+  --accent-soft: oklch(95% 0.04 60);
+
+  --sev-high: oklch(58% 0.20 28);
+  --sev-high-soft: oklch(95% 0.04 28);
+  --sev-medium: oklch(70% 0.15 70);
+  --sev-medium-soft: oklch(96% 0.04 75);
+  --sev-low: oklch(60% 0.13 155);
+  --sev-low-soft: oklch(95% 0.025 155);
+
+  --font-display: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Display", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Text", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, monospace;
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px oklch(15% 0.02 250 / 0.04);
+  --shadow: 0 4px 16px oklch(15% 0.02 250 / 0.06);
+  --shadow-lg: 0 20px 40px oklch(15% 0.02 250 / 0.08);
+
+  --container: 1240px;
+  --gutter: clamp(16px, 3vw, 32px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--fg);
+  font-family:var(--font-body);font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+
+.shell{max-width:var(--container);margin:0 auto;padding:0 var(--gutter)}
+
+/* TOP NAV */
+.topnav{position:sticky;top:0;z-index:50;background:oklch(100% 0 0 / .92);backdrop-filter:saturate(140%) blur(12px);border-bottom:1px solid var(--border)}
+.topnav__inner{display:flex;align-items:center;gap:24px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-0.01em}
+.brand__mark{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.brand__name{font-size:15px}
+.brand__sub{color:var(--muted);font-size:13px;font-weight:400}
+.navlinks{display:flex;gap:2px;margin-left:8px}
+.navlinks a{padding:8px 12px;border-radius:8px;font-size:14px;color:var(--fg-soft)}
+.navlinks a[aria-current="page"]{background:var(--surface-2);color:var(--fg);font-weight:500}
+.navlinks a:hover{background:var(--surface-2)}
+.topnav__spacer{flex:1}
+.useravatar{width:32px;height:32px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);display:grid;place-items:center;font-size:13px;color:var(--fg-soft);font-weight:500}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:var(--radius);font-size:14px;font-weight:500;border:1px solid transparent;transition:background 120ms ease,border-color 120ms ease,color 120ms ease}
+.btn--primary{background:var(--accent);color:#fff}
+.btn--primary:hover{background:var(--accent-hover)}
+.btn--ghost{border-color:var(--border);color:var(--fg);background:var(--surface)}
+.btn--ghost:hover{border-color:var(--border-strong)}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 3px oklch(66% 0.17 50 / .35);border-color:var(--accent)}
+.dropzone__tap:focus-visible{outline:none;box-shadow:0 0 0 4px oklch(66% 0.17 50 / .35), 0 10px 30px oklch(66% 0.17 50 / .28)}
+.btn--big{padding:18px 24px;font-size:16px;border-radius:12px;font-weight:600}
+.btn--block{width:100%}
+.btn__icon{width:18px;height:18px;flex:none}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)}
+.card--pad{padding:24px}
+.card--soft{background:var(--surface-2);border-color:transparent}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--fg-soft)}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.pill--high{color:var(--sev-high);background:var(--sev-high-soft);border-color:transparent}
+.pill--high::before{background:var(--sev-high)}
+.pill--medium{color:oklch(45% 0.14 70);background:var(--sev-medium-soft);border-color:transparent}
+.pill--medium::before{background:var(--sev-medium)}
+.pill--low{color:var(--sev-low);background:var(--sev-low-soft);border-color:transparent}
+.pill--low::before{background:var(--sev-low)}
+
+/* TYPOGRAPHY */
+.h-display{font-size:clamp(28px,4.4vw,44px);line-height:1.1;letter-spacing:-0.02em;font-weight:600;font-family:var(--font-display);margin:0}
+.h-section{font-size:20px;font-weight:600;letter-spacing:-0.01em;margin:0}
+.h-card{font-size:16px;font-weight:600;margin:0}
+.t-mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.t-muted{color:var(--muted)}
+.t-eyebrow{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+
+/* FOOTER */
+.metaftr{border-top:1px solid var(--border);margin-top:48px;padding:18px 0 28px;display:flex;flex-wrap:wrap;gap:8px 24px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.metaftr__live::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:var(--sev-low);box-shadow:0 0 0 4px oklch(60% 0.13 155 / .18);vertical-align:1px}
+
+/* ============================================================
+   HOME PAGE
+   ============================================================ */
+.hero{padding:56px 0 40px;display:grid;gap:20px;max-width:760px}
+.hero__sub{color:var(--muted);font-size:17px;max-width:60ch;line-height:1.55}
+
+.home-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:24px;align-items:start;padding-bottom:24px}
+@media (max-width:980px){.home-grid{grid-template-columns:1fr}}
+
+/* UPLOAD CARD */
+.upload{padding:32px;display:grid;gap:24px}
+.upload__heading{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.upload__title{font-size:22px;font-weight:600;letter-spacing:-0.01em}
+.upload__hint{font-size:13px;color:var(--muted)}
+.dropzone{
+  position:relative;
+  border:1.5px dashed var(--border-strong);
+  border-radius:14px;
+  background:linear-gradient(180deg, var(--surface-2), oklch(99% 0.002 250));
+  padding:48px 32px;
+  display:grid;place-items:center;text-align:center;gap:14px;
+  transition:border-color 160ms ease,background 160ms ease;
+}
+.dropzone:hover{border-color:var(--accent);background:var(--accent-soft)}
+.dropzone__icon{width:56px;height:56px;border-radius:14px;background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;color:var(--fg-soft)}
+.dropzone__icon svg{width:28px;height:28px}
+.dropzone__title{font-size:18px;font-weight:600;letter-spacing:-0.01em}
+.dropzone__hint{font-size:13px;color:var(--muted);max-width:36ch}
+.dropzone__actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+
+/* Mobile variant (touch/coarse pointer) — whole zone is a tap target; no drag-in copy */
+.dropzone__tap{display:none}
+.dropzone__tap-link{display:none}
+@media (pointer:coarse), (max-width:540px){
+  /* Hide drag-in chrome on touch devices */
+  .dropzone{border:0;background:transparent;padding:8px 0 0;gap:14px}
+  .dropzone:hover{background:transparent;border-color:transparent}
+  .dropzone__icon, .dropzone__title, .dropzone__actions{display:none}
+  .dropzone__tap{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    width:100%;padding:36px 24px;
+    background:var(--accent);color:#fff;
+    border-radius:18px;border:0;cursor:pointer;
+    box-shadow:0 10px 30px oklch(66% 0.17 50 / .28);
+    transition:background 120ms,transform 120ms;
+  }
+  .dropzone__tap:active{transform:translateY(1px);background:var(--accent-hover)}
+  .dropzone__tap svg{width:42px;height:42px;stroke:currentColor;fill:none;stroke-width:1.6}
+  .dropzone__tap-title{font-size:19px;font-weight:600;letter-spacing:-0.01em}
+  .dropzone__tap-sub{font-size:13px;color:oklch(100% 0 0 / .82);font-weight:400}
+  .dropzone__tap-link{
+    display:inline-block;padding:6px 8px;
+    color:var(--muted);font-size:14px;
+  }
+  .dropzone__tap-link:hover{color:var(--fg-soft)}
+  .dropzone__hint{order:99;font-size:13px;max-width:38ch}
+}
+
+.upload__steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)}
+.upload__step{background:var(--surface);padding:14px 16px;display:grid;gap:4px}
+.upload__step .num{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.08em}
+.upload__step .label{font-size:13px;font-weight:500}
+.upload__step .sub{font-size:12px;color:var(--muted)}
+@media (max-width:540px){.upload__steps{grid-template-columns:1fr;grid-template-rows:repeat(3,auto)}}
+
+/* SIDEBAR */
+.side{display:grid;gap:16px}
+.stats{padding:20px;display:grid;gap:14px}
+.stats__head{display:flex;justify-content:space-between;align-items:baseline}
+.stats__title{font-size:14px;font-weight:600}
+.stats__date{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.05em}
+.stats__grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{padding:14px;border-radius:10px;background:var(--surface-2);display:grid;gap:4px}
+.stat__num{font-family:var(--font-mono);font-size:22px;font-weight:600;letter-spacing:-0.02em}
+.stat__num--high{color:var(--sev-high)}
+.stat__num--mid{color:oklch(50% 0.14 70)}
+.stat__num--low{color:var(--sev-low)}
+.stat__label{font-size:12px;color:var(--muted)}
+
+.recent{padding:20px;display:grid;gap:12px}
+.recent__head{display:flex;justify-content:space-between;align-items:baseline}
+.recent__title{font-size:14px;font-weight:600}
+.recent__more{font-size:12px;color:var(--muted)}
+.recent__list{display:grid;gap:8px}
+.recent-item{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px;border-radius:10px;transition:background 120ms}
+.recent-item:hover{background:var(--surface-2)}
+.recent-item__thumb{width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg, oklch(85% 0.04 60), oklch(70% 0.06 35));position:relative;overflow:hidden}
+.recent-item__thumb::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 30%, oklch(100% 0 0 / .25), transparent 60%)}
+.recent-item__body{min-width:0;display:grid;gap:2px}
+.recent-item__warn{font-size:13px;font-weight:500;line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.recent-item__meta{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+
+/* MOBILE HOME */
+@media (max-width:640px){
+  .hero{padding:36px 0 24px}
+  .upload{padding:24px 18px}
+  .dropzone{padding:36px 18px}
+  .topnav__inner{height:54px;gap:12px}
+  .navlinks{display:none}
+  .brand__sub{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="shell topnav__inner">
+    <a href="index.html" class="brand">
+      <span class="brand__mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 5.5c-4.1 0-7.5 3.4-7.5 7.5v.5h15v-.5c0-4.1-3.4-7.5-7.5-7.5z"/><rect fill="currentColor" x="3" y="14" width="18" height="2.4" rx="1.2"/></svg></span>
+      <span class="brand__name">Safety Scout</span>
+      <span class="brand__sub">/ 工地安全巡检</span>
+    </a>
+    <nav class="navlinks">
+      <a href="home.html" aria-current="page">巡检</a>
+      <a href="history.html">报告</a>
+    </nav>
+    <div class="topnav__spacer"></div>
+    <div class="useravatar" title="安全员 · 张工">张</div>
+  </div>
+</header>
+
+<main class="shell">
+
+  <section class="hero">
+    <h1 class="h-display">拍一张工地照片，<br>AI 立刻找出隐患。</h1>
+    <p class="hero__sub">面向安全员的隐患识别工具。识别高处坠落、临边洞口、用电、消防、个人防护等十类常见隐患，给出可执行的整改建议与规范条款引用。平均 29 秒出报告。</p>
+  </section>
+
+  <section class="home-grid">
+
+    <article class="card upload">
+      <header class="upload__heading">
+        <div class="upload__title">上传工地现场照片</div>
+        <div class="upload__hint">JPG / PNG · 单张 ≤ 10 MB · 不会上传到任何第三方</div>
+      </header>
+
+      <div class="dropzone" id="dropzone" role="region" aria-label="上传照片">
+        <!-- Mobile: full-card tap target, no drag-in copy -->
+        <a href="polling.html" class="dropzone__tap" aria-label="拍照开始巡检">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6l1.5-2h5L16 6"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <span class="dropzone__tap-title">拍照</span>
+          <span class="dropzone__tap-sub">对准隐患区域，AI 越靠近识别越准</span>
+        </a>
+        <a href="polling.html" class="dropzone__tap-link">或从相册选择已有照片 →</a>
+
+        <!-- Desktop: drag-in dropzone with primary/secondary buttons -->
+        <div class="dropzone__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="6" width="18" height="14" rx="2"/>
+            <path d="M8 6l1.5-2h5L16 6"/>
+            <circle cx="12" cy="13" r="3.5"/>
+          </svg>
+        </div>
+        <div class="dropzone__title">拖入照片，或选择上传方式</div>
+        <div class="dropzone__hint">拍清楚关键区域（外架、临边、用电、人员防护），AI 越靠近越能识别细节。</div>
+        <div class="dropzone__actions">
+          <a href="polling.html" class="btn btn--primary btn--big">
+            <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6l1.5-2h5L16 6"/><circle cx="12" cy="13" r="3.5"/></svg>
+            拍照
+          </a>
+          <a href="polling.html" class="btn btn--ghost btn--big">
+            <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-7 7"/></svg>
+            从相册选择
+          </a>
+        </div>
+      </div>
+
+      <div class="upload__steps" aria-label="使用流程">
+        <div class="upload__step">
+          <span class="num">01 · 拍照</span>
+          <span class="label">对准隐患拍清楚</span>
+          <span class="sub">支持现场拍 / 历史照</span>
+        </div>
+        <div class="upload__step">
+          <span class="num">02 · 等待</span>
+          <span class="label">AI 识别 · 平均 29 秒</span>
+          <span class="sub">不离开页面也行</span>
+        </div>
+        <div class="upload__step">
+          <span class="num">03 · 看报告</span>
+          <span class="label">隐患清单 + 整改建议</span>
+          <span class="sub">可直接转发给班组</span>
+        </div>
+      </div>
+    </article>
+
+    <aside class="side">
+      <article class="card stats">
+        <header class="stats__head">
+          <div class="stats__title">今日巡检</div>
+          <div class="stats__date">2026-05-22 · 周五</div>
+        </header>
+        <div class="stats__grid">
+          <div class="stat">
+            <span class="stat__num">7</span>
+            <span class="stat__label">共巡检</span>
+          </div>
+          <div class="stat">
+            <span class="stat__num stat__num--high">3</span>
+            <span class="stat__label">高风险</span>
+          </div>
+          <div class="stat">
+            <span class="stat__num stat__num--mid">5</span>
+            <span class="stat__label">中风险</span>
+          </div>
+          <div class="stat">
+            <span class="stat__num stat__num--low">2</span>
+            <span class="stat__label">低风险</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card recent">
+        <header class="recent__head">
+          <div class="recent__title">最近巡检</div>
+          <a href="history.html" class="recent__more">全部 →</a>
+        </header>
+        <div class="recent__list">
+          <a href="report.html" class="recent-item">
+            <div class="recent-item__thumb"></div>
+            <div class="recent-item__body">
+              <div class="recent-item__warn">外架安全网松弛破损，高处坠落风险极高</div>
+              <div class="recent-item__meta">14:08 · 3 项隐患</div>
+            </div>
+            <span class="pill pill--high">高</span>
+          </a>
+          <a href="report.html" class="recent-item">
+            <div class="recent-item__thumb" style="background:linear-gradient(135deg, oklch(82% 0.04 240), oklch(70% 0.05 230))"></div>
+            <div class="recent-item__body">
+              <div class="recent-item__warn">楼梯无扶手，临边随时能坠落</div>
+              <div class="recent-item__meta">11:32 · 2 项隐患</div>
+            </div>
+            <span class="pill pill--high">高</span>
+          </a>
+          <a href="report.html" class="recent-item">
+            <div class="recent-item__thumb" style="background:linear-gradient(135deg, oklch(82% 0.05 145), oklch(70% 0.06 160))"></div>
+            <div class="recent-item__body">
+              <div class="recent-item__warn">配电箱开门带电作业，未挂警示牌</div>
+              <div class="recent-item__meta">09:50 · 1 项隐患</div>
+            </div>
+            <span class="pill pill--medium">中</span>
+          </a>
+        </div>
+      </article>
+    </aside>
+
+  </section>
+
+  <footer class="metaftr">
+    <span class="metaftr__live">服务可用</span>
+    <span class="topnav__spacer"></span>
+    <a href="index.html" class="t-muted">所有页面 →</a>
+  </footer>
+
+</main>
+
+</body>
+</html>

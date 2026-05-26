@@ -53,9 +53,9 @@ describe('utils/severity', () => {
     expect(Object.keys(SEVERITY_LABEL)).toHaveLength(3);
   });
 
-  it('uses dossier engineering palette (not iOS systemRed/Orange/Green)', () => {
-    expect(SEVERITY_COLOR.high).toBe('#C8281C');
-    expect(SEVERITY_COLOR.medium).toBe('#E07B1F');
-    expect(SEVERITY_COLOR.low).toBe('#3D7C3D');
+  it('uses clean-minimal palette (calm, not glowing)', () => {
+    expect(SEVERITY_COLOR.high).toBe('#D7373F');
+    expect(SEVERITY_COLOR.medium).toBe('#C77A1F');
+    expect(SEVERITY_COLOR.low).toBe('#2F8454');
   });
 });

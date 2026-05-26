@@ -15,6 +15,7 @@ GET：
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 
 from fastapi import (
@@ -41,6 +42,8 @@ from app.services import image as image_service
 from app.storage import inspection_repo as repo
 from app.tasks import inspection_runner
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/v1", tags=["inspections"])
 
 
@@ -64,6 +67,15 @@ async def create_inspection(
     # UploadFile 是异步流；一次性读进内存（已通过 max_image_mb 间接限流）。
     image_bytes = await image.read()
     content_type = image.content_type or ""
+    client_ip = request.client.host if request.client else None
+    logger.info(
+        "POST /inspections received",
+        extra={
+            "client_ip": client_ip,
+            "content_type": content_type,
+            "size_bytes": len(image_bytes),
+        },
+    )
     image_service.validate(
         content_type=content_type,
         size_bytes=len(image_bytes),
@@ -76,6 +88,16 @@ async def create_inspection(
     # 注意：必须传已读 image_bytes，UploadFile 句柄在响应返回后会被关。
     background_tasks.add_task(
         inspection_runner.run, inspection_id, image_bytes, provider
+    )
+
+    logger.info(
+        "inspection queued",
+        extra={
+            "inspection_id": inspection_id,
+            "client_ip": client_ip,
+            "size_bytes": len(image_bytes),
+            "provider": provider.name,
+        },
     )
 
     return CreateInspectionResponse(
@@ -98,6 +120,12 @@ async def get_inspection(
     if row is None:
         # HTTPException 走 FastAPI 自己的 handler；detail 保留与 SafetyScoutError
         # 一致的 envelope 形态，让前端只解析一种错误结构。
+        # 注意：GET 200 路径不打 info（前端按 poll_interval_ms=2000 轮询，会刷屏）；
+        # 只打 404，这是异常路径，值得关注。
+        logger.warning(
+            "GET /inspections not found",
+            extra={"inspection_id": inspection_id, "error_code": "NOT_FOUND"},
+        )
         raise HTTPException(
             status_code=404,
             detail={

@@ -1,0 +1,632 @@
+// ReportDetail (B6 · 2026-05-24)：单 hazard 详情页。
+// 对齐 mockup report-detail.html 核心 UX：crumbs/pager / hazard-head /
+// regulation / suggestion / interactive step + confirm sheet + undo toast。
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.container {
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 24px;
+}
+
+.lede {
+  font-size: 15px;
+  color: var(--ink-3);
+}
+
+.errorText {
+  font-size: 15px;
+  color: var(--high);
+}
+
+// === head ===
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+
+.crumbBtn {
+  color: var(--ink-2);
+  cursor: pointer;
+  padding: 4px 6px;
+  margin-left: -6px;
+  border-radius: var(--r-sm);
+}
+
+.crumbBtn:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.crumbSep {
+  opacity: 0.5;
+}
+
+.crumbCurrent {
+  color: var(--ink-2);
+}
+
+.crumbPos {
+  margin-left: 8px;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.pager {
+  display: flex;
+  gap: 6px;
+}
+
+.pagerBtn {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+
+.pagerBtn:hover {
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+}
+
+.pagerBtnDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+// === hazard head ===
+.hazardHead {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hazardTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hazardCode {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  background: var(--surface-2);
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  letter-spacing: 0.04em;
+}
+
+.hazardName {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.hazardTime {
+  margin-left: auto;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hazardDesc {
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+// === 重大事故隐患（建质规〔2024〕5号）badge + 判定依据 block ===
+// 紧跟 hazardHead，规范条款 reg block 之上，视觉上比 reg 更醒目（红色边框 + 红 tag）。
+.majorBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: var(--high);
+  color: #FFF;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+}
+
+.majorBasisBox {
+  background: var(--high-soft);
+  border: 1px solid var(--high);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.majorBasisHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.majorTag {
+  padding: 2px 10px;
+  background: var(--high);
+  color: #FFF;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.majorBasisLabel {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--high);
+  font-weight: 600;
+}
+
+.majorBasisBody {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+// === regulation ===
+.reg {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.regHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.regTitle {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.regSource {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.regBody {
+  display: block;
+  padding: 18px 22px;
+  // mockup .reg__quote 用 3px 左边线作 NYT/FT 编辑引用 —— blockquote 语义，detector 会
+  // false positive 命中 "side-tab"，与上轮 critique 判定一致，保留。
+  border-left: 3px solid var(--accent);
+  margin: 0 22px;
+  padding-left: 14px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+// === suggestion ===
+.suggestionBlock {
+  background: var(--accent-soft);
+  border-radius: var(--r-md);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suggestionHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.suggestionTitle {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.suggestionBody {
+  // 与 HazardItem.fix 颜色一致
+  color: #6E3517;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+// === interactive step ===
+.checklist {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checklistTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+  // 与 mockup B5 修复后一致：未完成态用 4% accent tint，已完成回中性
+  background: rgba(232, 93, 44, 0.035);
+  border: 1px solid rgba(232, 93, 44, 0.12);
+  border-radius: var(--r-md);
+}
+
+.stepDone {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+.stepCheck {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--line-strong);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+  position: relative;
+  margin-top: -1px;
+}
+
+.stepCheck:hover {
+  border-color: var(--ink-2);
+}
+
+// 未勾的高 stakes step 加一个小红点暗示"需先确认"
+.step[data-confirmable="true"] .stepCheck::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--high);
+}
+
+.stepDone .stepCheck {
+  background: var(--low);
+  border-color: var(--low);
+}
+
+.stepDone .stepCheck::after {
+  display: none;
+}
+
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stepAct {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.stepDone .stepAct {
+  color: var(--ink-3);
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.stepWhen {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+
+// === Confirm sheet 模态 ===
+.confirmSheet {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(20, 20, 16, 0.42);
+  backdrop-filter: blur(2px);
+}
+
+.confirmInner {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  max-width: 420px;
+  width: 100%;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--shadow-lg);
+  animation: csPop 180ms ease-out;
+}
+
+@keyframes csPop {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.confirmTitle {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confirmTitle::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--high);
+  box-shadow: 0 0 0 4px rgba(215, 55, 63, 0.15);
+  flex: none;
+  display: inline-block;
+}
+
+.confirmBody {
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+.confirmAct {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.confirmActLabel {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--high);
+  font-weight: 600;
+}
+
+.confirmActText {
+  color: var(--ink);
+}
+
+.confirmBtns {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.btnGhost {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.btnGhost:hover {
+  background: var(--surface-2);
+}
+
+.btnPrimary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.btnPrimary:hover {
+  background: var(--accent-hover);
+}
+
+// === Undo toast ===
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 180;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--ink);
+  color: var(--surface);
+  padding: 12px 14px 12px 18px;
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  font-size: 14px;
+  max-width: calc(100% - 32px);
+  animation: toastSlide 180ms ease-out;
+}
+
+@keyframes toastSlide {
+  from {
+    transform: translateX(-50%) translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+.toastText {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toastUndo {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: var(--surface);
+  padding: 5px 12px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+}
+
+.toastUndo:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.toastClose {
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 4px 6px;
+  line-height: 1;
+  flex: none;
+  font-size: 16px;
+}
+
+.toastClose:hover {
+  color: var(--surface);
+}
+
+// === prefers-reduced-motion ===
+@media (prefers-reduced-motion: reduce) {
+  .confirmInner,
+  .toast {
+    animation: none !important;
+  }
+}
+
+// === responsive ===
+@media (max-width: 640px) {
+  .container {
+    padding: 16px 18px 32px;
+    gap: 14px;
+  }
+  .head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .pager {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .pagerBtn {
+    flex: 1;
+    text-align: center;
+  }
+  .hazardHead {
+    padding: 18px 18px;
+  }
+  .hazardTime {
+    margin-left: 0;
+    width: 100%;
+  }
+  .regBody {
+    margin: 0 16px;
+  }
+}

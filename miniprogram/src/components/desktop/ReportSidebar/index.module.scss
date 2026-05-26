@@ -1,104 +1,206 @@
-.sidebar {
+// ReportSidebar (2026-05-22 unified-modern-minimal · 2026-05-24 B5 改造):
+// 单卡 "本次扫描概要" + bar + 各分类计数 + 整体判断 + 分析耗时 + 技术信息折叠。
+
+.card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  border: var(--border-charcoal);
-  background-color: var(--color-paper);
-}
-
-.titleBlock {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.eyebrow {
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow-desktop);
-  letter-spacing: 4px;
-  color: var(--color-caliper-grey);
+  gap: 14px;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
 }
 
 .title {
-  font-family: var(--font-display);
-  font-size: 32px;
-  letter-spacing: 4px;
-  color: var(--color-charcoal);
-  line-height: 1.1;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
 }
 
-.hero {
+// Bar 三色 segments
+.bar {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-2) 0;
-  border-top: var(--border-hairline);
-  border-bottom: var(--border-hairline);
+  gap: 6px;
 }
 
-.heroRow {
+.barRow {
   display: flex;
+  justify-content: space-between;
   align-items: baseline;
-  gap: var(--space-2);
-}
-
-.heroCount {
-  font-family: var(--font-mono);
-  font-size: 56px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.heroCountLabel,
-.heroSeverityLabel {
-  font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 3px;
-  color: var(--color-caliper-grey);
+  color: var(--ink-2);
 }
 
-.heroSeverity {
-  font-family: var(--font-display);
-  font-size: 24px;
+.barCount {
+  color: var(--ink-2);
+}
+
+.barNum {
+  font-family: var(--f-mono);
   font-weight: 600;
+  color: var(--ink);
 }
 
+.barTotalsLabel {
+  color: var(--ink-3);
+}
+
+.barTrack {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+}
+
+.barSeg {
+  height: 100%;
+}
+
+.barSegHigh {
+  background: var(--high);
+}
+.barSegMed {
+  background: var(--med);
+}
+.barSegLow {
+  background: var(--low);
+}
+
+.barLegend {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+// 重大事故隐患 row（建质规〔2024〕5号）—— bar 与 summary 之间，红底白字 tag + 计数。
+// majorCount=0 时父组件不渲染该 row（避免"重大隐患 0 项"的弱化暗示）。
+.majorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--high-soft);
+  border: 1px solid var(--high);
+  border-radius: var(--r-sm);
+}
+
+.majorTag {
+  padding: 2px 8px;
+  background: var(--high);
+  color: #FFF;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.majorCount {
+  font-family: var(--f-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--high);
+}
+
+.majorBasisHint {
+  margin-left: auto;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+// Summary section（整体判断 / 分析耗时 等）
 .summarySection {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
 }
 
 .summaryLabel {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-1);
-}
-
-.summaryLabelBar {
-  color: var(--color-eng-red);
-  font-weight: 700;
-}
-
-.summaryLabelText {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 3px;
-  color: var(--color-charcoal);
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
 }
 
 .summaryText {
-  font-size: var(--fs-body-desktop);
-  line-height: 1.6;
-  color: var(--color-charcoal);
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.55;
 }
 
-.warning {
-  margin-top: var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  background-color: rgba(224, 123, 31, 0.08);
-  border-left: 3px solid var(--color-warning-amber);
-  color: var(--color-charcoal);
-  font-size: 14px;
+.summaryValue {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+// TechDisclosure 折叠
+.techDisclosure {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.techSummary {
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-3);
+}
+
+.techSummary:hover {
+  color: var(--ink-2);
+}
+
+.techCaret {
+  width: 0;
+  height: 0;
+  border-left: 3px solid currentColor;
+  border-top: 2.5px solid transparent;
+  border-bottom: 2.5px solid transparent;
+  transition: transform 120ms ease;
+}
+
+.techCaretOpen {
+  transform: rotate(90deg);
+}
+
+.techBody {
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.techRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.techKey {
+  color: var(--ink-3);
+  font-family: var(--f-mono);
+  font-size: 11px;
+}
+
+.techValue {
+  color: var(--ink-2);
+  font-family: var(--f-mono);
+  font-size: 11px;
+}
+
+// 保留旧 SeverityPill 引用，视觉隐藏（测试 query 兼容）
+.legacyBreakdown {
+  display: none;
 }

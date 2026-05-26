@@ -1,0 +1,143 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s0);
+  padding: 14px 22px;
+  border-radius: var(--r-pill);
+  font-family: var(--f-sans);
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, transform 0.08s;
+  // §10.5 触控目标：实心按钮起码 44px 高（iOS HIG）。Ghost 是行内文本按钮，豁免。
+  min-height: 44px;
+}
+
+.ghost {
+  min-height: 0;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+// 2026-05-24 B9: H5 端 keyboard 用户的 focus 提示。Taro 编译到小程序无 :focus-visible 概念，
+// H5 端 <View>=<div>，:focus-visible 的伪类在 div 上需要 tabindex 配合才会触发；
+// 这里给出 fallback 视觉，至少保证支持 keyboard 导航的用户能看到当前焦点。
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(232, 93, 44, 0.35);
+  border-color: var(--accent);
+}
+
+.btn.disabled,
+.btn.loading {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.lg {
+  padding: 18px 28px;
+  font-size: 16px;
+}
+
+.block {
+  width: 100%;
+}
+
+.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.primary:hover {
+  background: var(--accent-2);
+}
+
+.secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line-2);
+  box-shadow: var(--shadow-sm);
+}
+
+.secondary:hover {
+  background: var(--surface-2);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.ghost:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+// Hero variant — large CTA block with icon + title/subtitle + arrow.
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 20px 24px;
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  border-radius: var(--r-lg);
+  box-shadow: 0 10px 28px rgba(232, 93, 44, 0.22);
+  white-space: normal;
+}
+
+.hero:hover {
+  background: var(--accent-2);
+}
+
+.hero:active {
+  transform: translateY(1px);
+  box-shadow: 0 6px 18px rgba(232, 93, 44, 0.2);
+}
+
+.heroIcon {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: var(--r-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  flex: 1;
+  margin-left: var(--s2);
+}
+
+.heroTitle {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.heroSub {
+  font-size: 13px;
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+.heroArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

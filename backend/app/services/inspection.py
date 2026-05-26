@@ -68,7 +68,19 @@ async def run_inspection(
             model=raw.model,
             latency_ms=raw.latency_ms,
         )
-        report = report.model_copy(update={"model_meta": meta})
+        # prompt 里给 LLM 的 inspection_id / created_at 是占位符
+        # ("00000000-0000-0000-0000-000000000000" / "2026-01-01T00:00:00Z")。
+        # 必须用真实的 id + 入库时的 created_at 覆盖，否则前端拿到的是占位符 UUID，
+        # 报告页查不到对应照片、报告号显示为 NO.00000000-000。
+        row = repo.get(conn, inspection_id)
+        real_created_at = row.created_at if row is not None else report.created_at
+        report = report.model_copy(
+            update={
+                "inspection_id": inspection_id,
+                "created_at": real_created_at,
+                "model_meta": meta,
+            }
+        )
 
         repo.update_succeeded(conn, inspection_id, report, meta)
         elapsed = int((time.monotonic() - t0) * 1000)

@@ -1,24 +1,26 @@
-// UploadDropzone —— dossier paper aesthetic 的桌面上传区。
-// data-hover='true' 由 React 设置；hover 状态边框变 eng-red、背景轻微高亮。
+// UploadDropzone — clean-minimal 桌面拖拽上传区。
 
 .zone {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-5) var(--space-3);
-  border: 2px dashed var(--color-charcoal);
-  background-color: var(--color-paper);
+  gap: 14px;
+  padding: 36px 28px;
+  background: var(--surface-2);
   cursor: pointer;
   user-select: none;
-  transition: border-color 120ms ease, background-color 120ms ease;
+  transition: background 120ms ease, outline-color 120ms ease;
   min-height: 280px;
+  outline: 1px dashed var(--line-2);
+  outline-offset: -14px;
+  border-radius: var(--r-md);
 }
 
 .zone[data-hover='true'] {
-  border-color: var(--color-eng-red);
-  background-color: rgba(200, 40, 28, 0.04);
+  outline-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .zone[aria-busy='true'] {
@@ -26,20 +28,72 @@
   opacity: 0.6;
 }
 
-.icon {
-  margin-bottom: var(--space-1);
+.iconCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.body {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 2px;
 }
 
 .label {
-  font-family: var(--font-body);
-  font-size: 18px;
-  color: var(--color-charcoal);
-  letter-spacing: 1px;
+  font-size: clamp(17px, 1.4vw, 26px);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.3px;
 }
 
 .sublabel {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--color-caliper-grey);
-  letter-spacing: 3px;
+  font-size: clamp(12.5px, 1vw, 15px);
+  color: var(--ink-2);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ctaPrimary,
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--r-pill);
+  font-size: clamp(14px, 1vw, 16px);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.ctaPrimary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.ctaSecondary {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-2);
+  cursor: pointer;
+}
+
+.ctaSecondary:hover {
+  background: var(--surface-2);
+}
+
+.ctaText {
+  line-height: 1;
 }

@@ -1,0 +1,61 @@
+.soft {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+
+.solid {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  color: var(--on-accent);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.label {
+  line-height: 1.2;
+}
+
+.soft.high {
+  background: var(--high-soft);
+  color: var(--high);
+}
+
+.soft.medium {
+  background: var(--med-soft);
+  color: var(--med);
+}
+
+.soft.low {
+  background: var(--low-soft);
+  color: var(--low);
+}
+
+.solid.high {
+  background: var(--high);
+}
+
+.solid.medium {
+  background: var(--med);
+}
+
+.solid.low {
+  background: var(--low);
+}

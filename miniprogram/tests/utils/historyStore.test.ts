@@ -1,0 +1,77 @@
+/**
+ * historyStore 单元测试（B8）。
+ */
+import {
+  appendHistory,
+  getHistory,
+  getHistoryEntry,
+  summarizeHistory,
+  _resetHistoryStore,
+  type HistoryEntry,
+} from '../../src/utils/historyStore';
+
+function makeEntry(overrides: Partial<HistoryEntry> = {}): HistoryEntry {
+  return {
+    inspectionId: 'i-' + Math.random().toString(36).slice(2, 9),
+    capturedAt: Date.now(),
+    summary: '现场存在多处隐患',
+    overallSeverity: 'high',
+    hazardCount: 3,
+    breakdown: { high: 3, medium: 0, low: 0 },
+    status: 'pending',
+    ...overrides,
+  };
+}
+
+describe('historyStore', () => {
+  beforeEach(() => {
+    _resetHistoryStore();
+  });
+
+  it('returns empty list on cold start', () => {
+    expect(getHistory()).toEqual([]);
+  });
+
+  it('appends entries and returns them sorted by capturedAt desc', () => {
+    const older = makeEntry({ inspectionId: 'a', capturedAt: 1000 });
+    const newer = makeEntry({ inspectionId: 'b', capturedAt: 2000 });
+    appendHistory(older);
+    appendHistory(newer);
+    const list = getHistory();
+    expect(list.map((e) => e.inspectionId)).toEqual(['b', 'a']);
+  });
+
+  it('updates existing entry with same inspectionId instead of duplicating', () => {
+    const e1 = makeEntry({ inspectionId: 'x', hazardCount: 3 });
+    appendHistory(e1);
+    appendHistory({ ...e1, hazardCount: 5 });
+    const list = getHistory();
+    expect(list.length).toBe(1);
+    expect(list[0].hazardCount).toBe(5);
+  });
+
+  it('getHistoryEntry returns null for missing id', () => {
+    appendHistory(makeEntry({ inspectionId: 'x' }));
+    expect(getHistoryEntry('y')).toBeNull();
+    expect(getHistoryEntry('x')?.inspectionId).toBe('x');
+  });
+
+  it('summarizeHistory computes total / weekly / highRisk / closed', () => {
+    const now = Date.now();
+    appendHistory(makeEntry({ inspectionId: 'a', capturedAt: now, overallSeverity: 'high' }));
+    appendHistory(makeEntry({ inspectionId: 'b', capturedAt: now - 1, overallSeverity: 'medium' }));
+    appendHistory(
+      makeEntry({
+        inspectionId: 'c',
+        capturedAt: now - 14 * 24 * 3600 * 1000,
+        overallSeverity: 'low',
+        status: 'closed',
+      }),
+    );
+    const s = summarizeHistory();
+    expect(s.total).toBe(3);
+    expect(s.weekly).toBe(2); // a + b 在 7 天内；c 14 天前
+    expect(s.highRisk).toBe(1);
+    expect(s.closed).toBe(1);
+  });
+});

@@ -1,127 +1,109 @@
-// 首页 dossier 布局：HeaderBand + 大标题 + 按钮 + 编号 tips + footer。
+// MobileIndex (unified-modern-minimal 2026-05-22)：TopNav / hero / 大橙 tap target。
+// 2026-05-24 重排：删 brandBar / eyebrow / today / photoWrap，主 CTA 改 dropzone__tap 风格。
+
 .page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: var(--color-paper);
+  background: var(--bg);
 }
 
-.titleBlock {
-  padding: var(--space-4) var(--space-3) var(--space-2);
+.hero {
+  padding: 36px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .h1 {
-  display: block;
-  font-family: var(--font-display);
-  font-size: var(--fs-h1);
-  font-weight: 700;
-  letter-spacing: 4px;
-  color: var(--color-charcoal);
-  line-height: 1.1;
+  font-size: clamp(28px, 7.2vw, 36px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
 }
 
-.h1Latin {
-  display: block;
-  margin-top: var(--space-1);
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow);
-  font-weight: 400;
-  letter-spacing: 3px;
-  color: var(--color-caliper-grey);
+.lede {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  margin-top: 4px;
+  max-width: 60ch;
 }
 
-.section {
-  padding: var(--space-3);
-}
-
-.sectionRule {
-  border-top: var(--border-charcoal);
-  padding-top: var(--space-1);
-  margin-bottom: var(--space-2);
-}
-
-.sectionLabel {
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow);
-  letter-spacing: 3px;
-  color: var(--color-charcoal);
-}
-
-.tipRow {
+.tapWrap {
+  padding: 8px 24px 0;
+  // safe-area 兼容：iPhone home indicator 不挡大橙 tap block。env() 不支持时降级 0。
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-1) 0;
-  font-family: var(--font-body);
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
 }
 
-.tipIndex {
-  font-family: var(--font-mono);
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--color-eng-red);
+// 大橙整块 tap target：mockup .dropzone__tap
+.dropzoneTap {
+  width: 100%;
+  padding: 36px 24px;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 10px 30px rgba(232, 93, 44, 0.28);
+  cursor: pointer;
+  transition: background 120ms, transform 120ms;
 }
 
-.tipText {
-  font-size: var(--fs-body);
-  color: var(--color-charcoal);
-  line-height: 1.4;
+.dropzoneTap:active {
+  transform: translateY(1px);
+  background: var(--accent-hover);
 }
 
-.footer {
-  margin-top: auto;
-  padding: var(--space-3);
-  border-top: var(--border-charcoal);
+.dropzoneTapBusy {
+  opacity: 0.85;
+  pointer-events: none;
 }
 
-.footerText {
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow);
-  letter-spacing: 2px;
-  color: var(--color-caliper-grey);
+.dropzoneTapTitle {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--on-accent);
 }
 
-// Tablet / desktop H5：容器居中 + 1px charcoal 边框（取代 prior box-shadow chrome）。
-@media (min-width: 768px) {
+.dropzoneTapSub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 400;
+}
+
+.albumLink {
+  padding: 6px 8px;
+  color: var(--ink-3);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.albumLink:hover {
+  color: var(--ink-2);
+}
+
+.spacer {
+  flex: 1;
+  min-height: 24px;
+}
+
+// ≥600px tablet 居中露 backdrop（IMPLEMENT.md §10.2）
+@media (min-width: 600px) {
   .page {
     max-width: 640px;
     margin: 0 auto;
-    border-left: var(--border-charcoal);
-    border-right: var(--border-charcoal);
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    background: var(--surface);
   }
-}
-@media (min-width: 1024px) {
-  .page {
-    max-width: 720px;
-  }
-}
-
-// 边距 CAD 刻度尺 —— 仅 H5 桌面 ≥1024px 显示。
-// JSX 已用 process.env.TARO_ENV === 'h5' 守住 (weapp 编译时整段消失)，
-// 这里再用 @media 守住 mobile H5 (≤1024px 时 display: none)。
-// 双 gate 设计：哪一端、什么宽度都不会乱出现。
-.rulerLeft, .rulerRight {
-  display: none;
-}
-@media (min-width: 1024px) {
-  .rulerLeft, .rulerRight {
-    display: block;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    width: 10px;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.55;
-    // 1px tick 每 16px 一格、模仿 CAD 边距测量条
-    background-image: repeating-linear-gradient(
-      to bottom,
-      var(--color-caliper-grey) 0,
-      var(--color-caliper-grey) 1px,
-      transparent 1px,
-      transparent 16px
-    );
-  }
-  .rulerLeft { left: 18px; }
-  .rulerRight { right: 18px; }
 }

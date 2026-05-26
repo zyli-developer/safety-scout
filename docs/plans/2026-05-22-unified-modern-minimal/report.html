@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>巡检报告 · Safety Scout</title>
+<style>
+:root{
+  --bg: oklch(99% 0.002 240);
+  --surface: oklch(100% 0 0);
+  --surface-2: oklch(97% 0.004 250);
+  --fg: oklch(18% 0.012 250);
+  --fg-soft: oklch(32% 0.012 250);
+  --muted: oklch(54% 0.012 250);
+  --border: oklch(92% 0.005 250);
+  --border-strong: oklch(80% 0.008 250);
+  --accent: oklch(66% 0.17 50);
+  --accent-hover: oklch(60% 0.18 48);
+  --accent-soft: oklch(95% 0.04 60);
+  --sev-high: oklch(58% 0.20 28);
+  --sev-high-soft: oklch(95% 0.04 28);
+  --sev-medium: oklch(70% 0.15 70);
+  --sev-medium-soft: oklch(96% 0.04 75);
+  --sev-low: oklch(60% 0.13 155);
+  --sev-low-soft: oklch(95% 0.025 155);
+  --font-display: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Display", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Text", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, monospace;
+  --radius: 10px; --radius-lg: 14px;
+  --container: 1240px; --gutter: clamp(16px, 3vw, 32px);
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none} button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+.shell{max-width:var(--container);margin:0 auto;padding:0 var(--gutter)}
+
+/* TopNav shared */
+.topnav{position:sticky;top:0;z-index:50;background:oklch(100% 0 0 / .92);backdrop-filter:saturate(140%) blur(12px);border-bottom:1px solid var(--border)}
+.topnav__inner{display:flex;align-items:center;gap:24px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-0.01em}
+.brand__mark{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.brand__name{font-size:15px}
+.brand__sub{color:var(--muted);font-size:13px;font-weight:400}
+.navlinks{display:flex;gap:2px;margin-left:8px}
+.navlinks a{padding:8px 12px;border-radius:8px;font-size:14px;color:var(--fg-soft)}
+.navlinks a[aria-current="page"]{background:var(--surface-2);color:var(--fg);font-weight:500}
+.navlinks a:hover{background:var(--surface-2)}
+.topnav__spacer{flex:1}
+.useravatar{width:32px;height:32px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);display:grid;place-items:center;font-size:13px;color:var(--fg-soft);font-weight:500}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:var(--radius);font-size:14px;font-weight:500;border:1px solid transparent;transition:all 120ms;cursor:pointer}
+.btn--primary{background:var(--accent);color:#fff}
+.btn--primary:hover{background:var(--accent-hover)}
+.btn--ghost{border-color:var(--border);color:var(--fg);background:var(--surface)}
+.btn--ghost:hover{border-color:var(--border-strong);background:var(--surface-2)}
+.btn--mini{font-size:13px;padding:7px 11px;color:var(--fg-soft)}
+.btn--mini .btn__icon{width:14px;height:14px}
+.btn__icon{width:16px;height:16px;flex:none}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 3px oklch(66% 0.17 50 / .35);border-color:var(--accent)}
+.chip:focus-visible{outline:none;box-shadow:0 0 0 3px oklch(66% 0.17 50 / .25);border-color:var(--accent)}
+
+/* Redo disclosure — quiet escape hatch, not a tool-doubt advertisement */
+.redo-disclosure{margin-top:6px}
+.redo-disclosure summary{
+  font-size:13px;color:var(--muted);cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;
+  padding:4px 2px;list-style:none;user-select:none;
+  width:fit-content;
+}
+.redo-disclosure summary::-webkit-details-marker{display:none}
+.redo-disclosure summary::before{
+  content:"";width:0;height:0;display:inline-block;
+  border-left:4px solid currentColor;
+  border-top:3px solid transparent;border-bottom:3px solid transparent;
+  transition:transform 120ms ease;
+}
+.redo-disclosure[open] summary::before{transform:rotate(90deg)}
+.redo-disclosure summary:hover{color:var(--fg-soft)}
+.redo-disclosure__inner{padding:10px 0 4px}
+
+/* Pills */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--fg-soft)}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.pill--high{color:var(--sev-high);background:var(--sev-high-soft);border-color:transparent}
+.pill--high::before{background:var(--sev-high)}
+.pill--medium{color:oklch(45% 0.14 70);background:var(--sev-medium-soft);border-color:transparent}
+.pill--medium::before{background:var(--sev-medium)}
+.pill--low{color:var(--sev-low);background:var(--sev-low-soft);border-color:transparent}
+.pill--low::before{background:var(--sev-low)}
+
+.t-mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.t-muted{color:var(--muted)}
+.t-eyebrow{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+
+/* ============================================================
+   REPORT
+   ============================================================ */
+.report-head{padding:36px 0 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.crumbs{font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:0.04em;display:flex;align-items:center;gap:8px}
+.crumbs a:hover{color:var(--fg)}
+.crumbs__sep{opacity:.5}
+
+.hero-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  overflow:hidden;
+  display:grid;
+  grid-template-columns: 260px 1fr;
+}
+@media (max-width: 820px){
+  .hero-card{grid-template-columns:1fr}
+}
+.hero-card__photo{
+  position:relative;
+  background:linear-gradient(135deg, oklch(75% 0.05 60), oklch(58% 0.07 35));
+  min-height:240px;
+}
+.hero-card__photo::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 20% 25%, oklch(100% 0 0 / .2), transparent 50%),
+    radial-gradient(circle at 75% 80%, oklch(0% 0 0 / .15), transparent 60%);
+}
+.hero-card__photo .photo-tag{
+  position:absolute;left:14px;bottom:14px;z-index:2;
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 10px;border-radius:999px;
+  background:oklch(15% 0.02 250 / .68);
+  color:#fff;font-size:11px;font-family:var(--font-mono);letter-spacing:0.04em;
+  backdrop-filter:blur(8px);
+}
+.hero-card__photo .photo-tag::before{content:"";width:6px;height:6px;border-radius:50%;background:#fff}
+
+.hero-card__body{padding:28px 32px;display:grid;gap:14px;align-content:start}
+.hero-card__top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.severity-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:5px 12px 5px 8px;border-radius:999px;
+  font-weight:600;font-size:13px;letter-spacing:0.02em;
+  background:var(--sev-high-soft);color:var(--sev-high);
+}
+.severity-tag::before{
+  content:"";width:8px;height:8px;border-radius:50%;background:var(--sev-high);
+  box-shadow:0 0 0 4px oklch(58% 0.20 28 / .15);
+}
+.hero-card__warn{
+  font-family:var(--font-display);
+  font-size:clamp(22px,2.6vw,30px);font-weight:600;letter-spacing:-0.02em;
+  line-height:1.2;margin:0;
+}
+.hero-card__sum{color:var(--fg-soft);font-size:15px;line-height:1.6;margin:0;max-width:64ch}
+.hero-card__meta{
+  margin-top:6px;
+  display:flex;flex-wrap:wrap;gap:6px 18px;
+  font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:0.02em;
+  padding-top:14px;border-top:1px solid var(--border);
+}
+.hero-card__meta b{color:var(--fg-soft);font-weight:500}
+.hero-card__actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+/* Filter row */
+.filter-row{
+  margin:24px 0 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 14px;border-radius:999px;
+  border:1px solid var(--border);background:var(--surface);
+  font-size:13px;color:var(--fg-soft);font-weight:500;
+  cursor:pointer;transition:all 120ms;
+}
+.chip:hover{border-color:var(--border-strong)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--surface);border-color:var(--fg)}
+.chip__count{font-family:var(--font-mono);font-size:11px;opacity:.7}
+.chip[aria-pressed="true"] .chip__count{opacity:1}
+.chip__sev{width:6px;height:6px;border-radius:50%;display:inline-block}
+.chip__sev--h{background:var(--sev-high)}
+.chip__sev--m{background:var(--sev-medium)}
+.chip__sev--l{background:var(--sev-low)}
+/* count=0 的 chip 在 high-only 报告里是噪声 —— aria-disabled + opacity 把它压成背景，
+   不删（保留筛选维度可见性），但不抢眼 */
+.chip[aria-disabled="true"]{opacity:.3;cursor:not-allowed;pointer-events:none}
+.filter-row__sort{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+
+/* Hazards list */
+.hazards{display:grid;gap:14px;padding-bottom:16px}
+
+.haz{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:22px 24px;display:grid;gap:14px;
+  grid-template-columns: 36px minmax(0,1fr);
+  align-items:start;
+  transition:border-color 120ms,box-shadow 120ms;
+}
+.haz:hover{border-color:var(--border-strong);box-shadow:0 4px 14px oklch(15% 0.02 250 / .04)}
+.haz__num{
+  width:36px;height:36px;border-radius:8px;
+  background:var(--surface-2);
+  display:grid;place-items:center;
+  font-family:var(--font-mono);font-size:12px;color:var(--muted);font-weight:600;
+}
+.haz__main{display:grid;gap:14px;min-width:0}
+.haz__header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.haz__title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.haz__code{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.04em;background:var(--surface-2);padding:3px 7px;border-radius:6px}
+.haz__name{font-size:16px;font-weight:600;letter-spacing:-0.005em}
+.haz__body{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:680px){.haz__body{grid-template-columns:1fr}}
+.haz__block{display:grid;gap:5px}
+.haz__block-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)}
+.haz__block-text{font-size:14px;line-height:1.55;color:var(--fg-soft)}
+.haz__regulation{
+  font-family:var(--font-mono);font-size:12px;color:var(--fg);
+  background:var(--surface-2);border:1px solid var(--border);
+  padding:8px 10px;border-radius:8px;line-height:1.5;
+  display:inline-block;
+}
+.haz__footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:6px;border-top:1px dashed var(--border)}
+.haz__detail{font-size:13px;color:var(--accent);font-weight:500;display:inline-flex;align-items:center;gap:4px}
+.haz__detail:hover{text-decoration:underline}
+
+/* Suggestion variant — accent left rule? NO, that's slop. Instead, callout style */
+.suggestion-callout{
+  background:var(--accent-soft);
+  border-radius:8px;
+  padding:10px 12px;
+  display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;
+  font-size:14px;line-height:1.55;color:oklch(35% 0.06 50);
+}
+.suggestion-callout__icon{
+  width:18px;height:18px;color:var(--accent);flex:none;margin-top:2px;
+}
+
+/* Sticky right panel — 在 1024px 起就显示，覆盖 iPad landscape；
+   侧栏宽度从 280→240，给主列让出空间避免 hazard list 挤压 */
+.report-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+@media (min-width:1024px){
+  .report-layout{grid-template-columns:minmax(0,1fr) 240px;gap:28px;align-items:start}
+  .sidepanel{position:sticky;top:80px;display:grid;gap:14px}
+}
+.sidepanel{display:none}
+@media (min-width:1024px){.sidepanel{display:grid}}
+.spcard{padding:18px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);display:grid;gap:14px}
+.spcard__title{font-size:13px;font-weight:600;letter-spacing:-0.005em}
+.summary-section{display:grid;gap:7px;padding-top:12px;border-top:1px solid var(--border)}
+.summary-section__label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+.tech-disclosure{padding-top:10px;border-top:1px solid var(--border);font-size:12px}
+.tech-disclosure summary{
+  cursor:pointer;list-style:none;color:var(--muted);
+  display:inline-flex;align-items:center;gap:6px;user-select:none;
+}
+.tech-disclosure summary::-webkit-details-marker{display:none}
+.tech-disclosure summary::before{
+  content:"";width:0;height:0;display:inline-block;
+  border-left:3px solid currentColor;
+  border-top:2.5px solid transparent;border-bottom:2.5px solid transparent;
+  transition:transform 120ms ease;
+}
+.tech-disclosure[open] summary::before{transform:rotate(90deg)}
+.tech-disclosure summary:hover{color:var(--fg-soft)}
+.bar{display:grid;gap:6px}
+.bar__row{display:flex;justify-content:space-between;font-size:12px;color:var(--fg-soft)}
+.bar__row .t-mono{color:var(--muted)}
+.bar__track{height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden;display:flex}
+.bar__seg{height:100%}
+.bar__seg--high{background:var(--sev-high)}
+.bar__seg--med{background:var(--sev-medium)}
+.bar__seg--low{background:var(--sev-low)}
+
+/* Footer */
+.metaftr{border-top:1px solid var(--border);margin-top:48px;padding:18px 0 28px;display:flex;flex-wrap:wrap;gap:8px 24px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.metaftr__live::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:var(--sev-low);box-shadow:0 0 0 4px oklch(60% 0.13 155 / .18);vertical-align:1px}
+
+@media (max-width:640px){
+  .topnav__inner{height:54px;gap:12px}
+  .navlinks{display:none}
+  .brand__sub{display:none}
+  .hero-card__body{padding:22px 20px}
+  .haz{padding:18px;grid-template-columns:1fr;gap:12px}
+  .haz__num{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="shell topnav__inner">
+    <a href="index.html" class="brand">
+      <span class="brand__mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 5.5c-4.1 0-7.5 3.4-7.5 7.5v.5h15v-.5c0-4.1-3.4-7.5-7.5-7.5z"/><rect fill="currentColor" x="3" y="14" width="18" height="2.4" rx="1.2"/></svg></span>
+      <span class="brand__name">Safety Scout</span>
+      <span class="brand__sub">/ 工地安全巡检</span>
+    </a>
+    <nav class="navlinks">
+      <a href="home.html">巡检</a>
+      <a href="history.html" aria-current="page">报告</a>
+    </nav>
+    <div class="topnav__spacer"></div>
+    <div class="useravatar" title="安全员 · 张工">张</div>
+  </div>
+</header>
+
+<main class="shell">
+
+  <div class="report-head">
+    <div class="crumbs">
+      <a href="history.html">报告</a>
+      <span class="crumbs__sep">/</span>
+      <span>5 月 22 日 · 14:08 外架巡检</span>
+    </div>
+    <a href="home.html" class="btn btn--ghost">
+      <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6l1.5-2h5L16 6"/><circle cx="12" cy="13" r="3.5"/></svg>
+      新建巡检
+    </a>
+  </div>
+
+  <div class="report-layout">
+
+    <div>
+      <!-- Hero -->
+      <article class="hero-card" data-screen-label="03 Report">
+        <div class="hero-card__photo">
+          <span class="photo-tag">外架立面 · 14:08</span>
+        </div>
+        <div class="hero-card__body">
+          <div class="hero-card__top">
+            <span class="severity-tag">整体高风险</span>
+          </div>
+          <h1 class="hero-card__warn">外架安全网松弛破损，<br>高处坠落风险极高</h1>
+          <p class="hero-card__sum">外架与结构间密目式安全立网严重松弛固定失效，临边无刚性防护栏，整体风险等级高，须立即停止临边作业并整改。</p>
+          <div class="hero-card__meta">
+            <span><b>3 项隐患</b> · 全部为高风险</span>
+            <span>14:08 拍摄</span>
+            <span>27 秒出报告</span>
+          </div>
+          <div class="hero-card__actions">
+            <button class="btn btn--primary">
+              <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              分享给班组
+            </button>
+            <button class="btn btn--ghost">
+              <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              导出 PDF
+            </button>
+          </div>
+          <details class="redo-disclosure">
+            <summary>和现场不一致？</summary>
+            <div class="redo-disclosure__inner">
+              <button class="btn btn--ghost btn--mini">
+                <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                用同一张照片重新分析
+              </button>
+            </div>
+          </details>
+        </div>
+      </article>
+
+      <!-- Filter -->
+      <div class="filter-row">
+        <div class="filter-chips" role="tablist">
+          <button class="chip" aria-pressed="true">全部 <span class="chip__count">3</span></button>
+          <button class="chip"><span class="chip__sev chip__sev--h"></span>高 <span class="chip__count">3</span></button>
+          <button class="chip" aria-disabled="true"><span class="chip__sev chip__sev--m"></span>中 <span class="chip__count">0</span></button>
+          <button class="chip" aria-disabled="true"><span class="chip__sev chip__sev--l"></span>低 <span class="chip__count">0</span></button>
+        </div>
+        <div class="filter-row__sort">按严重度排序 ↓</div>
+      </div>
+
+      <!-- Hazards -->
+      <section class="hazards">
+
+        <article class="haz">
+          <div class="haz__num">01</div>
+          <div class="haz__main">
+            <header class="haz__header">
+              <div class="haz__title">
+                <span class="haz__code">H1</span>
+                <span class="haz__name">高处坠落</span>
+                <span class="pill pill--high">高风险</span>
+              </div>
+              <a href="report-detail.html" class="haz__detail">查看条款 →</a>
+            </header>
+
+            <div class="haz__body">
+              <div class="haz__block">
+                <span class="haz__block-label">现象</span>
+                <p class="haz__block-text">外架与建筑结构间密目式安全立网松弛下垂，绳扣非标，存在明显缝隙；临边未设 ≥ 1.2m 刚性防护栏。</p>
+              </div>
+              <div class="haz__block">
+                <span class="haz__block-label">引用规范</span>
+                <code class="haz__regulation">JGJ80-2016 第 4.3.1 条 · JGJ59-2011（密目网固定间距 ≤45cm）</code>
+              </div>
+            </div>
+
+            <div class="suggestion-callout">
+              <svg class="suggestion-callout__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <div><b>整改建议 · </b>重新张紧立网，绳扣间距 ≤45cm，消除缝隙；张挂安全平网；临边补设 ≥1.2m 双横杆防护栏；整改前禁止临边作业。</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="haz">
+          <div class="haz__num">02</div>
+          <div class="haz__main">
+            <header class="haz__header">
+              <div class="haz__title">
+                <span class="haz__code">H2</span>
+                <span class="haz__name">物体打击</span>
+                <span class="pill pill--high">高风险</span>
+              </div>
+              <a href="report-detail.html" class="haz__detail">查看条款 →</a>
+            </header>
+
+            <div class="haz__body">
+              <div class="haz__block">
+                <span class="haz__block-label">现象</span>
+                <p class="haz__block-text">安全立网松弛失效，无法拦截高处坠物；结构边缘混凝土残渣未清理，存在随振动坠落风险。</p>
+              </div>
+              <div class="haz__block">
+                <span class="haz__block-label">引用规范</span>
+                <code class="haz__regulation">JGJ59-2011 第 3.0.5 条</code>
+              </div>
+            </div>
+
+            <div class="suggestion-callout">
+              <svg class="suggestion-callout__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <div><b>整改建议 · </b>恢复立网防护功能；外架内侧张挂安全平网；清理结构边缘残渣；正下方设硬质防护棚或封闭警戒区。</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="haz">
+          <div class="haz__num">03</div>
+          <div class="haz__main">
+            <header class="haz__header">
+              <div class="haz__title">
+                <span class="haz__code">H9</span>
+                <span class="haz__name">个人防护缺失</span>
+                <span class="pill pill--high">高风险</span>
+              </div>
+              <a href="report-detail.html" class="haz__detail">查看条款 →</a>
+            </header>
+
+            <div class="haz__body">
+              <div class="haz__block">
+                <span class="haz__block-label">现象</span>
+                <p class="haz__block-text">临边高处作业人员未见系挂安全带，于无临边防护的楼层边沿处作业。</p>
+              </div>
+              <div class="haz__block">
+                <span class="haz__block-label">引用规范</span>
+                <code class="haz__regulation">JGJ80-2016 第 6.1.1 条</code>
+              </div>
+            </div>
+
+            <div class="suggestion-callout">
+              <svg class="suggestion-callout__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <div><b>整改建议 · </b>所有临边高处作业人员必须系挂双钩安全带，安全绳挂至独立可靠锚固点；未佩戴者立即停工。</div>
+            </div>
+          </div>
+        </article>
+
+      </section>
+    </div>
+
+    <!-- Sticky side panel (desktop only) — one card summarises this scan; tech meta lives in a disclosure -->
+    <aside class="sidepanel">
+      <div class="spcard">
+        <div class="spcard__title">本次扫描概要</div>
+
+        <div class="bar">
+          <div class="bar__row"><span>共 <b class="t-mono">3</b> 项隐患</span><span class="t-muted">全部为高风险</span></div>
+          <div class="bar__track">
+            <div class="bar__seg bar__seg--high" style="width:100%"></div>
+          </div>
+          <div class="bar__row" style="font-family:var(--font-mono);font-size:11px">
+            <span>高 3</span><span>中 0</span><span>低 0</span>
+          </div>
+        </div>
+
+        <div class="summary-section">
+          <div class="summary-section__label">涉及类别</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            <span class="pill pill--high">H1 高处坠落</span>
+            <span class="pill pill--high">H2 物体打击</span>
+            <span class="pill pill--high">H9 个人防护</span>
+          </div>
+        </div>
+
+        <div class="summary-section">
+          <div class="summary-section__label">拍摄与分析</div>
+          <div style="font-size:13px;color:var(--fg-soft);line-height:1.6">
+            14:08 现场拍摄 · <span class="t-muted">27 秒出报告</span>
+          </div>
+        </div>
+
+        <details class="tech-disclosure">
+          <summary>技术信息</summary>
+          <div class="t-mono t-muted" style="font-size:11px;line-height:1.7;padding-top:6px">
+            <div>模型 claude-sonnet-4-6</div>
+            <div>Prompt v3 · SHA 604ae0…f6082e</div>
+          </div>
+        </details>
+      </div>
+    </aside>
+
+  </div>
+
+  <footer class="metaftr">
+    <span class="metaftr__live">服务可用</span>
+    <span class="topnav__spacer"></span>
+    <a href="index.html" class="t-muted">所有页面 →</a>
+  </footer>
+
+</main>
+
+<script>
+  // Filter chips (visual only)
+  document.querySelectorAll('.chip').forEach(function(c){
+    c.addEventListener('click', function(){
+      document.querySelectorAll('.chip').forEach(function(cc){ cc.setAttribute('aria-pressed','false') });
+      c.setAttribute('aria-pressed','true');
+    });
+  });
+</script>
+
+</body>
+</html>

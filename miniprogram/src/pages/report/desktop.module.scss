@@ -1,77 +1,453 @@
-// DesktopReport 布局：max-width 1400px 居中；body 用 CSS grid 4fr/6fr。
-// 字号 / 间距 token 都来自 src/styles/tokens.scss，模块内不再重声明 :root。
+// DesktopReport (Clean & Minimal)：TopNav / Breadcrumb / 页头 / Hero / AlarmBox /
+// 隐患列表卡 / 三联签字 / 页脚。max-width 1280、左右 32px gutter。
 
 .page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  max-width: 1400px;
+  background: var(--bg);
+}
+
+.container {
+  // 2026-05-22 unified-modern-minimal：宽屏统一收紧到 1240，与 home / polling 对齐。
+  max-width: 1240px;
+  width: 100%;
   margin: 0 auto;
-  padding: 0 var(--space-desktop-gutter);
-  background-color: var(--color-paper);
+  padding: 24px 32px 40px;
 }
 
-.body {
-  display: grid;
-  grid-template-columns: 4fr 6fr;
-  gap: var(--space-desktop-gutter);
-  padding: var(--space-3) 0 var(--space-5);
-  align-items: start;
+.processing {
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 0 32px;
 }
 
-.aside {
-  position: sticky;
-  top: var(--space-3);
-  align-self: start;
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: clamp(12px, 0.95vw, 14px);
 }
 
-.main {
+.crumbItem {
+  color: var(--ink-2);
+  cursor: pointer;
+  padding: 4px 6px;
+  margin-left: -6px;
+  border-radius: var(--r-sm);
+  transition: background 0.12s, color 0.12s;
+}
+
+.crumbItem:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.crumbCurrent {
+  font-family: var(--f-mono);
+  color: var(--ink-2);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.headerLeft {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
 }
 
-.sectionRule {
-  border-top: var(--border-charcoal);
-  padding-top: var(--space-1);
-  margin-bottom: var(--space-2);
+.headerTopRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
-.sectionLabel {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 3px;
-  color: var(--color-charcoal);
+.headerNo {
+  font-family: var(--f-mono);
+  font-size: clamp(12px, 0.95vw, 14px);
+  color: var(--ink-3);
 }
 
+.h1 {
+  font-size: clamp(28px, 2.8vw, 56px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  color: var(--ink);
+}
+
+.lede {
+  margin-top: 8px;
+  font-size: clamp(14px, 1vw, 17px);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btnText {
+  margin-left: 6px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: stretch;
+}
+
+.heroLeft,
+.heroRight {
+  display: flex;
+  flex-direction: column;
+}
+
+.alarmRow {
+  margin-bottom: 24px;
+}
+
+.listCard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.listHead {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+}
+
+.listTitleWrap {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.listTitle {
+  font-size: clamp(20px, 1.6vw, 24px);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+}
+
+.listCaption {
+  font-size: clamp(12px, 0.95vw, 14px);
+  color: var(--ink-3);
+}
+
+.listFilters {
+  display: flex;
+  gap: 6px;
+}
+
+.filterChip {
+  padding: 10px 16px;
+  font-size: clamp(13px, 1vw, 14px);
+  font-weight: 500;
+  color: var(--ink-2);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.filterChip:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.filterChipActive {
+  background: var(--surface-2);
+  color: var(--ink);
+  border-color: var(--line-2);
+}
+
+// count=0 的 chip 在 high-only 报告里是噪声 —— aria-disabled + opacity 压成背景
+// (critique P6 / minor #2 修复)
+.filterChipDisabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.filterChipCount {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  opacity: 0.7;
+  margin-left: 2px;
+}
+
+.filterChipActive .filterChipCount {
+  opacity: 1;
+}
+
+.listBody {
+  padding: 0 24px;
+}
+
+.signoff {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.signCell {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 18px 20px;
+}
+
+.signRole {
+  font-size: clamp(12px, 0.95vw, 14px);
+  color: var(--ink-3);
+}
+
+.signMain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.signName {
+  font-size: clamp(17px, 1.4vw, 20px);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.signStatus {
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: clamp(12px, 0.95vw, 13px);
+  font-weight: 600;
+}
+
+.signFoot {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--line-2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.signTime {
+  font-family: var(--f-mono);
+  font-size: clamp(12px, 0.95vw, 13px);
+  color: var(--ink-3);
+}
+
+.signRemind {
+  font-size: clamp(12px, 0.95vw, 13px);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.signRemind:hover {
+  color: var(--ink);
+}
+
+.footer {
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-3);
+  font-size: clamp(12px, 0.95vw, 13px);
+}
+
+.footerRight {
+  font-family: var(--f-mono);
+}
+
+// Error / centered states
 .centered {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: var(--space-3);
+  flex: 1;
+  padding: 80px 32px;
 }
 
 .errorBox {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-4);
-  border: var(--border-charcoal);
-  background-color: var(--color-paper);
+  gap: 16px;
+  padding: 48px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
   max-width: 480px;
 }
 
 .errorText {
-  font-size: 18px;
-  color: var(--color-charcoal);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
   text-align: center;
 }
 
 .retryHint {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 2px;
-  color: var(--color-caliper-grey);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+// §10.3 desktop-sm (1024–1279)：页头按钮组换行；gutter 收紧。
+@media (max-width: 1279px) {
+  .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .headerActions {
+    flex-wrap: wrap;
+  }
+}
+
+// §10.3 desktop-narrow (<1100)：Hero 双列变单列；签字栏三联 → 两联。
+@media (max-width: 1099px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+  .signoff {
+    grid-template-columns: 1fr 1fr;
+  }
+  .listFilters {
+    flex-wrap: wrap;
+  }
+}
+
+// 2026-05-22 unified：宽屏只放大 padding/gap，不再放大 container max-width。
+@media (min-width: 1600px) {
+  .container {
+    padding: 40px 48px 80px;
+  }
+  .header {
+    margin-bottom: 32px;
+  }
+  .hero {
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  .alarmRow,
+  .listCard {
+    margin-bottom: 32px;
+  }
+  .signoff {
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+}
+@media (min-width: 1920px) {
+  .container {
+    padding: 56px 48px 96px;
+  }
+}
+
+// 打印 / 导出 PDF：隐藏导航 / 面包屑 / 操作按钮，纸面只剩报告本体。
+//
+// 关键修复（2026-05-22）：
+//  · 没有 print-color-adjust:exact 时背景色 / rgba / backdrop-filter 都不打印，
+//    .photo 容器的 surface-2 灰底 + .meta 胶囊会变透明（图片本身能打印，但若图
+//    片 src 异常露出灰底就糊成一片）—— 强制 exact 让图片下面的占位也成纸面。
+//  · 屏幕端 .photo 高度走 clamp(240px, 36vh, 360px)；打印时 vh 基于纸面高度，
+//    在 Chrome 某些版本上 vh 解出 0，photo 容器塌成 0 → <img> height:100% 跟着
+//    塌成 0，整张图消失。打印态用显式 px 高度覆盖 inline style（!important
+//    才压得过 inline）。
+//  · TopNav 是 app chrome 不属于报告本体，打印时一并隐去。该组件 className 由
+//    .tsx 传入 styles.printHide，靠下面这条规则统一处理。
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .page {
+    background: #fff !important;
+    min-height: auto;
+  }
+  .container {
+    max-width: none;
+    padding: 16px 24px;
+  }
+
+  // 纸面不需要的 app chrome / 交互入口
+  .printHide,
+  .breadcrumb,
+  .headerActions,
+  .listFilters {
+    display: none !important;
+  }
+
+  // hero 整块尽量留在第一页内 + 给 Photo 一个确定的纸面高度
+  .hero {
+    break-inside: avoid;
+    margin-bottom: 16px;
+  }
+  // 直接覆盖 Photo 容器（heroLeft 的唯一子节点）的 inline height
+  .heroLeft > * {
+    height: 320px !important;
+  }
+  // 兜底确保 <img> 真填满容器；个别 Chrome 打印管线对 object-fit 处理不一致
+  .heroLeft img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+
+  // 2026-05-25：listCard 屏幕态用 overflow:hidden 给圆角裁剪边缘（line 125），
+  // 打印态必须显式还原成 visible —— 否则内容超出卡片的部分被直接裁掉，浏览器
+  // 不会把被裁的内容翻到下一页。这才是 PDF 只 1/1 页的真正原因（破除了
+  // break-inside:avoid 还不够）。
+  .listCard {
+    overflow: visible !important;
+    box-shadow: none;
+    border-radius: 0; // 既然 overflow:visible，圆角失去意义，避免视觉违和
+  }
+  // HazardItem 渲染出的 root view 是 listBody 的直接子节点；用直接子选择器
+  // 兜住单条不被切。
+  .listBody > * {
+    break-inside: avoid;
+    page-break-inside: avoid; // 老 spec 兼容（部分 Chrome 版本仍读这个）
+  }
+  // 短块独立保留 avoid：alarm 一行、签字一格、footer 一行 —— 它们高度小、
+  // 适合整块留在同一页。
+  .alarmRow,
+  .signCell,
+  .footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .signCell {
+    box-shadow: none;
+  }
 }

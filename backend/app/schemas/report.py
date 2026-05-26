@@ -18,6 +18,10 @@ class Hazard(BaseModel):
     severity: Severity
     regulation: str = ""
     suggestion: str = Field(max_length=100)
+    # 重大事故隐患（建质规〔2024〕5号）；命中即上报义务，前端红标区分。
+    # 默认值保证向后兼容：旧 LLM 响应未带这两个字段时仍可解析。
+    is_major: bool = False
+    major_basis: str = ""
 
 
 class ModelMeta(BaseModel):

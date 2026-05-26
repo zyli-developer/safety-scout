@@ -1,0 +1,201 @@
+// EmptyState 4 态：empty / blurry / rejected / network。
+// 对齐 docs/plans/2026-05-22-unified-modern-minimal/empty-error.html .state / .state__art。
+
+.state {
+  padding: 40px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+
+.art {
+  width: 140px;
+  height: 140px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex: none;
+}
+
+.artEmpty {
+  background: linear-gradient(135deg, var(--surface-2), #EEEEEA);
+  color: var(--ink-2);
+}
+
+.artBlurry {
+  background: linear-gradient(135deg, var(--low-soft), #DBE8E0);
+  color: var(--low);
+  // 给 SVG 加轻微模糊，强化"照片有点糊"的隐喻 (mockup 同手法)
+  & svg {
+    filter: blur(0.8px);
+  }
+}
+
+.artRejected {
+  background: linear-gradient(135deg, var(--med-soft), #ECDFC1);
+  color: var(--med-text, #8C5814);
+}
+
+.artNetwork {
+  background: linear-gradient(135deg, var(--high-soft), #F4DBDC);
+  color: var(--high);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 520px;
+}
+
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.sub {
+  color: var(--ink-3);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  max-width: 520px;
+  width: 100%;
+}
+
+@media (max-width: 540px) {
+  .details {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detailCell {
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-2);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detailLabel {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.detailValue {
+  color: var(--ink-2);
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+
+.btnPrimary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.btnPrimary:hover {
+  background: var(--accent-hover);
+}
+
+.btnGhost {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.btnGhost:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-2);
+}
+
+.tips {
+  margin-top: 8px;
+  width: 100%;
+  max-width: 680px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  padding: 16px 20px;
+  text-align: left;
+}
+
+.tipsTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.tipsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tipItem {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.tipBullet {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-top: 8px;
+  flex: none;
+}
+
+.tipText {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}

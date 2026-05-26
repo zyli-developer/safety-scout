@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI 分析中 · Safety Scout</title>
+<style>
+:root{
+  --bg: oklch(99% 0.002 240);
+  --surface: oklch(100% 0 0);
+  --surface-2: oklch(97% 0.004 250);
+  --fg: oklch(18% 0.012 250);
+  --fg-soft: oklch(32% 0.012 250);
+  --muted: oklch(54% 0.012 250);
+  --border: oklch(92% 0.005 250);
+  --border-strong: oklch(80% 0.008 250);
+  --accent: oklch(66% 0.17 50);
+  --accent-hover: oklch(60% 0.18 48);
+  --accent-soft: oklch(95% 0.04 60);
+  --sev-low: oklch(60% 0.13 155);
+  --font-display: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Display", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "SF Pro Text", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, monospace;
+  --radius: 10px; --radius-lg: 14px;
+  --container: 1240px; --gutter: clamp(16px, 3vw, 32px);
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none} button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+.shell{max-width:var(--container);margin:0 auto;padding:0 var(--gutter)}
+
+/* TOP NAV (shared) */
+.topnav{position:sticky;top:0;z-index:50;background:oklch(100% 0 0 / .92);backdrop-filter:saturate(140%) blur(12px);border-bottom:1px solid var(--border)}
+.topnav__inner{display:flex;align-items:center;gap:24px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-0.01em}
+.brand__mark{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.brand__name{font-size:15px}
+.brand__sub{color:var(--muted);font-size:13px;font-weight:400}
+.navlinks{display:flex;gap:2px;margin-left:8px}
+.navlinks a{padding:8px 12px;border-radius:8px;font-size:14px;color:var(--fg-soft)}
+/* polling 是巡检流程中的一步，链接指向 home，用 aria-current="step" 表达"流程中"，
+   而非"当前 page"；样式与 page 一致 */
+.navlinks a[aria-current="page"],
+.navlinks a[aria-current="step"]{background:var(--surface-2);color:var(--fg);font-weight:500}
+.navlinks a:hover{background:var(--surface-2)}
+.topnav__spacer{flex:1}
+.useravatar{width:32px;height:32px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);display:grid;place-items:center;font-size:13px;color:var(--fg-soft);font-weight:500}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:var(--radius);font-size:14px;font-weight:500;border:1px solid transparent;transition:all 120ms ease}
+.btn--ghost{border-color:var(--border);color:var(--fg);background:var(--surface)}
+.btn--ghost:hover{border-color:var(--border-strong)}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 3px oklch(66% 0.17 50 / .35);border-color:var(--accent)}
+
+.t-mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.t-muted{color:var(--muted)}
+.t-eyebrow{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+
+/* ===========================================================
+   POLLING STAGE — 3-state tracker as the hero
+   =========================================================== */
+.stage{padding:48px 0 32px;display:grid;place-items:center;text-align:center;gap:36px}
+.stage__head{display:grid;gap:14px;max-width:560px}
+.stage__title{font-family:var(--font-display);font-size:clamp(28px,3.6vw,36px);font-weight:600;letter-spacing:-0.02em;line-height:1.15;margin:0}
+.stage__sub{color:var(--muted);font-size:15px;line-height:1.55}
+
+/* Photo */
+.shot{width:120px;height:120px;border-radius:14px;overflow:hidden;position:relative;border:1px solid var(--border);background:linear-gradient(135deg, oklch(85% 0.04 60), oklch(70% 0.06 35))}
+.shot::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 30%, oklch(100% 0 0 / .3), transparent 60%)}
+/* badge 默认外探 10px；iOS 真机上把它再往上推一个 safe-area-inset-bottom，
+   防止 home indicator 把"已上传"药丸切掉。env() 不支持时降级为 -10px。 */
+.shot__badge{position:absolute;left:50%;bottom:calc(-10px - env(safe-area-inset-bottom, 0px));transform:translateX(-50%);background:var(--sev-low);color:#fff;font-family:var(--font-mono);font-size:11px;padding:3px 8px;border-radius:999px;font-weight:600;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;box-shadow:0 4px 10px oklch(60% 0.13 155 / .35)}
+.shot__badge::before{content:"";width:10px;height:10px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") center/contain no-repeat}
+
+/* 3-state tracker */
+.tracker{
+  width: 100%; max-width: 720px;
+  display:grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items:center;
+  gap: 8px;
+}
+.tnode{display:grid;justify-items:center;gap:10px;min-width:120px;padding:0 8px}
+.tnode__dot{
+  width:48px;height:48px;border-radius:50%;
+  display:grid;place-items:center;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  color:var(--muted);
+  font-family:var(--font-mono);font-weight:600;font-size:14px;
+  transition:all 200ms ease;
+  position:relative;
+}
+.tnode__dot svg{width:22px;height:22px}
+.tnode__label{font-size:14px;font-weight:500;color:var(--fg-soft)}
+.tnode__hint{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.04em}
+
+/* states */
+.tnode--done .tnode__dot{background:var(--sev-low);border-color:var(--sev-low);color:#fff}
+.tnode--done .tnode__label{color:var(--fg)}
+
+.tnode--active .tnode__dot{
+  background:var(--accent-soft);border-color:var(--accent);color:var(--accent);
+  box-shadow:0 0 0 6px oklch(66% 0.17 50 / .12);
+  animation:pulse 1.4s ease-in-out infinite;
+}
+.tnode--active .tnode__label{color:var(--fg);font-weight:600}
+.tnode--active .tnode__hint{color:var(--accent)}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 6px oklch(66% 0.17 50 / .14)}
+  50%{box-shadow:0 0 0 12px oklch(66% 0.17 50 / .04)}
+}
+
+.tnode--pending .tnode__label{color:var(--muted)}
+.tnode--pending .tnode__hint{color:var(--muted)}
+
+.tline{height:2px;border-radius:999px;background:var(--border);min-width:40px;width:100%;align-self:start;margin-top:23px;position:relative;overflow:hidden}
+.tline--done{background:var(--sev-low)}
+.tline--active{background:var(--border)}
+.tline--active::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg, transparent, var(--accent), transparent);
+  width:40%;
+  animation:flow 1.6s linear infinite;
+}
+@keyframes flow{
+  0%{transform:translateX(-100%)}
+  100%{transform:translateX(250%)}
+}
+
+/* Mobile tracker — vertical */
+@media (max-width:600px){
+  .tracker{grid-template-columns:1fr;grid-auto-flow:row;gap:0;max-width:320px}
+  .tnode{grid-template-columns:48px 1fr;grid-template-rows:auto auto;justify-items:start;align-items:center;column-gap:14px;text-align:left}
+  .tnode__dot{grid-row:span 2}
+  .tnode__label,.tnode__hint{grid-column:2}
+  .tline{height:24px;width:2px;min-width:0;margin:2px 0 2px 23px}
+  .tline--active::after{
+    background:linear-gradient(180deg, transparent, var(--accent), transparent);
+    width:100%;height:40%;
+    animation:flow-v 1.6s linear infinite;
+  }
+  @keyframes flow-v{
+    0%{transform:translateY(-100%)}
+    100%{transform:translateY(250%)}
+  }
+}
+
+/* Elapsed bar */
+.elapsed{
+  width:100%;max-width:560px;
+  display:grid;gap:8px;
+}
+.elapsed__row{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:0.04em}
+.elapsed__row strong{color:var(--accent);font-weight:600}
+.elapsed__bar{height:4px;border-radius:999px;background:var(--border);overflow:hidden}
+.elapsed__fill{height:100%;background:var(--accent);border-radius:999px;width:42%;transition:width .8s ease}
+
+/* live log */
+.livelog{
+  width:100%;max-width:560px;
+  text-align:left;
+  display:grid;gap:8px;
+  padding:18px 20px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+}
+.livelog__title{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase}
+.livelog__list{display:grid;gap:6px;font-family:var(--font-mono);font-size:12px;color:var(--fg-soft)}
+.livelog__item{display:flex;gap:10px;align-items:flex-start;line-height:1.5}
+.livelog__item .tag{color:var(--muted)}
+.livelog__item.active{color:var(--fg)}
+.livelog__item.active .dot{background:var(--accent);box-shadow:0 0 0 3px oklch(66% 0.17 50 / .18);animation:blink 1.2s ease infinite}
+.livelog__item .dot{width:6px;height:6px;border-radius:50%;background:var(--border-strong);margin-top:6px;flex:none}
+.livelog__item.done .dot{background:var(--sev-low)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.45}}
+
+.stage__cancel{font-size:13px;color:var(--muted);padding-top:8px}
+.stage__cancel a{text-decoration:underline;text-decoration-color:var(--border-strong);text-underline-offset:3px}
+
+/* Footer */
+.metaftr{border-top:1px solid var(--border);margin-top:48px;padding:18px 0 28px;display:flex;flex-wrap:wrap;gap:8px 24px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.metaftr__live::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:var(--sev-low);box-shadow:0 0 0 4px oklch(60% 0.13 155 / .18);vertical-align:1px}
+
+@media (max-width:640px){
+  .topnav__inner{height:54px;gap:12px}
+  .navlinks{display:none}
+  .brand__sub{display:none}
+  .stage{padding:32px 0 24px;gap:28px}
+}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="shell topnav__inner">
+    <a href="index.html" class="brand">
+      <span class="brand__mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 5.5c-4.1 0-7.5 3.4-7.5 7.5v.5h15v-.5c0-4.1-3.4-7.5-7.5-7.5z"/><rect fill="currentColor" x="3" y="14" width="18" height="2.4" rx="1.2"/></svg></span>
+      <span class="brand__name">Safety Scout</span>
+      <span class="brand__sub">/ 工地安全巡检</span>
+    </a>
+    <nav class="navlinks">
+      <a href="home.html" aria-current="step">巡检</a>
+      <a href="history.html">报告</a>
+    </nav>
+    <div class="topnav__spacer"></div>
+    <div class="useravatar" title="安全员 · 张工">张</div>
+  </div>
+</header>
+
+<main class="shell">
+
+  <section class="stage" data-screen-label="02 Polling">
+
+    <div class="shot" aria-label="刚刚拍摄的照片">
+      <span class="shot__badge">已上传</span>
+    </div>
+
+    <div class="stage__head">
+      <h1 class="stage__title">AI 正在识别这张照片里的<br>安全隐患…</h1>
+      <p class="stage__sub">不需要等在这页 — 完成后会自动跳转。平均 29 秒出结果。</p>
+    </div>
+
+    <div class="tracker" role="list" aria-label="分析进度">
+
+      <div class="tnode tnode--done" role="listitem">
+        <div class="tnode__dot" aria-label="已完成">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="tnode__label">拍照成功</div>
+        <div class="tnode__hint">0:03</div>
+      </div>
+
+      <div class="tline tline--done"></div>
+
+      <div class="tnode tnode--active" role="listitem">
+        <div class="tnode__dot" aria-label="进行中">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        </div>
+        <div class="tnode__label">AI 分析中</div>
+        <div class="tnode__hint" id="t-elapsed">0:12 / ~0:29</div>
+      </div>
+
+      <div class="tline tline--active"></div>
+
+      <div class="tnode tnode--pending" role="listitem">
+        <div class="tnode__dot" aria-label="未开始">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 13h6M9 17h6M9 9h2"/></svg>
+        </div>
+        <div class="tnode__label">报告就绪</div>
+        <div class="tnode__hint">即将完成</div>
+      </div>
+
+    </div>
+
+    <div class="elapsed">
+      <div class="elapsed__row">
+        <span>已用时 <strong id="elapsed-num">0:12</strong></span>
+        <span>预计 0:29</span>
+      </div>
+      <div class="elapsed__bar"><div class="elapsed__fill" id="elapsed-fill" style="width:42%"></div></div>
+    </div>
+
+    <div class="livelog" aria-live="polite">
+      <div class="livelog__title">实时分析</div>
+      <div class="livelog__list">
+        <div class="livelog__item done"><span class="dot"></span><span class="tag">[0:04]</span><span>照片已收到 · 准备分析</span></div>
+        <div class="livelog__item done"><span class="dot"></span><span class="tag">[0:06]</span><span>识别现场场景：外架 / 临边 / 楼层结构</span></div>
+        <div class="livelog__item active"><span class="dot"></span><span class="tag">[0:12]</span><span>逐项核查 H1-H10 类别，参照 JGJ80-2016…</span></div>
+        <div class="livelog__item"><span class="dot"></span><span class="tag">[—]</span><span>组装 JSON · 校验字段完整性</span></div>
+      </div>
+    </div>
+
+    <div class="stage__cancel">
+      不想等？ <a href="home.html">取消并返回</a>
+    </div>
+
+  </section>
+
+  <footer class="metaftr">
+    <span class="metaftr__live">服务可用</span>
+    <span class="topnav__spacer"></span>
+    <a href="index.html" class="t-muted">所有页面 →</a>
+  </footer>
+
+</main>
+
+<script>
+  // demo: progress ticking from 12 → 29s then jump to report
+  (function(){
+    var start = 12, target = 29;
+    var elapsedEl = document.getElementById('elapsed-num');
+    var hintEl = document.getElementById('t-elapsed');
+    var fillEl = document.getElementById('elapsed-fill');
+    function fmt(s){ return '0:' + String(s).padStart(2,'0'); }
+    var t = start;
+    var iv = setInterval(function(){
+      t += 1;
+      if (t > target) {
+        clearInterval(iv);
+        // demo handoff
+        return;
+      }
+      elapsedEl.textContent = fmt(t);
+      hintEl.textContent = fmt(t) + ' / ~0:29';
+      fillEl.style.width = Math.min(100, Math.round(t/target*100)) + '%';
+    }, 900);
+  })();
+</script>
+
+</body>
+</html>

@@ -58,7 +58,7 @@ describe('DesktopReport', () => {
     mockedRouter.mockReturnValue({ params: { id: 'r-1', pi: '20', to: '60000' } });
   });
 
-  it('renders ProgressIndicator while processing', async () => {
+  it('renders ProgressTracker while processing', async () => {
     const resp: GetInspectionResponse = {
       inspection_id: 'r-1',
       status: 'processing',
@@ -70,10 +70,9 @@ describe('DesktopReport', () => {
     mockedGet.mockResolvedValue(resp);
     render(<DesktopReport />);
     await waitFor(() => {
-      // ProgressIndicator 渲染了三个 step label：'拍照已就绪' / 'AI 识别中' /
-      // '报告生成中'。这里只用 processing 步对应的 step label，避免 getByText
-      // 同时匹配多个 step 抛 "found multiple elements"。
-      expect(screen.getByText('AI 识别中')).toBeInTheDocument();
+      // ProgressTracker 渲染 3 节点：'拍照已就绪' / 'AI 分析中' / '报告就绪'。
+      // 取 active 节点 'AI 分析中' 作为 processing 状态信号。
+      expect(screen.getByText('AI 分析中')).toBeInTheDocument();
     });
   });
 
@@ -92,9 +91,9 @@ describe('DesktopReport', () => {
     await waitFor(() => {
       expect(screen.getByText('现场巡检报告')).toBeInTheDocument();
     });
-    expect(screen.getByText('2')).toBeInTheDocument(); // hazardCount
-    // HazardCard 把 severity label 与 category_name 拼在同一个 Text 节点里：
-    // "高风险 · 高处坠落"。所以用 substring regex 而不是精确匹配。
+    // 2026-05-24 B5: hazardCount=2 在 sidebar barNum + barLegend 都出现，
+    // getByText('2') 会多匹配。改用 getAllByText 检查至少 1 处。
+    expect(screen.getAllByText('2').length).toBeGreaterThan(0); // hazardCount
     expect(screen.getByText(/高处坠落/)).toBeInTheDocument();
     expect(screen.getByText(/物体打击/)).toBeInTheDocument();
   });

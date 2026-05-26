@@ -1,0 +1,32 @@
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.num {
+  // 默认 compact，1280 视口约 36；宽屏 ≥1600 可放到 52。
+  font-size: clamp(32px, 2.4vw, 52px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -1px;
+  color: var(--ink);
+  font-feature-settings: 'tnum' on;
+}
+
+.num.high {
+  color: var(--high);
+}
+
+.num.med {
+  color: var(--med);
+}
+
+.num.low {
+  color: var(--low);
+}
+
+.lbl {
+  font-size: clamp(12.5px, 1vw, 14px);
+  color: var(--ink-3);
+}

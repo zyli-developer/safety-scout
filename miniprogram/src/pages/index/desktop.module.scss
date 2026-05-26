@@ -1,109 +1,221 @@
-// DesktopIndex 桌面布局：左右分栏 60/40，整页 max-width 1200px 居中。
-// 字号用 --*-desktop tokens（定义在 src/styles/tokens.scss）。
+// DesktopIndex (2026-05-22 unified-modern-minimal)：TopNav / Hero / 1.4fr+1fr 两栏。
+// 整页 max-width 1240、左右 32px gutter；字号用 clamp 保证 1024→1920 都能看。
+//
+// 2026-05-24 改动：删 eyebrow / headerActions / engineStrip，新增 .uploadSteps 三步流程卡。
 
 .page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--space-desktop-gutter);
-  background-color: var(--color-paper);
+  background: var(--bg);
 }
 
-.titleBlock {
-  padding: var(--space-5) 0 var(--space-3);
+.container {
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 32px 36px;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 760px;
+  margin-bottom: 24px;
 }
 
 .h1 {
-  display: block;
-  font-family: var(--font-display);
-  font-size: var(--fs-h1-desktop);
-  font-weight: 700;
-  letter-spacing: 6px;
-  color: var(--color-charcoal);
+  font-size: clamp(28px, 2.8vw, 44px);
+  font-weight: 600;
   line-height: 1.1;
+  letter-spacing: -1px;
+  color: var(--ink);
 }
 
-.h1Latin {
-  display: block;
-  margin-top: var(--space-1);
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow-desktop);
-  font-weight: 400;
-  letter-spacing: 4px;
-  color: var(--color-caliper-grey);
+.lede {
+  font-size: clamp(14px, 1vw, 17px);
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 60ch;
 }
 
-.body {
+.grid {
   display: grid;
-  grid-template-columns: 6fr 4fr;
-  gap: var(--space-desktop-gutter);
-  padding: var(--space-3) 0 var(--space-5);
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
 }
 
-.left {
-  display: flex;
-  align-items: stretch;
-}
-
-.right {
+.dropzoneCard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
 }
 
-.tipsCard,
-.engineCard {
-  padding: var(--space-3);
-  border: var(--border-charcoal);
-  background-color: var(--color-paper);
-}
-
-.sectionRule {
-  border-top: var(--border-charcoal);
-  padding-top: var(--space-1);
-  margin-bottom: var(--space-2);
-}
-
-.sectionLabel {
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow-desktop);
-  letter-spacing: 3px;
-  color: var(--color-charcoal);
-}
-
-.tipRow {
+.dropzoneHeader {
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--line);
   display: flex;
+  justify-content: space-between;
   align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-1) 0;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.tipIndex {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--color-eng-red);
+.dropzoneTitle {
+  font-size: clamp(17px, 1.4vw, 22px);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
 }
 
-.tipText {
-  font-size: var(--fs-body-desktop);
-  color: var(--color-charcoal);
+.dropzoneSpec {
+  font-family: var(--f-mono);
+  font-size: clamp(11.5px, 0.9vw, 13px);
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+
+// 三步流程卡：3 cell grid + 1px gap 制造单线分隔
+.uploadSteps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border-top: 1px solid var(--line);
+}
+
+.uploadStep {
+  background: var(--surface);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stepNum {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+}
+
+.stepLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.stepSub {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.todayCard,
+.recentCard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.todayCard {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cardTitle {
+  font-size: clamp(14px, 1vw, 16px);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.todayGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.recentCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.recentHead {
+  padding: 16px 20px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.recentLink {
+  font-size: 12px;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.recentBody {
+  padding: 0 20px 18px;
+}
+
+.recentEmpty {
+  font-size: 13px;
+  color: var(--ink-3);
   line-height: 1.5;
 }
 
-.engineLabel {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow-desktop);
-  letter-spacing: 3px;
-  color: var(--color-caliper-grey);
-  margin-bottom: var(--space-1);
+// desktop-sm (1024–1279)：gutter 收紧到 24px，三步卡变两行
+@media (max-width: 1279px) {
+  .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
 }
 
-.engineText {
-  font-family: var(--font-mono);
-  font-size: var(--fs-meta-desktop);
-  color: var(--color-charcoal);
-  letter-spacing: 2px;
+// desktop-narrow (<1100)：双列变单列，sidebar 落到下方
+@media (max-width: 1099px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+// 三步卡在窄屏变 1 列
+@media (max-width: 540px) {
+  .uploadSteps {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, auto);
+  }
+}
+
+// 宽屏只放大 padding/gap，container max-width 保持 1240
+@media (min-width: 1600px) {
+  .container {
+    padding: 56px 48px 64px;
+  }
+  .hero {
+    margin-bottom: 40px;
+  }
+  .grid {
+    gap: 32px;
+  }
+  .aside {
+    gap: 20px;
+  }
+}
+@media (min-width: 1920px) {
+  .container {
+    padding: 72px 48px 80px;
+  }
 }

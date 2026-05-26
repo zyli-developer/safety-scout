@@ -1,15 +1,31 @@
+/**
+ * 移动端报告页 — Clean & Minimal 重排：
+ *   AppBar / 概要卡（数字 + pill + summary + breakdown）/ AlarmBox / 隐患列表 /
+ *   粘性底部 actbar（导出 PDF / 转派班组）。
+ *
+ * 状态分支保持原样：error / timeout / processing / failed / succeeded。
+ * 现场照片大图：后端 GET 报告暂未带 photo_url，先省略；接入后在 AppBar 下追加 Photo。
+ *
+ * "导出 PDF" / "转派班组" 是 placeholder action —— 后端尚未实现，按下走 toast 提示。
+ */
 import Taro from '@tarojs/taro';
 import { View, Text } from '@tarojs/components';
+import { useEffect, useState } from 'react';
 
 import { usePolling } from '../../hooks/usePolling';
 import { getInspection } from '../../api/inspections';
-import { HazardCard } from '../../components/HazardCard';
-import { ProgressIndicator } from '../../components/ProgressIndicator';
+import { HazardItem } from '../../components/HazardItem';
+import { ProgressTracker } from '../../components/ProgressTracker';
 import { Icon } from '../../components/Icon';
-import { HeaderBand } from '../../components/HeaderBand';
-import { sortBySeverity, SEVERITY_LABEL, SEVERITY_COLOR } from '../../utils/severity';
+import { AppBar } from '../../components/AppBar';
+import { Button } from '../../components/Button';
+import { SeverityPill } from '../../components/SeverityPill';
+import { AlarmBox } from '../../components/AlarmBox';
+import { Photo } from '../../components/Photo';
+import { sortBySeverity } from '../../utils/severity';
 import { mapApiError } from '../../utils/errorMessage';
-import { relativeTime } from '../../utils/relativeTime';
+import { getPhotoFor } from '../../utils/lastPhotoStore';
+import { appendHistory } from '../../utils/historyStore';
 import { ApiError } from '../../api/client';
 import {
   DEFAULT_POLL_INTERVAL_MS,
@@ -17,6 +33,7 @@ import {
 } from '../../config';
 import type { GetInspectionResponse } from '../../types/inspection';
 import type { ReportPayload } from '../../types/report';
+import type { Severity } from '../../types/report';
 
 import styles from './mobile.module.scss';
 
@@ -36,18 +53,28 @@ export default function MobileReport() {
 
   if (error) {
     const ui = mapApiError(error);
-    return (
-      <ErrorView userMessage={ui.userMessage} allowRetry={ui.allowRetry} />
-    );
+    return <ErrorView userMessage={ui.userMessage} allowRetry={ui.allowRetry} />;
   }
 
   if (isTimedOut) {
-    return <ErrorView userMessage="AI 分析超时，请重试" allowRetry={true} />;
+    return <ErrorView userMessage="AI 分析超时，请重试" allowRetry />;
   }
 
   if (!result || result.status === 'queued' || result.status === 'processing') {
     const step = result?.status === 'processing' ? 2 : 1;
-    return <ProgressIndicator currentStep={step} elapsedMs={elapsedMs} />;
+    const cancelToHome = () => Taro.reLaunch({ url: '/pages/index/index' });
+    return (
+      <View className={styles.page}>
+        <AppBar title="巡检报告" onBack={cancelToHome} />
+        <View className={styles.processingWrap}>
+          <ProgressTracker
+            currentStep={step}
+            elapsedMs={elapsedMs}
+            onCancel={cancelToHome}
+          />
+        </View>
+      </View>
+    );
   }
 
   if (result.status === 'failed') {
@@ -58,12 +85,18 @@ export default function MobileReport() {
       500,
     );
     const ui = mapApiError(fakeApiError);
-    return (
-      <ErrorView userMessage={ui.userMessage} allowRetry={ui.allowRetry} />
-    );
+    return <ErrorView userMessage={ui.userMessage} allowRetry={ui.allowRetry} />;
   }
 
-  return <SucceededReport report={result.report!} />;
+  // 见 desktop.tsx 注释：URL 上的 id + outer created_at 才可信，
+  // report.inspection_id / report.created_at 在旧后端上是 LLM 占位符。
+  return (
+    <SucceededReport
+      report={result.report!}
+      canonicalId={id}
+      createdAt={result.created_at}
+    />
+  );
 }
 
 function ErrorView({
@@ -75,94 +108,195 @@ function ErrorView({
 }) {
   return (
     <View className={styles.errorView}>
-      <Icon name="x-circle" size={48} color="#C8281C" />
+      <Icon name="x-circle" size={48} color="var(--high)" />
       <Text className={styles.errorText}>{userMessage}</Text>
-      {allowRetry && (
-        <Text className={styles.retryHint}>请返回首页重新拍照</Text>
-      )}
+      {allowRetry && <Text className={styles.retryHint}>请返回首页重新拍照</Text>}
     </View>
   );
 }
 
-function SucceededReport({ report }: { report: ReportPayload }) {
+function countBySeverity(hazards: readonly { severity: Severity }[]) {
+  return hazards.reduce(
+    (acc, h) => {
+      acc[h.severity] += 1;
+      return acc;
+    },
+    { high: 0, medium: 0, low: 0 } as Record<Severity, number>,
+  );
+}
+
+function SucceededReport({
+  report,
+  canonicalId,
+  createdAt,
+}: {
+  report: ReportPayload;
+  canonicalId: string;
+  createdAt: string;
+}) {
   const sorted = sortBySeverity(report.hazards);
   const severity = report.overall_severity;
-  const meta = `${SEVERITY_LABEL[severity]} · ${relativeTime(report.created_at)}`;
+  const counts = countBySeverity(sorted);
+  const total = sorted.length;
+  // 重大事故隐患计数（建质规〔2024〕5号）；> 0 时 summaryCard 内插红色 row。
+  const majorCount = sorted.filter((h) => h.is_major === true).length;
+  // canonicalId 来自 URL（与上传时 rememberPhoto 同源），
+  // 仅在 URL 丢 id 时退到 report.inspection_id（旧后端为 LLM 占位符）。
+  const idForLookup = canonicalId || report.inspection_id;
+
+  // 2026-05-24 B8：记录到本地 history store（localStorage 临时方案）
+  useEffect(() => {
+    appendHistory({
+      inspectionId: idForLookup,
+      capturedAt: Date.parse(createdAt) || Date.now(),
+      summary: report.summary,
+      overallSeverity: severity,
+      hazardCount: total,
+      breakdown: counts,
+      status: 'pending',
+    });
+  }, [idForLookup]);
+  const shortNo = idForLookup.slice(0, 12).toUpperCase();
+  const photoMeta = `NO.${shortNo} · ${createdAt.slice(0, 16).replace('T', ' ')}`;
+  // 见 desktop.tsx 同段注释：blob URL → data URL 升级轮询，
+  // 让 PDF 导出时拿到的是 data: src，避免 Chrome 打印管线取不到 blob 数据。
+  const [photo, setPhoto] = useState(() => getPhotoFor(idForLookup));
+  useEffect(() => {
+    if (photo?.src?.startsWith('data:')) return;
+    const tick = () => {
+      const fresh = getPhotoFor(idForLookup);
+      if (fresh && fresh.src !== photo?.src) setPhoto(fresh);
+      return fresh?.src?.startsWith('data:') ?? false;
+    };
+    if (tick()) return;
+    const timer = setInterval(() => {
+      if (tick()) clearInterval(timer);
+    }, 500);
+    const stop = setTimeout(() => clearInterval(timer), 30000);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(stop);
+    };
+  }, [idForLookup, photo?.src]);
+
+  const notImplemented = (label: string) => () =>
+    Taro.showToast({ title: `${label}：开发中`, icon: 'none', duration: 2000 });
+
+  const handleExportPdf = () => {
+    if (process.env.TARO_ENV === 'h5' && typeof window !== 'undefined') {
+      window.print();
+    } else {
+      Taro.showToast({ title: '导出 PDF 需在 H5 端使用', icon: 'none', duration: 2000 });
+    }
+  };
+
   return (
     <View className={styles.page}>
-      <HeaderBand
-        identifier={`NO.${formatIdentifier(report.created_at)}`}
-        subtitle={meta}
+      <AppBar
+        className={styles.printHide}
+        title="巡检报告"
+        onBack={() => Taro.reLaunch({ url: '/pages/index/index' })}
+        right={
+          <>
+            <View
+              className={styles.iconBtn}
+              role="button"
+              aria-label="分享"
+              onClick={notImplemented('分享')}
+            >
+              <Icon name="share" size={16} color="var(--ink-2)" />
+            </View>
+            <View
+              className={styles.iconBtn}
+              role="button"
+              aria-label="更多"
+              onClick={notImplemented('更多')}
+            >
+              <Icon name="dots" size={16} color="var(--ink-2)" />
+            </View>
+          </>
+        }
       />
 
-      <View className={styles.titleBlock}>
-        <Text className={styles.eyebrow}>INSPECTION REPORT</Text>
-        <Text className={styles.h1}>现场巡检报告</Text>
+      {/* 现场照片大图（4:3）—— 报告即报告，照片永远是核心证据。
+          src 优先来自 lastPhotoStore（上传时缓存的本地 tempFilePath / blob URL）；
+          后端 GET 报告无 photo_url 时 fallback 灰底占位。 */}
+      <View className={styles.photoWrap}>
+        <Photo src={photo?.src ?? ''} ratio="4/3" overlay={!!photo} meta={photoMeta} />
       </View>
 
-      <View className={styles.hero}>
-        <View className={styles.heroLeft}>
-          <Text className={styles.heroCount} style={{ color: SEVERITY_COLOR[severity] }}>
-            {sorted.length}
-          </Text>
-          <Text className={styles.heroCountLabel}>项隐患待整改</Text>
+      <View className={styles.summaryWrap}>
+        <View className={styles.summaryCard}>
+          <View className={styles.summaryHead}>
+            <View className={styles.summaryHeadLeft}>
+              <Text className={styles.eyebrow}>检出隐患</Text>
+              <View className={styles.summaryCountRow}>
+                <Text className={styles.summaryCount}>{total}</Text>
+                <Text className={styles.summaryCountUnit}>项</Text>
+              </View>
+            </View>
+            <SeverityPill level={severity} variant="solid" />
+          </View>
+          <Text className={styles.summaryText}>{report.summary}</Text>
+          <View className={styles.breakdown}>
+            <SeverityPill level="high" count={counts.high} />
+            <SeverityPill level="medium" count={counts.medium} />
+            <SeverityPill level="low" count={counts.low} />
+          </View>
+          {majorCount > 0 && (
+            <View
+              className={styles.majorRow}
+              role="status"
+              aria-label={`重大事故隐患 ${majorCount} 项`}
+            >
+              <View className={styles.majorTag}>
+                <Text>重大隐患</Text>
+              </View>
+              <Text className={styles.majorCount}>{majorCount} 项</Text>
+              <Text className={styles.majorBasisHint}>建质规〔2024〕5号</Text>
+            </View>
+          )}
         </View>
-        <View className={styles.heroRight}>
-          <Text className={styles.heroSeverity} style={{ color: SEVERITY_COLOR[severity] }}>
-            {SEVERITY_LABEL[severity]}
-          </Text>
-          <Text className={styles.heroSeverityLabel}>风险等级判定</Text>
+      </View>
+
+      {report.plain_warning && (
+        <View className={styles.alarmWrap}>
+          <AlarmBox>{report.plain_warning}</AlarmBox>
+        </View>
+      )}
+
+      <View className={styles.hazardSection}>
+        <Text className={styles.sectionTitle}>隐患明细</Text>
+        <Text className={styles.sectionCaption}>按严重程度排序</Text>
+        <View className={styles.hazardList}>
+          {sorted.map((h, i) => (
+            <HazardItem
+              hazard={h}
+              key={`${h.category_code}-${i}`}
+              index={i + 1}
+              onAction={() =>
+                Taro.navigateTo({
+                  url: `/pages/report-detail/index?id=${canonicalId}&h=${i}`,
+                })
+              }
+            />
+          ))}
         </View>
       </View>
 
-      <View className={styles.summarySection}>
-        <View className={styles.summaryLabel}>
-          <Text className={styles.summaryLabelBar}>▎</Text>
-          <Text className={styles.summaryLabelText}>现场总览</Text>
-        </View>
-        <Text className={styles.summaryText}>{report.summary}</Text>
-        {report.plain_warning && (
-          <Text className={styles.warning}>{report.plain_warning}</Text>
-        )}
-      </View>
-
-      <View className={styles.sectionRule}>
-        <Text className={styles.sectionLabel}>隐患明细</Text>
-      </View>
-
-      {sorted.map((h, idx) => (
-        <HazardCard
-          hazard={h}
-          key={`${h.category_code}-${idx}`}
-          index={idx + 1}
-          total={sorted.length}
-        />
-      ))}
-
-      <View className={styles.footer}>
-        <Text className={styles.footerText}>⌖ AI ENGINE v3 · Claude Vision</Text>
+      {/* 2026-05-24：删 sticky 底部 actbar (mockup 移动版没有 sticky CTA，
+          主操作在 summaryCard 内或紧跟内容流。改为内联放在隐患列表后。)
+          CTA 主次对齐 mockup：分享 primary + 导出 PDF ghost。"转派班组" placeholder 删除。 */}
+      <View className={styles.inlineActions}>
+        <Button variant="primary" block onTap={notImplemented('分享给班组')}>
+          <Icon name="share" size={16} color="var(--on-accent)" />
+          <Text className={styles.actbarText}>分享给班组</Text>
+        </Button>
+        <Button variant="secondary" block onTap={handleExportPdf}>
+          <Icon name="download" size={16} color="var(--ink)" />
+          <Text className={styles.actbarText}>导出 PDF</Text>
+        </Button>
       </View>
     </View>
   );
-}
-
-function formatIdentifier(iso: string): string {
-  try {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return iso;
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    // Production system would use a sequence number from the backend; for now,
-    // a short hash of the ISO string is good enough to look like an identifier.
-    const seq = Math.abs(hash(iso)) % 10000;
-    return `${yyyy}-${mm}-${dd}-${String(seq).padStart(4, '0')}`;
-  } catch {
-    return iso;
-  }
-}
-function hash(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
-  return h;
 }

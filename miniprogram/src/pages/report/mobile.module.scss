@@ -1,140 +1,180 @@
+// 移动端报告页（Clean & Minimal）：AppBar / 概要卡 / AlarmBox / 隐患列表 /
+// 粘性底部 actbar。
+
 .page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: var(--color-paper);
-  padding-bottom: var(--space-5);
+  background: var(--bg);
 }
 
-.titleBlock {
-  padding: var(--space-4) var(--space-3) var(--space-2);
+.processingWrap {
+  padding: 24px 20px;
+}
+
+.photoWrap {
+  padding: 8px 20px 0;
+}
+
+.iconBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.summaryWrap {
+  padding: 8px 20px 0;
+}
+
+.summaryCard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summaryHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.summaryHeadLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .eyebrow {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow);
-  letter-spacing: 3px;
-  color: var(--color-caliper-grey);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  color: var(--ink-3);
+  text-transform: uppercase;
 }
 
-.h1 {
-  display: block;
-  margin-top: var(--space-1);
-  font-family: var(--font-display);
-  font-size: var(--fs-h1);
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: var(--color-charcoal);
-  line-height: 1.1;
-}
-
-.hero {
+.summaryCountRow {
   display: flex;
-  border-top: var(--border-charcoal);
-  border-bottom: var(--border-charcoal);
-  margin: var(--space-3) var(--space-3) 0;
-  padding: var(--space-3) 0;
-  gap: var(--space-3);
+  align-items: baseline;
+  gap: 8px;
 }
 
-.heroLeft, .heroRight {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+.summaryCount {
+  font-size: 56px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  color: var(--ink);
+  font-feature-settings: 'tnum' on;
 }
 
-.heroCount {
-  font-family: var(--font-condensed);
-  font-size: var(--fs-display);
-  font-weight: 700;
-  letter-spacing: -2px;
-  line-height: 1;
-}
-
-.heroCountLabel,
-.heroSeverityLabel {
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow);
-  letter-spacing: 2px;
-  color: var(--color-caliper-grey);
-}
-
-.heroSeverity {
-  font-family: var(--font-display);
-  font-size: var(--fs-h2);
-  font-weight: 700;
-  letter-spacing: 2px;
-}
-
-.summarySection {
-  padding: var(--space-3);
-}
-
-.summaryLabel {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  margin-bottom: var(--space-1);
-}
-
-.summaryLabelBar {
-  color: var(--color-charcoal);
-  font-family: var(--font-mono);
-}
-
-.summaryLabelText {
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow);
-  letter-spacing: 3px;
-  color: var(--color-charcoal);
+.summaryCountUnit {
+  font-size: 13.5px;
+  color: var(--ink-3);
 }
 
 .summaryText {
-  display: block;
-  font-family: var(--font-body);
-  font-size: var(--fs-body);
+  font-size: 13.5px;
   line-height: 1.5;
-  color: var(--color-charcoal);
+  color: var(--ink-2);
 }
 
-.warning {
+.breakdown {
+  display: flex;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+// 重大事故隐患（建质规〔2024〕5号）行。仅在 majorCount>0 时渲染。
+.majorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--high-soft);
+  border: 1px solid var(--high);
+  border-radius: var(--r-sm);
+}
+
+.majorTag {
+  padding: 2px 8px;
+  background: var(--high);
+  color: #FFF;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.majorCount {
+  font-family: var(--f-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--high);
+}
+
+.majorBasisHint {
+  margin-left: auto;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.alarmWrap {
+  padding: 16px 20px 0;
+}
+
+.hazardSection {
+  padding: 24px 20px 16px;
+}
+
+.sectionTitle {
   display: block;
-  margin-top: var(--space-2);
-  font-family: var(--font-body);
-  font-size: var(--fs-body);
-  line-height: 1.5;
-  color: var(--color-eng-red);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+  margin-bottom: 4px;
 }
 
-.sectionRule {
-  padding: var(--space-3);
-  border-top: var(--border-charcoal);
-  margin-top: var(--space-2);
+.sectionCaption {
+  font-size: 12px;
+  color: var(--ink-3);
 }
 
-.sectionLabel {
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow);
-  letter-spacing: 3px;
-  color: var(--color-charcoal);
+.hazardList {
+  margin-top: 12px;
 }
 
-.footer {
-  margin-top: auto;
-  padding: var(--space-3);
-  border-top: var(--border-charcoal);
+// 2026-05-24 B5：删除 sticky 底部 actbar（mockup 移动版无 sticky CTA），
+// 改为内联放在隐患列表后。.actbar 类保留为别名（部分 css 代码可能仍引用），
+// 但实际改用 .inlineActions 类承载新布局。
+.inlineActions {
+  margin: 16px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.footerText {
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow);
-  letter-spacing: 2px;
-  color: var(--color-caliper-grey);
+.actbarText {
+  margin-left: 6px;
 }
 
-// Error states (preserved from prior file)
+// Error states
 .errorView {
   display: flex;
   flex-direction: column;
@@ -142,34 +182,77 @@
   justify-content: center;
   min-height: 100vh;
   padding: 40px;
-  background-color: var(--color-paper);
-  gap: var(--space-2);
-}
-.errorText {
-  font-family: var(--font-display);
-  font-size: 30px;
-  color: var(--color-charcoal);
-  text-align: center;
-  line-height: 1.35;
-  font-weight: 700;
-}
-.retryHint {
-  font-family: var(--font-mono);
-  font-size: var(--fs-eyebrow);
-  color: var(--color-caliper-grey);
-  letter-spacing: 2px;
+  background: var(--bg);
+  gap: 16px;
 }
 
-@media (min-width: 768px) {
+.errorText {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.retryHint {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+// §10.2 自适应：≥600px tablet 居中。sticky actbar 跟随 shell 居中，不再需要
+// fixed + transform 来对齐。
+@media (min-width: 600px) {
   .page {
     max-width: 640px;
     margin: 0 auto;
-    border-left: var(--border-charcoal);
-    border-right: var(--border-charcoal);
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    background: var(--surface);
   }
 }
-@media (min-width: 1024px) {
+
+// 打印 / 导出 PDF：隐藏交互 chrome，让纸面只剩内容（照片 + 概要 + 隐患列表）。
+// 见 desktop.module.scss 同段注释 —— print-color-adjust:exact + 显式覆盖
+// Photo 的 inline 高度避免在打印态塌成 0、<img> 强制填满容器。
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   .page {
-    max-width: 720px;
+    max-width: none;
+    margin: 0;
+    border: 0;
+    background: #fff !important;
+  }
+  .printHide,
+  .actbar,
+  .inlineActions,
+  .iconBtn {
+    display: none !important;
+  }
+  .photoWrap {
+    break-inside: avoid;
+  }
+  // Photo 在 mobile 用 ratio="4/3"，aspect-ratio 在 Chrome 打印态多数能解；
+  // 仍兜底给 <img> 强制 100% + cover，避免某些版本 object-fit 失效。
+  .photoWrap img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+  // 2026-05-25：与 desktop 同源修复 —— hazardList 不能整块 avoid，否则 5+ 条
+  // 一页装不下时 Chrome 截断而非翻页。允许列表跨页，单条 hazard 不切两半。
+  .summaryCard {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .hazardList > * {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }

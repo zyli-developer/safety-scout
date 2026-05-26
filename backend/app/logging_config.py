@@ -58,6 +58,11 @@ def setup_logging(level: str = "INFO") -> None:
 
     生产入口（FastAPI lifespan）启动时调一次；测试代码若需要 capsys 抓 log，
     传 level="DEBUG" 并先调本函数。
+
+    同时接管 uvicorn 的三个 logger（uvicorn / uvicorn.access / uvicorn.error）——
+    uvicorn 在启动时给它们装了自己的 plain-text handler 且 propagate=False，
+    不接管的话生产 stdout 会一半 JSON、一半文本，日志聚合无法解析。做法：
+    清掉它们自带的 handlers + propagate=True，让它们走 root 的 JsonFormatter。
     """
     root = logging.getLogger()
     # 清掉默认 handler 防止双写
@@ -66,3 +71,9 @@ def setup_logging(level: str = "INFO") -> None:
     handler.setFormatter(JsonFormatter())
     root.addHandler(handler)
     root.setLevel(level)
+
+    # 接管 uvicorn 自己的 logger，统一为 JSON 输出
+    for name in ("uvicorn", "uvicorn.access", "uvicorn.error"):
+        ulog = logging.getLogger(name)
+        ulog.handlers.clear()
+        ulog.propagate = True

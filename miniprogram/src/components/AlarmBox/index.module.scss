@@ -1,0 +1,34 @@
+.alarm {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s2);
+  padding: var(--s2);
+  background: var(--high-soft);
+  border-radius: var(--r-sm);
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-pill);
+  background: var(--high);
+  color: var(--on-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.text {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.lead {
+  color: var(--high);
+  font-weight: 700;
+}

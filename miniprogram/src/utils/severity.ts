@@ -1,8 +1,8 @@
 /**
  * Severity → 排序权重 / 颜色 / 中文标签 + hazards 排序工具。
  *
- * 色板：红橙绿三档对应 high/medium/low，对应架构 §3 组件分工里 hazard 卡片的
- * 暗示性配色。任何 UI 组件需要根据 severity 着色都走这里，不要硬编码 hex。
+ * Clean & Minimal 色板：红/琥珀/绿 三档对应 high/medium/low，每档配 soft 软底。
+ * UI 组件需要根据 severity 着色时一律走这里，不要硬编码 hex。
  */
 import type { Severity, Hazard } from '../types/report';
 
@@ -12,26 +12,18 @@ export const SEVERITY_ORDER: Record<Severity, number> = {
   low: 1,
 };
 
-/** Dossier engineering palette — sharper than iOS HIG, matches paper-document context.
- *  See docs/plans/2026-05-20-miniprogram-ui-dossier-design.md. */
+/** Clean & Minimal 实色 — 用在 sev-solid / 数字着色等需要强对比的位置。 */
 export const SEVERITY_COLOR: Record<Severity, string> = {
-  high: '#C8281C',    // engineering red (stamps, critical)
-  medium: '#E07B1F',  // warning amber
-  low: '#3D7C3D',     // pass green
+  high: '#D7373F',
+  medium: '#C77A1F',
+  low: '#2F8454',
 };
 
-/** Paper-tinted pill background — sits on the #F4EFE5 body. */
-export const SEVERITY_BG_TINT: Record<Severity, string> = {
-  high: '#F5DDD9',
-  medium: '#F6E2CB',
-  low: '#DDE8DD',
-};
-
-/** AA-contrast text on the tint background. */
-export const SEVERITY_TEXT_ON_TINT: Record<Severity, string> = {
-  high: '#7A1812',
-  medium: '#7C4214',
-  low: '#1F4A1F',
+/** Clean & Minimal 软底 — 严重度 pill 的 background。 */
+export const SEVERITY_SOFT: Record<Severity, string> = {
+  high: '#FCE7E9',
+  medium: '#FBEED6',
+  low: '#DEEFE3',
 };
 
 export const SEVERITY_LABEL: Record<Severity, string> = {
