@@ -33,4 +33,4 @@ export const DEFAULT_TIMEOUT_MS = 330_000;
  * v2 timeout 比 v1 大（agent 多轮慢约 2.5×）；createInspection 会按后端
  * 返回的 timeout_ms 自动覆盖前端默认值，不需要在这里调。
  */
-export const V2_TRAFFIC_SHARE = 0;
+export const V2_TRAFFIC_SHARE = 1.0;
