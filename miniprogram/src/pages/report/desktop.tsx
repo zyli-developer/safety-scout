@@ -31,7 +31,9 @@ import { appendHistory } from '../../utils/historyStore';
 import { ApiError } from '../../api/client';
 import { DEFAULT_POLL_INTERVAL_MS, DEFAULT_TIMEOUT_MS } from '../../config';
 import type { GetInspectionResponse } from '../../types/inspection';
+import type { GetInspectionV2Response, SchemaVersion } from '../../types/inspection-v2';
 import type { ReportPayload, Severity } from '../../types/report';
+import { mapV2ReportToV1 } from '../../utils/v2Adapter';
 
 import styles from './desktop.module.scss';
 
@@ -40,9 +42,13 @@ export default function DesktopReport() {
   const id = router.params.id ?? '';
   const intervalMs = Number(router.params.pi) || DEFAULT_POLL_INTERVAL_MS;
   const timeoutMs = Number(router.params.to) || DEFAULT_TIMEOUT_MS;
+  // URL ?v=2 决定 GET 走哪条；缺省 v1 与历史 URL 兼容。
+  const schemaVersion: SchemaVersion = router.params.v === '2' ? 'v2' : 'v1';
 
-  const { result, error, elapsedMs, isTimedOut } = usePolling<GetInspectionResponse>({
-    fetch: () => getInspection(id),
+  const { result, error, elapsedMs, isTimedOut } = usePolling<
+    GetInspectionResponse | GetInspectionV2Response
+  >({
+    fetch: () => getInspection(id, schemaVersion),
     intervalMs,
     timeoutMs,
     stopWhen: (r) => r.status === 'succeeded' || r.status === 'failed',
@@ -96,9 +102,15 @@ export default function DesktopReport() {
   // 用 URL 上的 id（上传时 rememberPhoto 就是用它做 key）做照片查找的权威 id；
   // 旧版后端可能把 LLM 占位符 UUID 写进 report.inspection_id —— 不可信。
   // created_at 同理：outer 字段来自 DB row、可信；report.created_at 是 LLM 占位符。
+  // v2 报告先经 adapter 映射成 v1 shape，让现有 DesktopSucceededReport 直接复用；
+  // 见 utils/v2Adapter.ts 顶部文档（损失项 + 后续 PR 增量计划）。
+  const v1Report: ReportPayload =
+    schemaVersion === 'v2' && result.report
+      ? mapV2ReportToV1(result.report as any, id, result.created_at)
+      : (result.report! as ReportPayload);
   return (
     <DesktopSucceededReport
-      report={result.report!}
+      report={v1Report}
       canonicalId={id}
       createdAt={result.created_at}
     />

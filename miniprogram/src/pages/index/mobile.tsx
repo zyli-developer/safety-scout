@@ -42,8 +42,10 @@ export default function MobileIndex() {
     try {
       const resp = await createInspection(image.tempFilePath);
       rememberPhoto(resp.inspection_id, image.tempFilePath);
+      // v2 流量按 V2_TRAFFIC_SHARE 决定；report 页通过 ?v=X 知道用哪条 GET
+      const vParam = resp.schema_version === 'v2' ? '&v=2' : '';
       Taro.navigateTo({
-        url: `/pages/report/index?id=${resp.inspection_id}&pi=${resp.poll_interval_ms}&to=${resp.timeout_ms}`,
+        url: `/pages/report/index?id=${resp.inspection_id}&pi=${resp.poll_interval_ms}&to=${resp.timeout_ms}${vParam}`,
       });
     } catch (e) {
       const ui = mapApiError(e);

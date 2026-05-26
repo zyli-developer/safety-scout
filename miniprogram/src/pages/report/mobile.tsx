@@ -32,8 +32,10 @@ import {
   DEFAULT_TIMEOUT_MS,
 } from '../../config';
 import type { GetInspectionResponse } from '../../types/inspection';
+import type { GetInspectionV2Response, SchemaVersion } from '../../types/inspection-v2';
 import type { ReportPayload } from '../../types/report';
 import type { Severity } from '../../types/report';
+import { mapV2ReportToV1 } from '../../utils/v2Adapter';
 
 import styles from './mobile.module.scss';
 
@@ -42,10 +44,12 @@ export default function MobileReport() {
   const id = router.params.id ?? '';
   const intervalMs = Number(router.params.pi) || DEFAULT_POLL_INTERVAL_MS;
   const timeoutMs = Number(router.params.to) || DEFAULT_TIMEOUT_MS;
+  // URL ?v=2 决定 GET 走哪条；缺省 v1 与历史 URL 兼容。
+  const schemaVersion: SchemaVersion = router.params.v === '2' ? 'v2' : 'v1';
 
   const { result, error, elapsedMs, isTimedOut } =
-    usePolling<GetInspectionResponse>({
-      fetch: () => getInspection(id),
+    usePolling<GetInspectionResponse | GetInspectionV2Response>({
+      fetch: () => getInspection(id, schemaVersion),
       intervalMs,
       timeoutMs,
       stopWhen: (r) => r.status === 'succeeded' || r.status === 'failed',
@@ -90,9 +94,16 @@ export default function MobileReport() {
 
   // 见 desktop.tsx 注释：URL 上的 id + outer created_at 才可信，
   // report.inspection_id / report.created_at 在旧后端上是 LLM 占位符。
+  // v2 报告先经 adapter 映射成 v1 shape，让现有 SucceededReport 组件直接复用；
+  // 损失（image_summary / no_findings / uncertain 明细 / location / confidence）
+  // 见 utils/v2Adapter.ts 顶部文档，留后续 PR 增量。
+  const v1Report: ReportPayload =
+    schemaVersion === 'v2' && result.report
+      ? mapV2ReportToV1(result.report as any, id, result.created_at)
+      : (result.report! as ReportPayload);
   return (
     <SucceededReport
-      report={result.report!}
+      report={v1Report}
       canonicalId={id}
       createdAt={result.created_at}
     />
