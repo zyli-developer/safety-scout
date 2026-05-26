@@ -35,9 +35,9 @@
 }
 
 .tapWrap {
-  padding: 8px 20px 0;
-  // safe-area 兼容：iPhone home indicator 不挡大橙 tap block。env() 不支持时降级 0。
-  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  // safe-area 不再需要：之前 tapWrap 是底部元素，现在 historyEntry 接管底部，
+  // safe-area-inset-bottom 由 historyEntry 处理。
+  padding: 8px 20px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -101,6 +101,43 @@
 .spacer {
   flex: 1;
   min-height: 24px;
+}
+
+// 历史报告入口：首页底部明显可点的二级动作。
+// 跟 TopNav "报告" tab 互为冗余，保证两种 navigation reflex 都能命中。
+.historyEntry {
+  padding: 0 20px 24px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+.historyBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+
+.historyBtn:hover {
+  background: var(--surface-2);
+  border-color: var(--line-2);
+}
+
+.historyBtn:active {
+  background: var(--surface-2);
+}
+
+.historyLabel {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.1px;
 }
 
 // ≥600px tablet 居中露 backdrop（IMPLEMENT.md §10.2）

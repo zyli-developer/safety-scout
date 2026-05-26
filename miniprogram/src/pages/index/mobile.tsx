@@ -101,6 +101,22 @@ export default function MobileIndex() {
       </View>
 
       <View className={styles.spacer} />
+
+      {/* 移动端导航入口补丁：除了 TopNav "报告" tab 之外，首页底部再放一个
+          带 icon 的明显按钮指向 history 页 —— 大屏 / 工地戴手套场景下顶部
+          tab 可能被忽略，给主要二级动作单独一个 tap target。 */}
+      <View className={styles.historyEntry}>
+        <View
+          className={styles.historyBtn}
+          role="button"
+          aria-label="查看历史报告"
+          onClick={() => Taro.navigateTo({ url: '/pages/history/index' })}
+        >
+          <Icon name="document" size={18} color="var(--ink-2)" />
+          <Text className={styles.historyLabel}>查看历史报告</Text>
+          <Icon name="chevron-right" size={14} color="var(--ink-3)" />
+        </View>
+      </View>
     </View>
   );
 }
