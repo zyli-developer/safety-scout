@@ -12,17 +12,24 @@ SDK 短连接相对轻，理论上可以同时跑；分开 cap 也便于 future 
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import sqlite3
 import time
 
 from app.config import Settings
-from app.errors import SafetyScoutError
+from app.errors import LLMTimeoutError, SafetyScoutError
 from app.safety_agent.agent import analyze_image
 from app.safety_agent.loader import SkillLoader
 from app.storage import inspection_repo as repo
+from app.storage import metrics_repo
 from app.storage.inspection_repo import ErrorPayload
+from app.storage.metrics_repo import (
+    InputFingerprint,
+    RuntimeMetrics,
+    VersionFingerprint,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +52,16 @@ async def run_inspection_v2(
 ) -> None:
     """v2 后台任务。任何异常 → 标 failed。"""
     repo.update_processing(conn, inspection_id)
+
+    # 质量追踪指纹：在跑分析之前就准备好，无论成功失败都要写 metrics（防幸存者偏差）
+    image_sha = hashlib.sha256(image).hexdigest()
+    version_fp = VersionFingerprint(
+        api_version="v2",
+        prompt_version=skill_loader.index_version,  # v2 prompt 由 skill 库版本决定
+        skill_index_version=skill_loader.index_version,
+        model=settings.agent_model,
+    )
+    input_fp = InputFingerprint(image_sha256=image_sha, image_bytes=len(image))
 
     t0 = time.monotonic()
     try:
@@ -70,6 +87,23 @@ async def run_inspection_v2(
         )
         repo.update_succeeded_v2(conn, inspection_id, report, meta_json)
         elapsed = int((time.monotonic() - t0) * 1000)
+        # 写质量追踪指标（成功路径）
+        metrics_repo.record_from_report(
+            conn,
+            inspection_id,
+            version=version_fp,
+            inp=input_fp,
+            runtime=RuntimeMetrics(
+                total_elapsed_ms=elapsed,
+                input_tokens=stats.input_tokens,
+                output_tokens=stats.output_tokens,
+                cost_usd=stats.cost_usd,
+                tool_calls=stats.tool_calls,
+                scenarios_loaded=stats.scenarios_loaded,
+            ),
+            report=report,
+            status="succeeded",
+        )
         logger.info(
             "v2 inspection succeeded",
             extra={
@@ -90,6 +124,16 @@ async def run_inspection_v2(
             inspection_id,
             ErrorPayload(code=exc.code, message=str(exc), user_message=exc.user_message),
         )
+        elapsed = int((time.monotonic() - t0) * 1000)
+        metrics_repo.record_failure(
+            conn,
+            inspection_id,
+            version=version_fp,
+            inp=input_fp,
+            runtime=RuntimeMetrics(total_elapsed_ms=elapsed),
+            status="timeout" if isinstance(exc, LLMTimeoutError) else "failed",
+            error_code=exc.code,
+        )
         logger.warning(
             "v2 inspection failed",
             extra={"inspection_id": inspection_id, "error_code": exc.code},
@@ -103,6 +147,16 @@ async def run_inspection_v2(
                 message=f"{type(exc).__name__}: {exc}",
                 user_message="服务内部错误，请重试",
             ),
+        )
+        elapsed = int((time.monotonic() - t0) * 1000)
+        metrics_repo.record_failure(
+            conn,
+            inspection_id,
+            version=version_fp,
+            inp=input_fp,
+            runtime=RuntimeMetrics(total_elapsed_ms=elapsed),
+            status="failed",
+            error_code="INTERNAL",
         )
         logger.exception(
             "v2 inspection unexpected error",

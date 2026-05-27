@@ -70,6 +70,74 @@ def init_schema(conn: sqlite3.Connection) -> None:
         );
         CREATE INDEX IF NOT EXISTS idx_feedbacks_inspection ON feedbacks(inspection_id);
         CREATE INDEX IF NOT EXISTS idx_feedbacks_check_id ON feedbacks(check_id);
+
+        -- 质量追踪体系（docs/specs/quality-tracking.md）—— Layer 1 数据层。
+        -- 每次分析（含失败 / 超时）写一行。与 inspections 1:1，独立 GC 策略。
+        -- 失败行也必须写 —— 防幸存者偏差（只看成功样本会高估质量）。
+        CREATE TABLE IF NOT EXISTS inspection_metrics (
+            inspection_id            TEXT PRIMARY KEY REFERENCES inspections(id),
+            -- 版本指纹（缺这个就无法说"哪个 prompt 改动让我变好了"）
+            api_version              TEXT NOT NULL,     -- 'v1' | 'v2'
+            prompt_version           TEXT NOT NULL,     -- v1: PROMPT_VERSION; v2: skill_index_version
+            skill_index_version      TEXT,              -- safety_skills/_index.json 顶层 version
+            model                    TEXT NOT NULL,     -- claude-opus-4-7 / sonnet-4-5 / ...
+            -- 输入指纹
+            image_sha256             TEXT NOT NULL,     -- 同图复跑去重 / 一致性分析
+            image_bytes              INTEGER NOT NULL,
+            run_group_id             TEXT,              -- 同图 N 次复跑绑成一组；NULL=单跑
+            -- 性能 / 成本（从 model_meta_json 摘出来变列，方便 SQL）
+            total_elapsed_ms         INTEGER,
+            input_tokens             INTEGER,
+            output_tokens            INTEGER,
+            cache_read_tokens        INTEGER DEFAULT 0,
+            cost_usd                 REAL,
+            tool_calls               INTEGER DEFAULT 0,
+            scenarios_loaded         TEXT,              -- JSON array，v1 为空数组
+            -- 结果形状（从 report_json 预提，避免每次 query 重新 parse 12k 字符）
+            finding_count            INTEGER DEFAULT 0,
+            no_finding_count         INTEGER DEFAULT 0,
+            uncertain_count          INTEGER DEFAULT 0,
+            severity_dist_json       TEXT,              -- {"重大":1,"较大":2,...}
+            is_major_count           INTEGER DEFAULT 0,
+            major_basis_filled_count INTEGER DEFAULT 0,
+            reg_coverage             REAL,              -- regulation 非空的 finding 占比
+            -- 状态
+            status                   TEXT NOT NULL,     -- 'succeeded' | 'failed' | 'timeout'
+            error_code               TEXT,
+            recorded_at              TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_im_prompt_ver  ON inspection_metrics(prompt_version);
+        CREATE INDEX IF NOT EXISTS idx_im_image_sha   ON inspection_metrics(image_sha256);
+        CREATE INDEX IF NOT EXISTS idx_im_recorded_at ON inspection_metrics(recorded_at);
+        CREATE INDEX IF NOT EXISTS idx_im_status      ON inspection_metrics(status);
+
+        -- 质量追踪 Layer 2 评判表（docs/specs/quality-tracking.md §4.1）。
+        -- 每个 (baseline, candidate) pair 跑 1 次 judge → 写 1 行（含位置去偏 2 次原始返回）。
+        -- inconclusive 也写（confident=0），便于统计 judge 稳定性。
+        CREATE TABLE IF NOT EXISTS quality_judgments (
+            id                       TEXT PRIMARY KEY,
+            image_sha256             TEXT NOT NULL,
+            baseline_inspection_id   TEXT REFERENCES inspections(id),
+            candidate_inspection_id  TEXT REFERENCES inspections(id),
+            judge_model              TEXT NOT NULL,
+            judge_rubric_version     TEXT NOT NULL,
+            confident                INTEGER NOT NULL,   -- 1 = 位置去偏一致，0 = inconclusive
+            -- 以下 winner_* 在 confident=0 时为 NULL；值域 'baseline'|'candidate'|'tie'
+            winner_overall           TEXT,
+            winner_recall            TEXT,
+            winner_precision         TEXT,
+            winner_regulation        TEXT,
+            winner_action            TEXT,
+            judge_confidence         TEXT,               -- 'high'|'medium'|'low' (judge 自评)
+            overall_summary          TEXT,
+            raw_json_1               TEXT NOT NULL,
+            raw_json_2               TEXT NOT NULL,
+            cost_usd                 REAL DEFAULT 0,
+            judged_at                TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_qj_image ON quality_judgments(image_sha256);
+        CREATE INDEX IF NOT EXISTS idx_qj_pair  ON quality_judgments(baseline_inspection_id, candidate_inspection_id);
+        CREATE INDEX IF NOT EXISTS idx_qj_judge_model ON quality_judgments(judge_model);
     """)
 
     # SQLite 不支持 ADD COLUMN IF NOT EXISTS，需要先探一下 PRAGMA。

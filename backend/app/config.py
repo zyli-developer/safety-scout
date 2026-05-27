@@ -90,6 +90,14 @@ class Settings(BaseSettings):
     backend_hard_timeout_s: int = 320
     rate_limit_per_minute: int = 10
 
+    # === Quality Tracking · Layer 2 LLM-as-Judge ===
+    # 评判模型必须 ≠ 被测模型 —— 防 self-preference bias（doc §4.3）。
+    # 被测 opus-4-7，默认 judge 用 sonnet-4-5（更便宜 ~1/5、评判能力强）。
+    # 跨厂商需要时改 doubao / openai。
+    judge_model: str = "claude-sonnet-4-5"
+    # judge 调用超时（pairwise 评一对 + 含图片，120s 足够）
+    judge_timeout_seconds: int = 120
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

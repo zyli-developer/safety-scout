@@ -11,17 +11,24 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
 import sqlite3
 import time
 
-from app.errors import SafetyScoutError
+from app.errors import LLMTimeoutError, SafetyScoutError
 from app.llm.base import LLMProvider
 from app.llm.parser import parse_report
-from app.llm.prompt import ANALYZE_PROMPT
+from app.llm.prompt import ANALYZE_PROMPT, PROMPT_VERSION
 from app.schemas.report import ModelMeta
 from app.storage import inspection_repo as repo
+from app.storage import metrics_repo
 from app.storage.inspection_repo import ErrorPayload
+from app.storage.metrics_repo import (
+    InputFingerprint,
+    RuntimeMetrics,
+    VersionFingerprint,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +51,17 @@ async def run_inspection(
 ) -> None:
     """后台任务体。任何异常 → 标 failed，不再向上抛（背景任务无消费者）。"""
     repo.update_processing(conn, inspection_id)
+
+    # 质量追踪指纹（docs/specs/quality-tracking.md §3.3）：
+    # 先准备好 —— 成功失败都要写 metrics（防幸存者偏差）。
+    image_sha = hashlib.sha256(image).hexdigest()
+    version_fp = VersionFingerprint(
+        api_version="v1",
+        prompt_version=PROMPT_VERSION,
+        # provider 暴露 model_id (claude_cli/doubao 都有)；fake provider 没有 → unknown
+        model=getattr(provider, "model_id", "unknown"),
+    )
+    input_fp = InputFingerprint(image_sha256=image_sha, image_bytes=len(image))
 
     t0 = time.monotonic()
     try:
@@ -84,6 +102,23 @@ async def run_inspection(
 
         repo.update_succeeded(conn, inspection_id, report, meta)
         elapsed = int((time.monotonic() - t0) * 1000)
+        # 写质量追踪指标（成功路径）
+        metrics_repo.record_from_report(
+            conn,
+            inspection_id,
+            version=VersionFingerprint(
+                api_version="v1",
+                prompt_version=PROMPT_VERSION,
+                model=raw.model,  # 用真实返回的 model 字符串覆盖 provider.model（更准）
+            ),
+            inp=input_fp,
+            runtime=RuntimeMetrics(
+                total_elapsed_ms=elapsed,
+                cost_usd=float(raw.provider_payload.get("total_cost_usd") or 0.0),
+            ),
+            report=report,
+            status="succeeded",
+        )
         logger.info(
             "inspection succeeded",
             extra={
@@ -99,6 +134,16 @@ async def run_inspection(
             inspection_id,
             ErrorPayload(code=exc.code, message=str(exc), user_message=exc.user_message),
         )
+        elapsed = int((time.monotonic() - t0) * 1000)
+        metrics_repo.record_failure(
+            conn,
+            inspection_id,
+            version=version_fp,
+            inp=input_fp,
+            runtime=RuntimeMetrics(total_elapsed_ms=elapsed),
+            status="timeout" if isinstance(exc, LLMTimeoutError) else "failed",
+            error_code=exc.code,
+        )
         logger.warning(
             "inspection failed",
             extra={"inspection_id": inspection_id, "error_code": exc.code},
@@ -112,6 +157,16 @@ async def run_inspection(
                 message=f"{type(exc).__name__}: {exc}",
                 user_message="服务内部错误，请重试",
             ),
+        )
+        elapsed = int((time.monotonic() - t0) * 1000)
+        metrics_repo.record_failure(
+            conn,
+            inspection_id,
+            version=version_fp,
+            inp=input_fp,
+            runtime=RuntimeMetrics(total_elapsed_ms=elapsed),
+            status="failed",
+            error_code="INTERNAL",
         )
         logger.exception(
             "inspection unexpected error",
