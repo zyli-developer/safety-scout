@@ -38,6 +38,17 @@ export interface FindingV2 {
   /** 给安全员的整改建议，动作可执行。 */
   action: string;
   confidence: V2Confidence;
+  /**
+   * 是否命中《房屋市政工程生产安全重大事故隐患判定标准（2024版）》
+   * 建质规〔2024〕5号。由后端模型自行判定 —— **不允许前端用 severity 等价代换**。
+   * Optional：旧响应未带时按 false 处理（adapter 不会合成假依据）。
+   */
+  is_major?: boolean;
+  /**
+   * is_major=true 时引用的判定标准条款（"《...》建质规〔2024〕5号 第 X 条 类别 — 现象"格式）；
+   * 不命中或不确信时为空串。Optional 同样为兼容旧响应。
+   */
+  major_basis?: string;
 }
 
 export interface NoFindingV2 {

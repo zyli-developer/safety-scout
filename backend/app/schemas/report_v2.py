@@ -50,6 +50,16 @@ class Finding(BaseModel):
     regulation: str = Field(default="", description="引用的规范条款编号")
     action: str = Field(min_length=1, description="给安全员的整改建议，动作可执行")
     confidence: Confidence
+    # 重大事故隐患（建质规〔2024〕5号）—— 模型自行判定，不允许仅凭 severity=重大 等价代换。
+    # 默认 false / 空串：前端 adapter 直接 pass-through，不再合成假依据。
+    is_major: bool = Field(
+        default=False,
+        description="是否命中《房屋市政工程生产安全重大事故隐患判定标准（2024版）》",
+    )
+    major_basis: str = Field(
+        default="",
+        description="is_major=true 时引用的判定标准条款；不确信留空",
+    )
 
 
 class NoFinding(BaseModel):

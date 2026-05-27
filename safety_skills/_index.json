@@ -105,6 +105,7 @@
     "_shared/role_definition.md",
     "_shared/output_schema.md",
     "_shared/fatal_warnings.md",
+    "_shared/major_hazard_judgment.md",
     "_shared/cot_instructions.md"
   ],
   "l1_core": "_l1_core/L1_必查清单.md"

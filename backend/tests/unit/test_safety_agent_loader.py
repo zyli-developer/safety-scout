@@ -42,7 +42,13 @@ def test_l1_checklist_non_empty(loader: SkillLoader) -> None:
 
 
 def test_shared_modules_loadable(loader: SkillLoader) -> None:
-    for name in ("role_definition", "cot_instructions", "fatal_warnings", "output_schema"):
+    for name in (
+        "role_definition",
+        "cot_instructions",
+        "fatal_warnings",
+        "major_hazard_judgment",
+        "output_schema",
+    ):
         content = loader.get_shared(name)
         assert content, f"shared/{name} 内容为空"
         assert not content.startswith("---")
