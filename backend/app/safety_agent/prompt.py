@@ -27,6 +27,10 @@ class PromptBuilder:
             ("# 分析流程", self.loader.get_shared("cot_instructions")),
             ("# L1 必查清单（每张图必查）", self.loader.get_l1_checklist()),
             ("# 致命隐患强化", self.loader.get_shared("fatal_warnings")),
+            (
+                "# 重大事故隐患判定（建质规〔2024〕5号）",
+                self.loader.get_shared("major_hazard_judgment"),
+            ),
             ("# 输出格式规范", self.loader.get_shared("output_schema")),
             ("# 可用场景列表", self._build_scenario_list()),
         ]

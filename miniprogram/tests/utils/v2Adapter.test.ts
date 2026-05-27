@@ -57,21 +57,32 @@ function makeReportV2(overrides: Partial<ReportV2Payload> = {}): ReportV2Payload
 }
 
 describe('mapV2SeverityToV1', () => {
-  test('重大 → high + is_major=true', () => {
-    expect(mapV2SeverityToV1('重大')).toEqual({ severity: 'high', isMajor: true });
+  test('重大 → high', () => {
+    expect(mapV2SeverityToV1('重大')).toBe('high');
   });
-  test('较大 → high + is_major=false', () => {
-    expect(mapV2SeverityToV1('较大')).toEqual({ severity: 'high', isMajor: false });
+  test('较大 → high', () => {
+    expect(mapV2SeverityToV1('较大')).toBe('high');
   });
   test('一般 → medium', () => {
-    expect(mapV2SeverityToV1('一般')).toEqual({ severity: 'medium', isMajor: false });
+    expect(mapV2SeverityToV1('一般')).toBe('medium');
   });
   test('低 → low', () => {
-    expect(mapV2SeverityToV1('低')).toEqual({ severity: 'low', isMajor: false });
+    expect(mapV2SeverityToV1('低')).toBe('low');
   });
 });
 
 describe('mapV2FindingToV1Hazard', () => {
+  test('模型未提供 is_major → 默认 false + major_basis 为空（不合成假依据）', () => {
+    // 这是回归保护：旧实现会把 severity=重大 等价代换为 is_major=true，
+    // 并把 check_id 当作判定标准条款号拼进 major_basis（用户 2026-05 反馈的 bug）。
+    const h = mapV2FindingToV1Hazard(
+      makeFinding({ severity: '重大', check_id: 'S06-A01', category: '高坠风险' }),
+    );
+    expect(h.severity).toBe('high');
+    expect(h.is_major).toBe(false);
+    expect(h.major_basis).toBe('');
+  });
+
   test('较大 finding 不触发重大隐患红标', () => {
     const h = mapV2FindingToV1Hazard(makeFinding({ severity: '较大' }));
     expect(h.severity).toBe('high');
@@ -79,14 +90,23 @@ describe('mapV2FindingToV1Hazard', () => {
     expect(h.major_basis).toBe('');
   });
 
-  test('重大 finding 触发 is_major + major_basis 引建质规〔2024〕5号', () => {
+  test('模型提供 is_major=true + major_basis → adapter pass-through 原样保留', () => {
+    const basis =
+      '《房屋市政工程生产安全重大事故隐患判定标准（2024版）》建质规〔2024〕5号 第 6 条 高处作业 — 临边高度 ≥2m 无防护栏';
     const h = mapV2FindingToV1Hazard(
-      makeFinding({ severity: '重大', check_id: 'S06-E02', category: '高坠风险' }),
+      makeFinding({ severity: '重大', is_major: true, major_basis: basis }),
     );
-    expect(h.severity).toBe('high');
     expect(h.is_major).toBe(true);
-    expect(h.major_basis).toContain('建质规〔2024〕5号');
-    expect(h.major_basis).toContain('S06-E02');
+    expect(h.major_basis).toBe(basis);
+  });
+
+  test('adapter 严格用 check_id 作字面值，不把它写进 major_basis', () => {
+    // 模型不给 → adapter 不能把 check_id 'S06-A01' 拼进 major_basis 模板
+    const h = mapV2FindingToV1Hazard(
+      makeFinding({ severity: '重大', check_id: 'S06-A01' }),
+    );
+    expect(h.major_basis).not.toContain('S06-A01');
+    expect(h.major_basis).not.toContain('建质规');
   });
 
   test('description 合并 title + location + description', () => {

@@ -29,7 +29,9 @@ load_strategy: always
       "severity": "重大",
       "regulation": "JGJ80-2016 第 4.1.1 条：高度 2m 及以上的临边作业必须设置防护栏杆",
       "action": "立即停工，搭设标准防护栏杆（上杆 1.2m + 中杆 0.6m + 挡脚板 ≥180mm），栏杆完成验收后方可恢复作业",
-      "confidence": "高"
+      "confidence": "高",
+      "is_major": true,
+      "major_basis": "《房屋市政工程生产安全重大事故隐患判定标准（2024版）》建质规〔2024〕5号 第 6 条 高处作业 — 临边高度 ≥2m 无防护栏"
     }
   ],
 
@@ -81,6 +83,11 @@ load_strategy: always
 - **confidence**：你对该判断的把握度（高 / 中 / 低）
 - **regulation**：必须引用具体规范编号 + 条款号
 - **location**：必须用图片相对位置描述，便于人工复核
+- **is_major** / **major_basis**：是否命中《房屋市政工程生产安全重大事故隐患判定标准
+  （2024版）》建质规〔2024〕5号。判定规则与 `major_basis` 文本格式见
+  「重大事故隐患判定」shared 模块。**`severity=重大` 不是 `is_major=true`
+  的充分条件 —— 二者独立判断**；不确信能否命中判定标准时，
+  必须 `is_major=false` + `major_basis=""`（空串，不要写"无"/"不适用"）。
 
 ## 输出约束
 

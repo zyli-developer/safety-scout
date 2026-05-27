@@ -120,3 +120,30 @@ def test_finding_check_id_required() -> None:
         ReportV2Payload.model_validate(bad)
     locs = {e["loc"] for e in exc.value.errors()}
     assert any("check_id" in str(loc) for loc in locs)
+
+
+def test_is_major_defaults_false_and_basis_empty() -> None:
+    """旧响应不带 is_major / major_basis 时仍可解析 —— 模型保守留空。"""
+    report = ReportV2Payload.model_validate(DOC_EXAMPLE)
+    assert report.findings[0].is_major is False
+    assert report.findings[0].major_basis == ""
+
+
+def test_is_major_with_basis_passes_through() -> None:
+    """模型主动填 is_major + major_basis 时，schema 原样保留 —— adapter 才拿得到真值。"""
+    good = {
+        **DOC_EXAMPLE,
+        "findings": [
+            {
+                **DOC_EXAMPLE["findings"][0],
+                "is_major": True,
+                "major_basis": (
+                    "《房屋市政工程生产安全重大事故隐患判定标准（2024版）》"
+                    "建质规〔2024〕5号 第 6 条 高处作业 — 临边高度 ≥2m 无防护栏"
+                ),
+            }
+        ],
+    }
+    report = ReportV2Payload.model_validate(good)
+    assert report.findings[0].is_major is True
+    assert "建质规〔2024〕5号" in report.findings[0].major_basis

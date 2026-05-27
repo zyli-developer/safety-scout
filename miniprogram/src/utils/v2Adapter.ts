@@ -12,25 +12,29 @@
  * - `uncertain[]` 明细 —— 仅保留计数
  * - 每条 finding 的 `location` / `confidence` / `category` / `status`
  *
- * 严重度映射（v2 中文四档 → v1 三档 + is_major）：
- *   重大 → high + is_major=true（建质规〔2024〕5号 红标走这里）
- *   较大 → high
- *   一般 → medium
- *   低   → low
+ * 严重度映射（v2 中文四档 → v1 三档）：
+ *   重大 / 较大 → high
+ *   一般       → medium
+ *   低         → low
+ *
+ * **is_major / major_basis 是模型字段，adapter 不参与判定**：
+ *   旧实现曾用「severity=重大 → 拼模板」等价代换，会把 check_id 当作判定标准条款号写进
+ *   `major_basis`，造成"判定依据"虚构（用户 2026-05 反馈的 S06-A01 案例就是这个 bug）。
+ *   现在 adapter 严格 pass-through `f.is_major` / `f.major_basis` —— 模型不给就显示不出，
+ *   宁可少一个红标，也不要伪造一句"建质规〔2024〕5号"。
  */
 import type { Hazard, ReportPayload, Severity, CategoryCode } from '../types/report';
 import type { ReportV2Payload, V2Severity, FindingV2 } from '../types/report-v2';
 
-export function mapV2SeverityToV1(v2: V2Severity): { severity: Severity; isMajor: boolean } {
+export function mapV2SeverityToV1(v2: V2Severity): Severity {
   switch (v2) {
     case '重大':
-      return { severity: 'high', isMajor: true };
     case '较大':
-      return { severity: 'high', isMajor: false };
+      return 'high';
     case '一般':
-      return { severity: 'medium', isMajor: false };
+      return 'medium';
     case '低':
-      return { severity: 'low', isMajor: false };
+      return 'low';
   }
 }
 
@@ -41,18 +45,16 @@ export function mapV2SeverityToV1(v2: V2Severity): { severity: Severity; isMajor
  * 但 HazardItem 渲染时只把它当文本显示，运行时无差。类型上做 `as` 断言通过编译。
  */
 export function mapV2FindingToV1Hazard(f: FindingV2): Hazard {
-  const { severity, isMajor } = mapV2SeverityToV1(f.severity);
   return {
     category_code: f.check_id as CategoryCode,
     category_name: f.category,
     description: f.title + (f.location ? ` · ${f.location}` : '') + (f.description ? `\n${f.description}` : ''),
-    severity,
+    severity: mapV2SeverityToV1(f.severity),
     regulation: f.regulation,
     suggestion: f.action,
-    is_major: isMajor,
-    major_basis: isMajor && f.severity === '重大'
-      ? `《房屋市政工程生产安全重大事故隐患判定标准（2024版）》建质规〔2024〕5号 — ${f.category}（${f.check_id}）`
-      : '',
+    // 严格 pass-through：模型未提供则视为 false / 空串，不再合成假依据。
+    is_major: f.is_major === true,
+    major_basis: typeof f.major_basis === 'string' ? f.major_basis : '',
   };
 }
 
@@ -69,7 +71,7 @@ export function mapV2ReportToV1(
   createdAt: string,
 ): ReportPayload {
   const hazards = v2.findings.map(mapV2FindingToV1Hazard);
-  const overall = mapV2SeverityToV1(v2.report_meta.overall_risk_level).severity;
+  const overall = mapV2SeverityToV1(v2.report_meta.overall_risk_level);
 
   // plain_warning 给 1-30 字醒目卡片用 —— v2 没有直接对应，取 image_summary 截断。
   const plainWarning = v2.report_meta.image_summary.length <= 30
