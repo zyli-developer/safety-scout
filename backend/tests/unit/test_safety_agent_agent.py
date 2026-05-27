@@ -179,6 +179,47 @@ async def test_timeout_raises_llm_timeout(
         )
 
 
+async def test_cli_path_forwarded_to_options(
+    monkeypatch, skill_loader, spy_build_tools
+) -> None:
+    """ClaudeAgentOptions 必须显式拿到 settings.claude_cli_path。
+
+    动机：v2 Agent SDK 之前不传 cli_path 会回退到 SDK bundled CLI，
+    在某些版本组合下吐 'error result: success' 直接挂掉生产
+    （PR #10 修复）。本测试是回归保护 —— 谁删 / 改 cli_path 行立刻红。
+
+    断言点：
+    1. options.cli_path 与 settings.claude_cli_path 字符串相等
+    2. options.model 与 settings.agent_model 一致（顺带防误删邻近行）
+    """
+    captured: dict[str, Any] = {}
+    custom_cli = "/opt/claude/bin/claude-custom"
+    custom_settings = Settings(
+        agent_timeout_seconds=5,
+        safety_skills_root=SKILLS_ROOT,
+        claude_cli_path=custom_cli,
+    )
+
+    async def fake_query(*, prompt, options, transport=None):
+        captured["options"] = options
+        submit = spy_build_tools["by_name"]["submit_safety_report"]
+        await submit.handler({"report_json": json.dumps(VALID_REPORT, ensure_ascii=False)})
+        yield _make_result_message()
+
+    monkeypatch.setattr(agent_mod, "query", fake_query)
+
+    await agent_mod.analyze_image(
+        image_bytes=b"x", settings=custom_settings, skill_loader=skill_loader
+    )
+
+    opts = captured["options"]
+    assert opts.cli_path == custom_cli, (
+        "ClaudeAgentOptions.cli_path 必须等于 settings.claude_cli_path —— "
+        "丢失这个绑定会让 v2 退回 SDK bundled CLI 触发生产 'error result: success'"
+    )
+    assert opts.model == custom_settings.agent_model
+
+
 async def test_scenarios_loaded_recorded(
     monkeypatch, settings, skill_loader, spy_build_tools
 ) -> None:
