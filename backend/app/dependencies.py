@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import sqlite3
+import time
 from collections.abc import Iterator
 from functools import lru_cache
 from pathlib import Path
@@ -77,16 +78,43 @@ def get_llm_provider(settings: Settings = Depends(get_settings)) -> LLMProvider:
     )
 
 
-@lru_cache(maxsize=1)
-def _build_skill_loader(skills_root: str) -> SkillLoader:
-    """私有：用字符串路径做 cache key（Path 也 hashable，但 str 更省事 + 跨平台稳定）。"""
-    return SkillLoader(skills_root)
+# SkillLoader TTL cache：(skills_root, ttl_s) → (cached_at_monotonic, loader)。
+# 替代 @lru_cache 的 "永久缓存" —— 安全工程师改 .md 后 git pull，下次请求 TTL
+# 命中重建，无需重启 backend（docs/specs/v2-rollout.md §三 follow-up）。
+#
+# ttl_s 作为 cache key 一部分：单测可通过改 settings 字段强制不同 ttl 互不污染。
+# 进程级，线程安全 trade-off：FastAPI/uvicorn 单 worker + asyncio 模型下读写在
+# 同一 event loop 序列化；并发 worker 部署各自一份 cache，TTL 内多重建几次
+# 可接受（SkillLoader 构造 ~毫秒级，I/O 主要是首次读 md）。
+_skill_loader_cache: dict[tuple[str, int], tuple[float, SkillLoader]] = {}
+
+
+def _build_skill_loader(skills_root: str, ttl_s: int) -> SkillLoader:
+    """TTL-cached factory。ttl_s ≤ 0 时禁用缓存，每次重建。"""
+    if ttl_s <= 0:
+        return SkillLoader(skills_root)
+    key = (skills_root, ttl_s)
+    now = time.monotonic()
+    entry = _skill_loader_cache.get(key)
+    if entry is not None and now - entry[0] < ttl_s:
+        return entry[1]
+    loader = SkillLoader(skills_root)
+    _skill_loader_cache[key] = (now, loader)
+    return loader
+
+
+def _clear_skill_loader_cache() -> None:
+    """仅测试用：手动清缓存（绕开 TTL）。"""
+    _skill_loader_cache.clear()
 
 
 def get_skill_loader(settings: Settings = Depends(get_settings)) -> SkillLoader:
-    """进程单例 SkillLoader —— 预热 L1+shared 后被 v2 路由 / runner 共用。
+    """SkillLoader —— TTL 缓存，按 settings.safety_skills_cache_ttl_s 控制热重载频率。
 
     集成测试可通过 app.dependency_overrides 注入指向 tmp dir 的桩 loader；
-    需要时也可直接 _build_skill_loader.cache_clear() 强制重建。
+    需要时也可直接 _clear_skill_loader_cache() 强制重建。
     """
-    return _build_skill_loader(str(Path(settings.safety_skills_root)))
+    return _build_skill_loader(
+        str(Path(settings.safety_skills_root)),
+        settings.safety_skills_cache_ttl_s,
+    )

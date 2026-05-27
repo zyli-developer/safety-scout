@@ -288,6 +288,42 @@
   font-weight: 600;
 }
 
+// 分析中 badge：accent-soft 底色 + 橙色脉冲点（呼应 ProgressTracker 现场感）
+.analyzingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.analyzingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.7); }
+}
+
+// 失败 badge：红色 outlined，与分析中区分得开
+.failedBadge {
+  padding: 4px 10px;
+  background: var(--high-soft);
+  color: var(--high);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .emptyFilter {
   padding: 32px 20px;
   text-align: center;

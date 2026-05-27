@@ -67,7 +67,7 @@ export default function MobileIndex() {
       <View className={styles.hero}>
         <Text className={styles.h1}>拍一张工地照片，AI 立刻找出隐患。</Text>
         <Text className={styles.lede}>
-          面向安全员的隐患识别工具。识别十类常见隐患，给出可执行的整改建议。平均 3 分钟出报告。
+          面向安全员的隐患识别工具。识别十类常见隐患，给出可执行的整改建议。约 3-4 分钟出报告。
         </Text>
       </View>
 
@@ -86,7 +86,7 @@ export default function MobileIndex() {
           <Icon name="camera" size={42} color="var(--on-accent)" />
           <Text className={styles.dropzoneTapTitle}>{uploading ? '上传中…' : '拍照'}</Text>
           <Text className={styles.dropzoneTapSub}>
-            {uploading ? '正在送往 AI 分析' : '对准隐患区域，AI 越靠近识别越准'}
+            {uploading ? '正在送往 AI 分析' : '靠近隐患区域拍照，识别更准确'}
           </Text>
         </View>
 
@@ -101,6 +101,22 @@ export default function MobileIndex() {
       </View>
 
       <View className={styles.spacer} />
+
+      {/* 移动端导航入口补丁：除了 TopNav "报告" tab 之外，首页底部再放一个
+          带 icon 的明显按钮指向 history 页 —— 大屏 / 工地戴手套场景下顶部
+          tab 可能被忽略，给主要二级动作单独一个 tap target。 */}
+      <View className={styles.historyEntry}>
+        <View
+          className={styles.historyBtn}
+          role="button"
+          aria-label="查看历史报告"
+          onClick={() => Taro.navigateTo({ url: '/pages/history/index' })}
+        >
+          <Icon name="document" size={18} color="var(--ink-2)" />
+          <Text className={styles.historyLabel}>查看历史报告</Text>
+          <Icon name="chevron-right" size={14} color="var(--ink-3)" />
+        </View>
+      </View>
     </View>
   );
 }

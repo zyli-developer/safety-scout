@@ -68,6 +68,10 @@ class Settings(BaseSettings):
     agent_max_turns: int = 15
     # Skill 库根目录；默认 = 仓库根/safety_skills（zip 解压位置）
     safety_skills_root: Path = _REPO_ROOT / "safety_skills"
+    # SkillLoader 缓存 TTL（秒）。默认 60s —— 安全工程师 git pull 后下次请求
+    # 命中重建，无需重启 backend。设 0 退化为"每请求重建"；
+    # 设很大（如 86400）= 永久缓存（接近旧 lru_cache 行为，需手动重启清缓存）。
+    safety_skills_cache_ttl_s: int = 60
 
     # === Storage ===
     sqlite_path: str = "local_data/safety_scout.db"

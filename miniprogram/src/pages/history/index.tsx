@@ -24,14 +24,21 @@ import { Icon } from '../../components/Icon';
 import { SeverityPill } from '../../components/SeverityPill';
 import { EmptyState } from '../../components/EmptyState';
 import { Button } from '../../components/Button';
-import { getHistory, summarizeHistory, type HistoryEntry } from '../../utils/historyStore';
+import { appendHistory, getHistory, summarizeHistory, type HistoryEntry } from '../../utils/historyStore';
 import { getPhotoFor } from '../../utils/lastPhotoStore';
 import { relativeTime } from '../../utils/relativeTime';
-import type { Severity } from '../../types/report';
+import { getInspection } from '../../api/inspections';
+import { mapV2ReportToV1 } from '../../utils/v2Adapter';
+import type { Severity, ReportPayload } from '../../types/report';
+import type { ReportV2Payload } from '../../types/report-v2';
 
 import styles from './index.module.scss';
 
 type SeverityFilter = 'all' | 'high' | 'medium' | 'low';
+
+// 每 5s 轮询一次 analyzing 条目；与 ProgressTracker 的现场感节奏对齐，
+// 也不会对后端 GET 端点造成压力（每条 analyzing inspection 一次请求）。
+const ANALYZING_POLL_MS = 5000;
 
 export default function HistoryPage() {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
@@ -45,6 +52,82 @@ export default function HistoryPage() {
     setSummary(summarizeHistory());
   }, []);
 
+  // 2026-05-26：自动轮询升级 analyzing 条目 —— 用户中途回到首页 / 进 history
+  // 时不必再手动点回报告页，history 自己每 5s 查后端一次，命中 succeeded/failed
+  // 即写入完整数据。修复 #2 报告：「等了很久没新结果」。
+  useEffect(() => {
+    const analyzing = entries.filter((e) => e.analysisStatus === 'analyzing');
+    if (analyzing.length === 0) return;
+
+    let cancelled = false;
+
+    const tick = async () => {
+      for (const entry of analyzing) {
+        if (cancelled) return;
+        try {
+          const r = await getInspection(
+            entry.inspectionId,
+            entry.schemaVersion ?? 'v1',
+          );
+          if (cancelled) return;
+          if (r.status === 'succeeded' && r.report) {
+            // v2 报告先经 adapter 转回 v1 shape，再做 breakdown 统计
+            const v1Report: ReportPayload =
+              entry.schemaVersion === 'v2'
+                ? mapV2ReportToV1(
+                    r.report as ReportV2Payload,
+                    entry.inspectionId,
+                    r.created_at,
+                  )
+                : (r.report as ReportPayload);
+            const breakdown = { high: 0, medium: 0, low: 0 } as Record<Severity, number>;
+            for (const h of v1Report.hazards) breakdown[h.severity] += 1;
+            appendHistory({
+              inspectionId: entry.inspectionId,
+              capturedAt: Date.parse(r.created_at) || entry.capturedAt,
+              summary: v1Report.summary,
+              overallSeverity: v1Report.overall_severity,
+              hazardCount: v1Report.hazards.length,
+              breakdown,
+              status: 'pending',
+              schemaVersion: entry.schemaVersion,
+              analysisStatus: 'succeeded',
+            });
+          } else if (r.status === 'failed') {
+            appendHistory({
+              inspectionId: entry.inspectionId,
+              capturedAt: Date.parse(r.created_at) || entry.capturedAt,
+              summary: r.error?.user_message ?? '分析失败',
+              overallSeverity: 'low',
+              hazardCount: 0,
+              breakdown: { high: 0, medium: 0, low: 0 },
+              status: 'pending',
+              schemaVersion: entry.schemaVersion,
+              analysisStatus: 'failed',
+            });
+          }
+        } catch {
+          // 单次 poll 失败（网络抖动 / 后端临时 5xx）下次再试，不打断 interval
+        }
+      }
+      if (!cancelled) {
+        setEntries(getHistory());
+        setSummary(summarizeHistory());
+      }
+    };
+
+    // 立刻先 tick 一次（用户进页面时有 stale analyzing entry 的话最快秒级生效）
+    tick();
+    const interval = setInterval(tick, ANALYZING_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+    // entries 变化时重启 effect —— 新 analyzing 加进来要轮询、resolved 出去要停。
+    // 用 join(',') 做稳定字符串依赖避免对 entries 引用变化触发不必要重启。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries.filter((e) => e.analysisStatus === 'analyzing').map((e) => e.inspectionId).join(',')]);
+
   const filtered = useMemo(() => {
     return entries.filter((e) => {
       if (filter !== 'all' && e.overallSeverity !== filter) return false;
@@ -53,9 +136,12 @@ export default function HistoryPage() {
     });
   }, [entries, filter, query]);
 
+  // chip counts 排除 analyzing/failed 条目 —— 它们的 overallSeverity 是 placeholder='low'，
+  // 计入"低"会让用户误以为有低风险已分析报告。所有 analyzing/failed 单独 badge 展示。
   const counts = useMemo(() => {
-    const acc = { all: entries.length, high: 0, medium: 0, low: 0 };
-    for (const e of entries) acc[e.overallSeverity] += 1;
+    const ready = entries.filter((e) => e.analysisStatus !== 'analyzing' && e.analysisStatus !== 'failed');
+    const acc = { all: ready.length, high: 0, medium: 0, low: 0 };
+    for (const e of ready) acc[e.overallSeverity] += 1;
     return acc;
   }, [entries]);
 
@@ -225,8 +311,16 @@ function Chip({
 
 function HistoryRow({ entry }: { entry: HistoryEntry }) {
   const photo = getPhotoFor(entry.inspectionId);
+  const isAnalyzing = entry.analysisStatus === 'analyzing';
+  const isFailed = entry.analysisStatus === 'failed';
   const onTap = () => {
-    Taro.navigateTo({ url: `/pages/report/index?id=${entry.inspectionId}` });
+    // v2 inspection 必须带 ?v=2 —— 否则 report 页按 v1 调 GET /api/v1/...
+    // 后端 v2 路由会 404（schema_version 隔离）。缺省（undefined）按 v1 处理，
+    // 与历史无 schemaVersion 字段的本地缓存条目兼容。
+    const vParam = entry.schemaVersion === 'v2' ? '&v=2' : '';
+    Taro.navigateTo({
+      url: `/pages/report/index?id=${entry.inspectionId}${vParam}`,
+    });
   };
   return (
     <View className={styles.row} role="button" onClick={onTap}>
@@ -241,23 +335,42 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
       <View className={styles.rowBody}>
         <Text className={styles.rowWarn}>{entry.summary}</Text>
         <View className={styles.rowMeta}>
-          <Text className={styles.rowMetaItem}>
-            <Text className={styles.rowMetaB}>{entry.hazardCount}</Text> 项隐患
-          </Text>
+          {!isAnalyzing && !isFailed && (
+            <Text className={styles.rowMetaItem}>
+              <Text className={styles.rowMetaB}>{entry.hazardCount}</Text> 项隐患
+            </Text>
+          )}
           <Text className={styles.rowMetaTime}>{relativeTime(new Date(entry.capturedAt).toISOString())}</Text>
         </View>
       </View>
       <View className={styles.rowCounts}>
-        {entry.breakdown.high > 0 && (
-          <SeverityPill level="high" count={entry.breakdown.high} />
+        {/* analysisStatus 优先于 severity 渲染：分析中 → 旋转点；失败 → 红色 badge；
+            成功（含 undefined 老条目）→ 走原 severity pill 渲染 */}
+        {isAnalyzing && (
+          <View className={styles.analyzingBadge} aria-label="分析中">
+            <View className={styles.analyzingDot} />
+            <Text>分析中</Text>
+          </View>
         )}
-        {entry.breakdown.medium > 0 && (
-          <SeverityPill level="medium" count={entry.breakdown.medium} />
+        {isFailed && (
+          <View className={styles.failedBadge} aria-label="分析失败">
+            <Text>失败</Text>
+          </View>
         )}
-        {entry.breakdown.low > 0 && (
-          <SeverityPill level="low" count={entry.breakdown.low} />
+        {!isAnalyzing && !isFailed && (
+          <>
+            {entry.breakdown.high > 0 && (
+              <SeverityPill level="high" count={entry.breakdown.high} />
+            )}
+            {entry.breakdown.medium > 0 && (
+              <SeverityPill level="medium" count={entry.breakdown.medium} />
+            )}
+            {entry.breakdown.low > 0 && (
+              <SeverityPill level="low" count={entry.breakdown.low} />
+            )}
+            {entry.hazardCount === 0 && <Text className={styles.rowPass}>✓ 通过</Text>}
+          </>
         )}
-        {entry.hazardCount === 0 && <Text className={styles.rowPass}>✓ 通过</Text>}
       </View>
       <Icon name="chevron-right" size={16} color="var(--ink-3)" />
     </View>

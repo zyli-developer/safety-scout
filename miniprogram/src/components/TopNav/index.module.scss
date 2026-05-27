@@ -73,12 +73,21 @@
 @media (max-width: 640px) {
   .inner {
     height: 54px;
-    gap: 12px;
+    gap: 8px;
+    padding: 0 16px;
   }
 
-  // mobile 下不显示 nav tabs（"巡检 / 报告"），由底部 tab 或别的导航方式承担
+  // 2026-05-26：之前 mobile 下隐藏 nav tabs（注释里说"由底部 tab 或别的导航方式
+  // 承担"），但 bottom tab 从来没做 → 移动端 history 页完全没有入口（navigation
+  // dead-end）。修复：mobile 也显示 tabs，"报告" 即历史入口。
   .links {
-    display: none;
+    margin-left: 4px;
+    gap: 4px;
+  }
+
+  .link {
+    padding: 6px 10px;
+    font-size: 13.5px;
   }
 }
 

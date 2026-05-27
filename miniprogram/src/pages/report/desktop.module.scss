@@ -201,6 +201,25 @@
   padding: 0 24px;
 }
 
+// 仅 v2 显示：列表底部"我们漏了什么？"反馈入口（kind=missed）。
+// 2026-05-26：从灰色 pill 改为小字 underline 链接，与 HazardItem.meta 行内
+// 的"反馈"链接视觉语言统一（mobile + desktop 同源）。
+.missedRow {
+  padding: 16px 24px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.missedLink {
+  color: var(--accent);
+  font-size: 13.5px;
+  text-decoration: underline;
+  text-decoration-thickness: 0.5px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+
 .signoff {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);

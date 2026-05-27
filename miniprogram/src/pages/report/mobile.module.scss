@@ -6,6 +6,10 @@
   flex-direction: column;
   min-height: 100vh;
   background: var(--bg);
+  // sticky 底部 inlineActions 占 ~72px（12 padding + 44 button + 12 padding +
+  // env(safe-area)），content 空出对应空间避免最后一条 hazard / "我们漏了什么"
+  // 链接被遮挡。
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
 }
 
 .processingWrap {
@@ -71,10 +75,13 @@
 }
 
 .summaryCount {
-  font-size: 56px;
+  // 2026-05-26：56→40 + letter-spacing -1.5→-0.8。
+  // 56px 在 375px 宽手机上占屏宽 ~15%，product UI 不在数字上吼。
+  // 40px 仍是 hero-scale，weight=600 + tnum 维持权威感。
+  font-size: 40px;
   font-weight: 600;
   line-height: 1.05;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.8px;
   color: var(--ink);
   font-feature-settings: 'tnum' on;
 }
@@ -135,7 +142,10 @@
 }
 
 .alarmWrap {
-  padding: 16px 20px 0;
+  // 2026-05-26：AlarmBox 现在在 SummaryCard 之前，紧跟 Photo。
+  // padding 改为 16/20/8（顶 16、左右 20、底 8），让 alarm → summary 间距收紧、
+  // 视觉上 alarm 是头条而非 summary 的"附录"。
+  padding: 16px 20px 8px;
 }
 
 .hazardSection {
@@ -160,15 +170,50 @@
   margin-top: 12px;
 }
 
-// 2026-05-24 B5：删除 sticky 底部 actbar（mockup 移动版无 sticky CTA），
-// 改为内联放在隐患列表后。.actbar 类保留为别名（部分 css 代码可能仍引用），
-// 但实际改用 .inlineActions 类承载新布局。
+// 仅 v2 显示：列表底部"我们漏了什么？"反馈入口（kind=missed）。
+// 2026-05-26：从灰色 pill 改为小字 underline 链接，与 HazardItem.meta 行内
+// 的"反馈"链接视觉语言统一 —— 同一类操作（badcase 反馈）应该是同一种 affordance。
+.missedRow {
+  margin-top: 16px;
+  padding: 0 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.missedLink {
+  color: var(--accent);
+  font-size: 13px;
+  text-decoration: underline;
+  text-decoration-thickness: 0.5px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+
+// 2026-05-26：导出 PDF 按钮改 sticky 底部 —— 工地场景安全员快速保存 / 转派
+// 报告，按钮必须随手可达；inline 形态需要滚到底部才能点，是导出动作的反模式。
+// （之前 2026-05-24 B5 因 mockup 移版无 sticky 改 inline；本次重新决策走 sticky。）
+//
+// z-index < FeedbackModal (1000)；@media print 仍然隐藏（@media print 段已含 .inlineActions）。
 .inlineActions {
-  margin: 16px 20px 24px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding: 12px 20px;
+  // iPhone home indicator 兼容：内边距 + env() 同步加，env 不支持时降级 0。
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 8px;
+  // 微微浮起感（中性 token 阴影向上）：让 sticky 条与页面有轻层次差，
+  // 但不打破工具调性 —— 不用彩色光晕。
+  box-shadow: 0 -4px 16px rgba(20, 20, 16, 0.04);
 }
+
 
 .actbarText {
   margin-left: 6px;
@@ -202,8 +247,7 @@
   text-transform: uppercase;
 }
 
-// §10.2 自适应：≥600px tablet 居中。sticky actbar 跟随 shell 居中，不再需要
-// fixed + transform 来对齐。
+// §10.2 自适应：≥600px tablet 居中。sticky inlineActions 也跟着收到 640px 居中。
 @media (min-width: 600px) {
   .page {
     max-width: 640px;
@@ -211,6 +255,16 @@
     border-left: 1px solid var(--line);
     border-right: 1px solid var(--line);
     background: var(--surface);
+  }
+
+  // sticky 条用 left/right: 50% + transform 居中到 640 shell；max-width 同步
+  // 限定，外部 backdrop 区域不被遮。
+  .inlineActions {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 640px;
   }
 }
 

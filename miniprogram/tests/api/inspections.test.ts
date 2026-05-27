@@ -87,7 +87,9 @@ describe('api/inspections.createInspection', () => {
       });
     });
 
-    await createInspection('/tmp/photo.png');
+    // 显式传 'v1' —— V2_TRAFFIC_SHARE 上线后默认 pickSchemaVersion=v2，
+    // 该测试断言的是「v1 路径下 url + filePath + name 都对」，与 ramp 决策解耦。
+    await createInspection('/tmp/photo.png', 'v1');
     expect(mockedUploadFile).toHaveBeenCalledTimes(1);
     const call = mockedUploadFile.mock.calls[0][0];
     expect(call.url).toBe(API_BASE_URL + '/api/v1/inspections');

@@ -8,6 +8,7 @@
  * - search input 过滤 summary 文本
  */
 import { fireEvent, render, screen } from '@testing-library/react';
+import Taro from '@tarojs/taro';
 
 import HistoryPage from '../../src/pages/history/index';
 import {
@@ -15,6 +16,8 @@ import {
   _resetHistoryStore,
   type HistoryEntry,
 } from '../../src/utils/historyStore';
+
+const mockedNavigate = Taro.navigateTo as unknown as jest.Mock;
 
 function makeEntry(overrides: Partial<HistoryEntry> = {}): HistoryEntry {
   return {
@@ -32,6 +35,7 @@ function makeEntry(overrides: Partial<HistoryEntry> = {}): HistoryEntry {
 describe('HistoryPage (B8)', () => {
   beforeEach(() => {
     _resetHistoryStore();
+    mockedNavigate.mockReset();
   });
 
   it('renders EmptyState when no history', () => {
@@ -75,6 +79,49 @@ describe('HistoryPage (B8)', () => {
     fireEvent.click(screen.getByText('中'));
     expect(screen.queryByText('high item')).toBeNull();
     expect(screen.getByText('medium item')).toBeInTheDocument();
+  });
+
+  it('row tap navigates to /pages/report/index?id=X (v1 inspection, no ?v param)', () => {
+    appendHistory(
+      makeEntry({
+        inspectionId: 'v1-id',
+        summary: 'v1 报告',
+        overallSeverity: 'high',
+        schemaVersion: 'v1',
+      }),
+    );
+    render(<HistoryPage />);
+    fireEvent.click(screen.getByText('v1 报告'));
+    expect(mockedNavigate).toHaveBeenCalledTimes(1);
+    expect(mockedNavigate.mock.calls[0][0].url).toBe('/pages/report/index?id=v1-id');
+  });
+
+  it('row tap navigates with &v=2 when entry is v2 inspection', () => {
+    appendHistory(
+      makeEntry({
+        inspectionId: 'v2-id',
+        summary: 'v2 报告',
+        overallSeverity: 'high',
+        schemaVersion: 'v2',
+      }),
+    );
+    render(<HistoryPage />);
+    fireEvent.click(screen.getByText('v2 报告'));
+    expect(mockedNavigate).toHaveBeenCalledTimes(1);
+    expect(mockedNavigate.mock.calls[0][0].url).toBe('/pages/report/index?id=v2-id&v=2');
+  });
+
+  it('legacy entry (no schemaVersion) navigates without ?v param —— 与 v1 同等处理', () => {
+    appendHistory(
+      makeEntry({
+        inspectionId: 'legacy-id',
+        summary: 'legacy 报告',
+        overallSeverity: 'low',
+      }),
+    );
+    render(<HistoryPage />);
+    fireEvent.click(screen.getByText('legacy 报告'));
+    expect(mockedNavigate.mock.calls[0][0].url).toBe('/pages/report/index?id=legacy-id');
   });
 
   it('disables filter chip when count is 0', () => {

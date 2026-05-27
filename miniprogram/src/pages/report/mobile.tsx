@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { getInspection } from '../../api/inspections';
 import { HazardItem } from '../../components/HazardItem';
+import { FeedbackModal } from '../../components/FeedbackModal';
 import { ProgressTracker } from '../../components/ProgressTracker';
 import { Icon } from '../../components/Icon';
 import { AppBar } from '../../components/AppBar';
@@ -54,6 +55,41 @@ export default function MobileReport() {
       timeoutMs,
       stopWhen: (r) => r.status === 'succeeded' || r.status === 'failed',
     });
+
+  // 2026-05-26：进入轮询页就在 history 里写一条"分析中"占位 ——
+  // 用户中途点"回到首页继续"（前端 reLaunch 但后端继续跑）时，仍能从 history
+  // 找到这次 inspection；后端跑完后 SucceededReport 用相同 inspectionId
+  // 覆写为完整数据 + analysisStatus='succeeded'。
+  useEffect(() => {
+    if (!id) return;
+    appendHistory({
+      inspectionId: id,
+      capturedAt: Date.now(),
+      summary: '分析中…',
+      overallSeverity: 'low',
+      hazardCount: 0,
+      breakdown: { high: 0, medium: 0, low: 0 },
+      status: 'pending',
+      schemaVersion,
+      analysisStatus: 'analyzing',
+    });
+  }, [id, schemaVersion]);
+
+  // 命中 failed 时升级 history 条目为 failed 态
+  useEffect(() => {
+    if (!id || !result || result.status !== 'failed') return;
+    appendHistory({
+      inspectionId: id,
+      capturedAt: Date.parse(result.created_at) || Date.now(),
+      summary: result.error?.user_message ?? '分析失败',
+      overallSeverity: 'low',
+      hazardCount: 0,
+      breakdown: { high: 0, medium: 0, low: 0 },
+      status: 'pending',
+      schemaVersion,
+      analysisStatus: 'failed',
+    });
+  }, [id, schemaVersion, result?.status]);
 
   if (error) {
     const ui = mapApiError(error);
@@ -106,6 +142,7 @@ export default function MobileReport() {
       report={v1Report}
       canonicalId={id}
       createdAt={result.created_at}
+      schemaVersion={schemaVersion}
     />
   );
 }
@@ -140,10 +177,12 @@ function SucceededReport({
   report,
   canonicalId,
   createdAt,
+  schemaVersion,
 }: {
   report: ReportPayload;
   canonicalId: string;
   createdAt: string;
+  schemaVersion: SchemaVersion;
 }) {
   const sorted = sortBySeverity(report.hazards);
   const severity = report.overall_severity;
@@ -156,6 +195,8 @@ function SucceededReport({
   const idForLookup = canonicalId || report.inspection_id;
 
   // 2026-05-24 B8：记录到本地 history store（localStorage 临时方案）
+  // schemaVersion 必须持久化 —— history 页跳回此页时按它决定 URL 是否带 ?v=2
+  // 2026-05-26：analysisStatus='succeeded' 升级先前轮询期写入的"分析中"占位
   useEffect(() => {
     appendHistory({
       inspectionId: idForLookup,
@@ -165,10 +206,16 @@ function SucceededReport({
       hazardCount: total,
       breakdown: counts,
       status: 'pending',
+      schemaVersion,
+      analysisStatus: 'succeeded',
     });
-  }, [idForLookup]);
+  }, [idForLookup, schemaVersion]);
   const shortNo = idForLookup.slice(0, 12).toUpperCase();
   const photoMeta = `NO.${shortNo} · ${createdAt.slice(0, 16).replace('T', ' ')}`;
+  // 反馈 modal 状态：null=关闭；{checkId?} 形式打开（checkId 缺省 → 漏报模式）。
+  // 仅 v2 显示反馈入口（v1 没有 feedback API）。
+  const [feedbackTarget, setFeedbackTarget] = useState<{ checkId?: string } | null>(null);
+  const showFeedback = schemaVersion === 'v2';
   // 见 desktop.tsx 同段注释：blob URL → data URL 升级轮询，
   // 让 PDF 导出时拿到的是 data: src，避免 Chrome 打印管线取不到 blob 数据。
   const [photo, setPhoto] = useState(() => getPhotoFor(idForLookup));
@@ -190,9 +237,6 @@ function SucceededReport({
     };
   }, [idForLookup, photo?.src]);
 
-  const notImplemented = (label: string) => () =>
-    Taro.showToast({ title: `${label}：开发中`, icon: 'none', duration: 2000 });
-
   const handleExportPdf = () => {
     if (process.env.TARO_ENV === 'h5' && typeof window !== 'undefined') {
       window.print();
@@ -207,26 +251,9 @@ function SucceededReport({
         className={styles.printHide}
         title="巡检报告"
         onBack={() => Taro.reLaunch({ url: '/pages/index/index' })}
-        right={
-          <>
-            <View
-              className={styles.iconBtn}
-              role="button"
-              aria-label="分享"
-              onClick={notImplemented('分享')}
-            >
-              <Icon name="share" size={16} color="var(--ink-2)" />
-            </View>
-            <View
-              className={styles.iconBtn}
-              role="button"
-              aria-label="更多"
-              onClick={notImplemented('更多')}
-            >
-              <Icon name="dots" size={16} color="var(--ink-2)" />
-            </View>
-          </>
-        }
+        /* 2026-05-26：删除 AppBar 右侧"分享 / 更多"两个 IconBtn ——
+           原本都是 notImplemented toast 桩按钮。Product UI 不在顶部
+           chrome 上放假动作；功能真做完时通过 right={...} 注回。 */
       />
 
       {/* 现场照片大图（4:3）—— 报告即报告，照片永远是核心证据。
@@ -235,6 +262,15 @@ function SucceededReport({
       <View className={styles.photoWrap}>
         <Photo src={photo?.src ?? ''} ratio="4/3" overlay={!!photo} meta={photoMeta} />
       </View>
+
+      {/* 2026-05-26 层级重排：AlarmBox（plain_warning，紧急简短）移到 SummaryCard 之前。
+          安全员第一眼应该看到「问题是什么」（plain_warning），SummaryCard 提供支撑数据。
+          原顺序 SummaryCard→AlarmBox 让两个红色块挤在一起，hierarchy 不清。 */}
+      {report.plain_warning && (
+        <View className={styles.alarmWrap}>
+          <AlarmBox>{report.plain_warning}</AlarmBox>
+        </View>
+      )}
 
       <View className={styles.summaryWrap}>
         <View className={styles.summaryCard}>
@@ -270,12 +306,6 @@ function SucceededReport({
         </View>
       </View>
 
-      {report.plain_warning && (
-        <View className={styles.alarmWrap}>
-          <AlarmBox>{report.plain_warning}</AlarmBox>
-        </View>
-      )}
-
       <View className={styles.hazardSection}>
         <Text className={styles.sectionTitle}>隐患明细</Text>
         <Text className={styles.sectionCaption}>按严重程度排序</Text>
@@ -287,27 +317,48 @@ function SucceededReport({
               index={i + 1}
               onAction={() =>
                 Taro.navigateTo({
-                  url: `/pages/report-detail/index?id=${canonicalId}&h=${i}`,
+                  url: `/pages/report-detail/index?id=${canonicalId}&h=${i}${schemaVersion === 'v2' ? '&v=2' : ''}`,
                 })
+              }
+              onFeedback={
+                // v2 适配器把 check_id 写进了 category_code，可直接当 check_id 用
+                showFeedback ? () => setFeedbackTarget({ checkId: h.category_code }) : undefined
               }
             />
           ))}
         </View>
+        {showFeedback && (
+          <View className={styles.missedRow}>
+            <View
+              className={styles.missedLink}
+              role="button"
+              aria-label="反馈：我们漏了什么"
+              onClick={() => setFeedbackTarget({})}
+            >
+              <Text>我们漏了什么？提交反馈 →</Text>
+            </View>
+          </View>
+        )}
       </View>
 
-      {/* 2026-05-24：删 sticky 底部 actbar (mockup 移动版没有 sticky CTA，
-          主操作在 summaryCard 内或紧跟内容流。改为内联放在隐患列表后。)
-          CTA 主次对齐 mockup：分享 primary + 导出 PDF ghost。"转派班组" placeholder 删除。 */}
+      {/* 2026-05-26：删除"分享给班组" primary CTA —— 之前是 notImplemented toast 桩，
+          主 CTA 撑桩在 product UI 是信任失败。"导出 PDF" 真做完了（调 window.print），
+          作为唯一动作保留，提升到 primary。后续真做"分享给班组"时通过 primary 注回。 */}
       <View className={styles.inlineActions}>
-        <Button variant="primary" block onTap={notImplemented('分享给班组')}>
-          <Icon name="share" size={16} color="var(--on-accent)" />
-          <Text className={styles.actbarText}>分享给班组</Text>
-        </Button>
-        <Button variant="secondary" block onTap={handleExportPdf}>
-          <Icon name="download" size={16} color="var(--ink)" />
+        <Button variant="primary" block onTap={handleExportPdf}>
+          <Icon name="download" size={16} color="var(--on-accent)" />
           <Text className={styles.actbarText}>导出 PDF</Text>
         </Button>
       </View>
+
+      {showFeedback && (
+        <FeedbackModal
+          isOpen={feedbackTarget !== null}
+          onClose={() => setFeedbackTarget(null)}
+          inspectionId={canonicalId}
+          checkId={feedbackTarget?.checkId}
+        />
+      )}
     </View>
   );
 }
