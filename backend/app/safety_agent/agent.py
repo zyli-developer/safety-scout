@@ -129,6 +129,9 @@ async def analyze_image(
         options = ClaudeAgentOptions(
             system_prompt=system_prompt,
             model=settings.agent_model,
+            # 生产环境优先复用系统已登录的 Claude CLI，避免 SDK bundled CLI
+            # 在部分版本组合下出现 stream-json 协议异常（error: "success"）。
+            cli_path=settings.claude_cli_path,
             mcp_servers={SAFETY_MCP_SERVER_NAME: mcp_server},
             allowed_tools=["Read", _LOAD_TOOL_FQN, _SUBMIT_TOOL_FQN],
             max_turns=settings.agent_max_turns,
