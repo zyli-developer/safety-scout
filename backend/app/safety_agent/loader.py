@@ -62,6 +62,11 @@ class SkillLoader:
 
     # ----- 对外接口 -----
 
+    @property
+    def index_version(self) -> str:
+        """skill 库版本号 —— 给质量追踪 (inspection_metrics.skill_index_version) 用。"""
+        return self.index.get("version", "unknown")
+
     def get_l1_checklist(self) -> str:
         """L1 必查清单（每次分析都要注入 system prompt）。"""
         return self._read_file(self.index["l1_core"])

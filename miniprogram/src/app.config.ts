@@ -8,6 +8,9 @@ export default defineAppConfig({
     'pages/report-detail/index',
     // 2026-05-24 B8：巡检历史列表（localStorage 数据源，后端 list endpoint 上线前的临时方案）
     'pages/history/index',
+    // 2026-05-27：质量趋势 dashboard（docs/specs/quality-tracking.md §5）。
+    // 入口在 history 页 header 的"质量趋势"小链接；不进 TopNav（守 2-tab 设计）。
+    'pages/quality/index',
   ],
   window: {
     backgroundTextStyle: 'light',

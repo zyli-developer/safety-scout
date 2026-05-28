@@ -167,6 +167,18 @@ export default function HistoryPage() {
                 ? '还没有巡检记录，开始第一次拍照吧'
                 : `本机共 ${entries.length} 次巡检 · ${counts.high} 处高风险`}
             </Text>
+            {/*
+              质量趋势入口（docs/specs/quality-tracking.md §5.2）。
+              低调链接而非 TopNav 第三 tab —— 守 TopNav 2-tab 设计、不暴露给安全员日常使用。
+            */}
+            <View
+              className={styles.qualityLink}
+              role="button"
+              aria-label="进入质量趋势 dashboard"
+              onClick={() => Taro.navigateTo({ url: '/pages/quality/index' })}
+            >
+              <Text>质量趋势 →</Text>
+            </View>
           </View>
           <Button variant="primary" onTap={onNewInspection}>
             <Icon name="camera" size={16} color="var(--on-accent)" />
