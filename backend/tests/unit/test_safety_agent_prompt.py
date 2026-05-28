@@ -180,16 +180,43 @@ def test_initial_user_message_enforces_pure_json_output(builder: PromptBuilder) 
 
 
 def test_initial_user_message_caps_no_findings_and_uncertain(builder: PromptBuilder) -> None:
-    """新增性能约束：prompt 必须明示 no_findings ≤ 5 / uncertain ≤ 3，与 schema
-    的 max_length=5/3 一一对应。光靠 schema 硬约束 CLI 会触发反复重生成（实测
-    structured output 不通过会走多次 retry）；prompt 提前说清楚能让模型一次性
-    按上限生成，省 token、省时间。
-    """
+    """新增性能约束：prompt 必须明示 no_findings ≤ 5 / uncertain ≤ 3。"""
     msg = builder.build_initial_user_message()
     assert "no_findings" in msg
-    assert "5" in msg  # 至少出现 5
+    assert "5" in msg
     assert "uncertain" in msg
-    assert "3" in msg  # 至少出现 3
+    assert "3" in msg
+
+
+def test_initial_user_message_enforces_field_budgets(builder: PromptBuilder) -> None:
+    """v4.1：user message 必须明示字段字数 budget（description ≤25、regulation
+    ≤15、action ≤40）。这是 output_tokens 压缩的关键约束 —— 单靠 schema 例子
+    建议不够，user message 再强化一次。"""
+    msg = builder.build_initial_user_message()
+    # 至少出现这几个关键字段名和数字
+    assert "description" in msg
+    assert "regulation" in msg
+    assert "25" in msg  # description budget
+    assert "15" in msg  # regulation budget
+    assert "40" in msg  # action budget
+
+
+def test_initial_user_message_caps_key_recommendations(builder: PromptBuilder) -> None:
+    """summary.key_recommendations 也要 cap（之前 3 条 × 20 tok = 60 tok，
+    cap 到 2 条）—— prompt 应提到。"""
+    msg = builder.build_initial_user_message()
+    assert "key_recommendations" in msg
+    assert "2" in msg  # 最多 2 条
+
+
+def test_initial_user_message_no_field_overlap_instruction(
+    builder: PromptBuilder,
+) -> None:
+    """description / action / regulation 三个字段必须独立 —— prompt 显式禁止
+    互相复述（实测模型常在 description 里把 regulation 文字也铺一遍）。"""
+    msg = builder.build_initial_user_message()
+    # 包含某种"独立 / 不复述 / 不重复"的指令
+    assert any(kw in msg for kw in ["独立", "不复述", "不要互相", "不要复述", "不与"])
 
 
 def test_initial_user_message_with_extra_context(builder: PromptBuilder) -> None:

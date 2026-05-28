@@ -91,11 +91,16 @@ class PromptBuilder:
             "不要在普通消息里输出 JSON 文本\n"
             "- submit 之前/之后不要输出过程性解释、思路、分析步骤；CoT 推理走 extended "
             "thinking 内部通道，不要在最终回复里复述\n"
-            "- `findings`：存在隐患的项全部列出，描述要可操作、不要赘述\n"
-            "- `no_findings` **最多 5 条**：只挑现场最容易被外行质疑漏检的项（如安全帽、"
-            "防护栏的常见高发项），其余不必列；每条只写 check_id + 极简 note\n"
-            "- `uncertain` **最多 3 条**：只列真正会影响整改判断、必须人工现场复核的项；"
-            "细枝末节的不确定不要写"
+            "- **严格遵守「输出格式规范」里的字数 budget**（description ≤25 字 / "
+            "regulation ≤15 字仅留代码+条号 / action ≤40 字 / no_findings.note ≤10 字 等）。"
+            "超出 budget 对安全员价值低、对延迟成本高\n"
+            "- `findings`：存在隐患的项全部列出；description/action/regulation 三个字段"
+            "**各自独立**，不要互相复述\n"
+            "- `no_findings` **最多 5 条**：只挑现场最易被外行质疑漏检的项（如安全帽、"
+            "防护栏），其余不必列；note 只写一句话原因\n"
+            "- `uncertain` **最多 3 条**：只列真正影响整改判断、必须人工复核的项；"
+            "细枝末节不写\n"
+            "- `summary.key_recommendations` **最多 2 条**顶层动作，不与单项 action 重复"
         )
 
     # ---------- v4 stage 1：场景识别 ----------
