@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from app.safety_agent.loader import SkillLoader
-from app.safety_agent.tools import build_safety_tools
+from app.safety_agent.tools import build_safety_tools, build_scene_detection_tool
 from app.schemas.report_v2 import ReportV2Payload
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -163,3 +163,118 @@ async def test_metric_log_on_submit_schema_error(tools_and_sink, caplog) -> None
     ]
     assert metrics, "schema 错误应埋 v2.tool.submit.schema_error"
     assert metrics[0].first_loc.startswith("findings.0.severity")
+
+
+# ============== v4 两阶段：submit_scene_detection 工具 ==============
+
+
+@pytest.fixture
+def detection_tool_and_sink(loader: SkillLoader):
+    sink: list[list[str]] = []
+    tools = build_scene_detection_tool(loader, sink)
+    return tools[0], sink
+
+
+async def test_scene_detection_valid_ids_persisted(detection_tool_and_sink) -> None:
+    """合法 ID 列表 → sink 追加，返回 is_error 不出现。"""
+    tool, sink = detection_tool_and_sink
+    result = await tool.handler({"scenes": ["S03", "S05"]})
+    assert "is_error" not in result
+    assert sink == [["S03", "S05"]]
+
+
+async def test_scene_detection_filters_unknown_ids(detection_tool_and_sink) -> None:
+    """混合合法 + 未知 ID → 过滤掉未知的，sink 只存合法的，返回 ok 不是 is_error。"""
+    tool, sink = detection_tool_and_sink
+    result = await tool.handler({"scenes": ["S03", "S99", "S05", "ZZZ"]})
+    assert "is_error" not in result
+    assert sink == [["S03", "S05"]]
+    # 提示文本里要告诉模型哪些被忽略了
+    assert "S99" in result["content"][0]["text"] or "ZZZ" in result["content"][0]["text"]
+
+
+async def test_scene_detection_all_unknown_returns_error(detection_tool_and_sink) -> None:
+    """全部 ID 都非法 → is_error，sink 不变。"""
+    tool, sink = detection_tool_and_sink
+    result = await tool.handler({"scenes": ["S99", "ZZZ"]})
+    assert result.get("is_error") is True
+    assert sink == []
+
+
+async def test_scene_detection_wrong_type_returns_error(detection_tool_and_sink) -> None:
+    """scenes 不是字符串列表 → is_error。"""
+    tool, sink = detection_tool_and_sink
+    result = await tool.handler({"scenes": "S03"})  # 字符串而非列表
+    assert result.get("is_error") is True
+    assert sink == []
+
+
+async def test_scene_detection_mixed_type_returns_error(detection_tool_and_sink) -> None:
+    """列表里混了非字符串 → is_error。"""
+    tool, sink = detection_tool_and_sink
+    result = await tool.handler({"scenes": ["S03", 5]})
+    assert result.get("is_error") is True
+    assert sink == []
+
+
+async def test_scene_detection_metric_accepted(detection_tool_and_sink, caplog) -> None:
+    tool, _ = detection_tool_and_sink
+    with caplog.at_level("INFO", logger="app.safety_agent.tools"):
+        await tool.handler({"scenes": ["S03"]})
+    metrics = [
+        r for r in caplog.records
+        if getattr(r, "metric", "") == "v2.tool.scene_detection.accepted"
+    ]
+    assert metrics, "成功 detection 应埋 v2.tool.scene_detection.accepted"
+    assert metrics[0].scenes == ["S03"]
+
+
+async def test_scene_detection_metric_partial_unknown(detection_tool_and_sink, caplog) -> None:
+    tool, _ = detection_tool_and_sink
+    with caplog.at_level("INFO", logger="app.safety_agent.tools"):
+        await tool.handler({"scenes": ["S03", "S99"]})
+    metrics = [
+        r for r in caplog.records
+        if getattr(r, "metric", "") == "v2.tool.scene_detection.partial_unknown"
+    ]
+    assert metrics, "部分未知 ID 应埋 partial_unknown"
+    assert metrics[0].ignored == ["S99"]
+
+
+async def test_scene_detection_metric_all_unknown(detection_tool_and_sink, caplog) -> None:
+    tool, _ = detection_tool_and_sink
+    with caplog.at_level("WARNING", logger="app.safety_agent.tools"):
+        await tool.handler({"scenes": ["S99", "ZZZ"]})
+    metrics = [
+        r for r in caplog.records
+        if getattr(r, "metric", "") == "v2.tool.scene_detection.all_unknown"
+    ]
+    assert metrics, "全 unknown 应埋 all_unknown"
+
+
+# ---------- loader subset 行为 ----------
+
+
+def test_loader_get_scenarios_inline_subset(loader: SkillLoader) -> None:
+    """get_scenarios_inline(ids) 只包含指定子集；不在列表里的不应出现 L2 内容。"""
+    only_s03 = loader.get_scenarios_inline(scenario_ids=["S03"])
+    assert "S03" in only_s03
+    # S03 的 L2 至少包含"脚手架"这种主题词
+    assert "脚手架" in only_s03
+    # 其他场景不应被 inline
+    # 用 S08 起重机械 / S07 施工用电的标题
+    all_inline = loader.get_scenarios_inline()
+    assert len(only_s03) < len(all_inline) / 3, "单场景子集应远小于全 inline"
+
+
+def test_loader_get_scenarios_inline_none_equals_all(loader: SkillLoader) -> None:
+    """get_scenarios_inline(None) ≡ get_all_scenarios_inline()（向后兼容）。"""
+    assert loader.get_scenarios_inline(None) == loader.get_all_scenarios_inline()
+
+
+def test_loader_get_scenarios_inline_unknown_ids_ignored(loader: SkillLoader) -> None:
+    """未知 ID 静默忽略，不报错。"""
+    only_unknown = loader.get_scenarios_inline(scenario_ids=["S99", "ZZZ"])
+    assert only_unknown == ""  # 没匹配上任何场景
+    mixed = loader.get_scenarios_inline(scenario_ids=["S03", "S99"])
+    assert "S03" in mixed

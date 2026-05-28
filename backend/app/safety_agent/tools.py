@@ -1,23 +1,24 @@
-"""v2 Agent 的 in-process MCP tool。
+"""v2 Agent 的 in-process MCP tools。
 
-工厂 `build_safety_tools(loader, sink)` 当前只返回一个 SdkMcpTool：
-- `submit_safety_report(report_json)` —— Agent 提交最终结构化报告
+两个工厂函数 + 共享的 sink 模式：
+- `build_safety_tools(loader, sink)` —— stage 2 用，返回 [submit_safety_report]
+- `build_scene_detection_tool(loader, sink)` —— stage 1 用，返回单个
+  submit_scene_detection 工具
 
-`sink` 是一个调用方持有的列表（容量 0/1）：submit 校验通过后把 ReportV2Payload
-追加进去，agent.analyze_image 在 query() 流结束后从 sink 里取最终结果。
+`sink` 是一个调用方持有的列表（容量 0/1）：工具校验通过后把结果追加进去，
+agent.analyze_image 在 query() 流结束后从 sink 里取。
 设计成"列表 sink + 闭包工具"，是因为：
 1. SDK 把工具调度到 in-process MCP server，没有官方"返回值给宿主"的通道；
 2. 用闭包持有 sink 比线程/contextvar 简单，单元测试也好造桩；
-3. 多次 submit 由工具方"拒收第二次"或宿主清空 sink 控制（这里取后者：宿主每次
-   分析新建 session）。
+3. 多次提交由工具方"拒收第二次"或宿主清空 sink 控制（这里取后者：宿主每个
+   stage 新建 sink）。
 
 历史：原本还有 `load_scenario_skill` 工具供 Agent 按需拉 L2 清单，已下线 ——
-12 个场景的 L2 内容现在全部 inline 进 system prompt（PromptBuilder），省 4 个
-串行 tool turn 的延迟。`loader` 参数当前未使用但保留，便于将来再加新工具不
-破坏调用方签名。
+12 个场景的 L2 内容现在按 stage 1 命中情况 inline 进 stage 2 system prompt
+（PromptBuilder.build_system_prompt(scene_ids=...)）。
 
 错误处理原则（plan §4.3）：
-- JSON 解析失败、schema 校验失败：返 `is_error=True` + 可读修复提示，让 Agent 重提交
+- JSON 解析失败、schema 校验失败、参数非法：返 `is_error=True` + 可读修复提示
 - 不要 raise —— SDK 会把异常转成 error message，但消息文本不可控
 """
 from __future__ import annotations
@@ -45,6 +46,83 @@ def _text_result(text: str, is_error: bool = False) -> dict[str, Any]:
     if is_error:
         out["is_error"] = True
     return out
+
+
+def build_scene_detection_tool(
+    loader: SkillLoader,
+    scene_sink: list[list[str]],
+) -> list[SdkMcpTool[Any]]:
+    """Stage 1 用：场景识别工具。模型识别图属于哪几个场景后调此工具提交 ID 列表。
+
+    Args:
+        loader: 用来拿合法场景 ID 列表，做"未知 ID"校验
+        scene_sink: 验证通过的场景 ID 列表追加到这里（list[list[str]]，宿主取最后一项）
+
+    返回的工具 input schema：`{"scenes": list[str]}`。
+    """
+    valid_ids = {s["id"] for s in loader.list_scenarios()}
+
+    @tool(
+        name="submit_scene_detection",
+        description=(
+            "提交 Stage 1 识别出的命中场景 ID 列表。"
+            "scenes 必须是 list[str]，每个元素是 system prompt「场景目录」里出现过的 ID（如 'S03'）。"
+            "提交后立即结束 Stage 1。"
+        ),
+        input_schema={"scenes": list[str]},
+    )
+    async def submit_scene_detection(args: dict[str, Any]) -> dict[str, Any]:
+        scenes = args.get("scenes")
+        if not isinstance(scenes, list) or not all(isinstance(s, str) for s in scenes):
+            logger.warning(
+                "v2 stage1 scene_detection bad type",
+                extra={"metric": "v2.tool.scene_detection.bad_type"},
+            )
+            return _text_result(
+                "scenes 必须是字符串列表，如 ['S03', 'S05']", is_error=True
+            )
+        # 过滤未知 ID（不直接报错，而是过滤后告知 —— 模型自然下次调整；
+        # 全部非法时报 is_error）
+        filtered = [s for s in scenes if s in valid_ids]
+        unknown = [s for s in scenes if s not in valid_ids]
+        if not filtered:
+            logger.warning(
+                "v2 stage1 scene_detection all_unknown",
+                extra={
+                    "metric": "v2.tool.scene_detection.all_unknown",
+                    "submitted": scenes,
+                },
+            )
+            return _text_result(
+                f"提交的场景 ID 全部不在合法列表中：{scenes}。"
+                f"合法 ID 见 system prompt「场景目录」，例如 {sorted(valid_ids)[:5]} ...",
+                is_error=True,
+            )
+        scene_sink.append(filtered)
+        if unknown:
+            logger.info(
+                "v2 stage1 scene_detection partial_unknown",
+                extra={
+                    "metric": "v2.tool.scene_detection.partial_unknown",
+                    "accepted": filtered,
+                    "ignored": unknown,
+                },
+            )
+        else:
+            logger.info(
+                "v2 stage1 scene_detection accepted",
+                extra={
+                    "metric": "v2.tool.scene_detection.accepted",
+                    "scenes": filtered,
+                },
+            )
+        return _text_result(
+            f"已记录命中场景：{filtered}"
+            + (f"（忽略未知 ID：{unknown}）" if unknown else "")
+            + "。Stage 1 结束。"
+        )
+
+    return [submit_scene_detection]
 
 
 def build_safety_tools(

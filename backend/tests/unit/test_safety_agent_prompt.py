@@ -80,6 +80,81 @@ def test_system_prompt_length_in_range(builder: PromptBuilder) -> None:
     assert 15000 <= len(sp) <= 60000, f"system prompt 长度异常: {len(sp)} 字符"
 
 
+# ---------- v4 两阶段：stage 1 prompt ----------
+
+
+def test_stage1_system_prompt_has_meta_no_l2(builder: PromptBuilder) -> None:
+    """Stage 1 prompt 只含场景目录 meta（ID + 名 + 特征），不含任何 L2 详情。
+
+    L2 详情应留给 stage 2 按命中场景动态注入。这里硬断言 stage 1 长度
+    显著小于 stage 2 全 inline。
+    """
+    sp1 = builder.build_stage1_system_prompt()
+    sp2_full = builder.build_system_prompt()  # 全 inline 22-36k
+    assert "S03" in sp1  # 场景目录里 ID 必须出现
+    assert "S12" in sp1
+    # 应远小于全 inline；上限 18k 字符，下限象征性给 500
+    # （实测目前 ~1.5k 字符 = 中文 ~750 tokens，stage 1 任务简单不需要更长）
+    assert 500 <= len(sp1) <= 18000, f"stage1 prompt 异常长度: {len(sp1)}"
+    assert len(sp1) < len(sp2_full) / 2, (
+        f"stage1 ({len(sp1)}) 应远小于 stage2 全 inline ({len(sp2_full)})"
+    )
+
+
+def test_stage1_system_prompt_mentions_detection_tool(builder: PromptBuilder) -> None:
+    """Stage 1 prompt 必须明示工具名 submit_scene_detection。"""
+    sp1 = builder.build_stage1_system_prompt()
+    assert "submit_scene_detection" in sp1 or "stage 1" in sp1.lower() or "场景识别" in sp1
+
+
+def test_stage1_user_message_requires_detection_tool(builder: PromptBuilder) -> None:
+    msg = builder.build_stage1_user_message()
+    assert "submit_scene_detection" in msg
+    # stage 1 不应让模型做深度分析
+    assert "submit_safety_report" not in msg
+
+
+def test_stage1_scenario_meta_lists_all_12(builder: PromptBuilder) -> None:
+    """场景目录 meta 必须列全 12 个，否则 stage 1 漏掉的场景永远进不去 stage 2。"""
+    sp1 = builder.build_stage1_system_prompt()
+    for sid in ("S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12"):
+        assert sid in sp1, f"stage1 prompt 漏场景 {sid}"
+
+
+# ---------- v4 两阶段：stage 2 subset prompt ----------
+
+
+def test_build_system_prompt_with_scene_subset(builder: PromptBuilder) -> None:
+    """build_system_prompt(scene_ids=[...]) 只 inline 指定场景的 L2。"""
+    full = builder.build_system_prompt()  # 全 12 inline
+    subset = builder.build_system_prompt(scene_ids=["S03", "S05"])
+    assert len(subset) < len(full), "子集 prompt 必须比全 inline 短"
+    assert "S03" in subset
+    assert "S05" in subset
+    # 命中的子集 prompt 大小应是全集的一小部分（场景占大头）
+    assert len(subset) < len(full) * 0.7
+
+
+def test_build_system_prompt_with_empty_subset_falls_back_to_all(
+    builder: PromptBuilder,
+) -> None:
+    """scene_ids=None 或 [] → 走全 inline 兜底（等价旧 v3 行为）。"""
+    full = builder.build_system_prompt()
+    none_arg = builder.build_system_prompt(scene_ids=None)
+    assert full == none_arg
+
+
+def test_initial_user_message_with_scene_ids_mentions_them(
+    builder: PromptBuilder,
+) -> None:
+    """传 scene_ids 给 user message 时，必须告诉模型"识别已完成"避免重复。"""
+    msg = builder.build_initial_user_message(scene_ids=["S03", "S05"])
+    assert "S03" in msg
+    assert "S05" in msg
+    # 必须明示"已识别 / Stage 1" 避免模型重复识别
+    assert any(kw in msg for kw in ["已识别", "Stage 1", "stage 1", "stage1"])
+
+
 def test_initial_user_message_uses_submit_tool_not_legacy_load(
     builder: PromptBuilder,
 ) -> None:

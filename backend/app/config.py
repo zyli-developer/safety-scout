@@ -78,6 +78,12 @@ class Settings(BaseSettings):
     # 默认从 8000 下调到 2000：实测对工地图分析推理深度足够，且能省 ~10-15s
     # 延迟（thinking tokens 计入 output_tokens 总数，按 output 速率生成）。
     agent_thinking_budget_tokens: int = 2000
+    # v4 两阶段开关（stage 1 场景识别 + stage 2 子集深度分析）。
+    # 默认 False = 走 v3 单阶段（全 12 场景 inline 进 system prompt，实测 ~115s）。
+    # True = 走 v4 两阶段。实测两阶段比单阶段慢 ~76%（202s vs 115s）—— stage 1 净
+    # 增 ~24s + 阶段切换 vision 重处理 + 新 cache 建立 ~36s，stage 2 输出耗时也没
+    # 因 prompt 变短而显著减少。代码保留是给将来"stage 1 走 Haiku"等变体打底。
+    agent_use_two_stage: bool = False
     # Native structured output：API 直接强制返回符合 JSON schema 的最终回复，
     # 省掉 submit_safety_report 工具调用那一轮 + 模型 wrap-up 文本（实测可省 ~15s）。
     # 关闭可回退到 v0 行为（保留 submit 工具），但本仓库当前已删除该工具实现，
