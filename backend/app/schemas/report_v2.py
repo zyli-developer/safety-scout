@@ -99,19 +99,20 @@ class ReportSummary(BaseModel):
 class ReportV2Payload(BaseModel):
     """v2 报告完整体 —— 与 output_schema.md 一一对应。
 
-    输出体量约束（性能优化）：
-    - `findings` 不设上限（真隐患不能丢）
-    - `no_findings` ≤ **5**：仅保留"最易被外人质疑漏检"的项，多写没用；
-      旧版 15-30 条占了 30%+ 输出 token、生成耗时严重
-    - `uncertain` ≤ **3**：模型"我不确定"列表对动作驱动价值低，只保留最关键的复核项
-    - structured output 模式下 CLI 把这些 max_length 编译进 json_schema，硬约束
-      模型按上限生成 —— 不像 prompt 里的"建议"那样可能被忽略
+    历史：曾给 `no_findings`/`uncertain` 加 `max_length=5/3` 硬约束（structured
+    output 模式下 CLI 会把它编进 json_schema 强制模型按上限生成）。但生产实测
+    Sonnet 4.6 满足不了这个硬约束 —— 模型反复生成 N+1 条触发 CLI retry，5 次
+    后放弃，整次请求超时（实测一张图 365s 超 360s timeout）。已撤销。
+
+    现状：体量约束仅放在 prompt（"最多 5/3 条"是 soft 建议），由模型自行遵守。
+    实测 Sonnet 通常会遵守 80%+，少数超 1-2 条可接受；比硬约束触发 retry 死循环
+    可靠得多。findings 不设任何上限。
     """
 
     model_config = ConfigDict(extra="forbid")
 
     report_meta: ReportMeta
     findings: list[Finding] = Field(default_factory=list)
-    no_findings: list[NoFinding] = Field(default_factory=list, max_length=5)
-    uncertain: list[Uncertain] = Field(default_factory=list, max_length=3)
+    no_findings: list[NoFinding] = Field(default_factory=list)
+    uncertain: list[Uncertain] = Field(default_factory=list)
     summary: ReportSummary

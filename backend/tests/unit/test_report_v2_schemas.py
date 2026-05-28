@@ -111,54 +111,31 @@ def test_findings_empty_list_allowed() -> None:
     assert report.findings == []
 
 
-def test_no_findings_capped_at_5() -> None:
-    """no_findings 超过 5 条 → ValidationError。
+def test_no_findings_no_schema_cap() -> None:
+    """回归保护：no_findings 不应有 schema max_length —— Sonnet 4.6 满足不了，会
+    触发 CLI 的 structured-output retry 死循环（实测 5 次 retry 571s 后放弃，
+    总耗时超 360s timeout，整次请求挂掉）。体量约束只走 prompt soft 提示。
 
-    动机：output_tokens 优化（性能） —— 旧版输出 15+ 条 no_findings 占 30%+
-    tokens、生成耗时严重。schema max_length=5 配合 structured output 强制 CLI
-    按上限生成，比 prompt"建议"约束更可靠。
+    曾经版本：no_findings max_length=5 → 生产挂；现已撤销。
     """
-    too_many = [{"check_id": f"X{i:02d}", "note": "已检查"} for i in range(6)]
-    bad = {**DOC_EXAMPLE, "no_findings": too_many}
-    with pytest.raises(ValidationError) as exc:
-        ReportV2Payload.model_validate(bad)
-    locs = {e["loc"] for e in exc.value.errors()}
-    assert any("no_findings" in str(loc) for loc in locs)
-
-
-def test_no_findings_at_5_passes() -> None:
-    """no_findings 恰好 5 条 → 通过（边界值）。"""
-    exactly_5 = [{"check_id": f"X{i:02d}", "note": "已检查"} for i in range(5)]
-    good = {**DOC_EXAMPLE, "no_findings": exactly_5}
+    many = [{"check_id": f"X{i:02d}", "note": "已检查"} for i in range(30)]
+    good = {**DOC_EXAMPLE, "no_findings": many}
     report = ReportV2Payload.model_validate(good)
-    assert len(report.no_findings) == 5
+    assert len(report.no_findings) == 30
 
 
-def test_uncertain_capped_at_3() -> None:
-    """uncertain 超过 3 条 → ValidationError（与 no_findings 同一类约束）。"""
-    too_many = [
+def test_uncertain_no_schema_cap() -> None:
+    """同 no_findings：uncertain 不应有 schema max_length。"""
+    many = [
         {"check_id": f"U{i:02d}", "reason": "不确定", "suggested_action": "复核"}
-        for i in range(4)
+        for i in range(30)
     ]
-    bad = {**DOC_EXAMPLE, "uncertain": too_many}
-    with pytest.raises(ValidationError) as exc:
-        ReportV2Payload.model_validate(bad)
-    locs = {e["loc"] for e in exc.value.errors()}
-    assert any("uncertain" in str(loc) for loc in locs)
-
-
-def test_uncertain_at_3_passes() -> None:
-    """uncertain 恰好 3 条 → 通过（边界值）。"""
-    exactly_3 = [
-        {"check_id": f"U{i:02d}", "reason": "不确定", "suggested_action": "复核"}
-        for i in range(3)
-    ]
-    good = {**DOC_EXAMPLE, "uncertain": exactly_3}
+    good = {**DOC_EXAMPLE, "uncertain": many}
     report = ReportV2Payload.model_validate(good)
-    assert len(report.uncertain) == 3
+    assert len(report.uncertain) == 30
 
 
-def test_findings_has_no_cap() -> None:
+def test_findings_no_schema_cap() -> None:
     """findings 不能设上限 —— 真隐患不能丢；超过 10 条也必须通过。"""
     many_findings = [
         {**DOC_EXAMPLE["findings"][0], "check_id": f"F{i:02d}"} for i in range(12)

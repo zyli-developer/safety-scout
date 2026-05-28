@@ -57,10 +57,16 @@ class Settings(BaseSettings):
     doubao_timeout_seconds: int = 120
 
     # === Agent SDK (v2) ===
-    # v2 默认走 sonnet-4-6：输出速度 ~200 tok/s（opus-4-7 仅 ~64），3-4× 快；
-    # 重大隐患召回风险由质量追踪 Layer 2 judge 持续监控（accept_rules.recall_no_regression）。
+    # v2 默认 opus-4-7。曾尝试切 sonnet-4-6（理论上输出更快），生产实测翻车：
+    # Sonnet 4.6 不会用 CLI 在 output_format=json_schema 模式下注入的虚拟工具
+    # `StructuredOutput`，连续 5 次产空 keys=[]，CLI 5 次 retry 全失败、
+    # 总耗时 504s 超 timeout（模型 thinking 里自承"I'm having trouble with the
+    # StructuredOutput tool"）。trace 还显示 Sonnet 在此场景输出速率 ~48 tok/s
+    # 实际比 Opus 64 tok/s 还慢，没有"理论速度优势"。
+    # 想切 Sonnet 要先解决 structured output 兼容（要么换回 submit_safety_report
+    # 自定义工具路径，要么等 SDK/CLI 修正 Sonnet 对 StructuredOutput 的引导）。
     # 不用 sonnet alias —— 同 v1 教训
-    agent_model: str = "claude-sonnet-4-6"
+    agent_model: str = "claude-opus-4-7"
     # Agent 多轮 tool 调用比单次慢；优化后（inline skills + structured output +
     # extended thinking + sonnet）目标 < 60s；保守 timeout 留余地。
     agent_timeout_seconds: int = 360
