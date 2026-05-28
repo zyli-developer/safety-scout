@@ -68,8 +68,10 @@ class Settings(BaseSettings):
     agent_max_turns: int = 15
     # Extended thinking 预算（tokens）。thinking tokens 走专门通道、不计 output_tokens、
     # 不发到用户可见的回复里。开启后模型可以"想清楚再说"，但用户看到的输出只有最终 JSON。
-    # 0 = 禁用 extended thinking；建议范围 4000-10000（推理深度 vs 成本平衡）。
-    agent_thinking_budget_tokens: int = 8000
+    # 0 = 禁用 extended thinking；建议范围 2000-8000（推理深度 vs 成本/延迟平衡）。
+    # 默认从 8000 下调到 2000：实测对工地图分析推理深度足够，且能省 ~10-15s
+    # 延迟（thinking tokens 计入 output_tokens 总数，按 output 速率生成）。
+    agent_thinking_budget_tokens: int = 2000
     # Native structured output：API 直接强制返回符合 JSON schema 的最终回复，
     # 省掉 submit_safety_report 工具调用那一轮 + 模型 wrap-up 文本（实测可省 ~15s）。
     # 关闭可回退到 v0 行为（保留 submit 工具），但本仓库当前已删除该工具实现，

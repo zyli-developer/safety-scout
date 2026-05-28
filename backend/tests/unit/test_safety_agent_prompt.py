@@ -101,6 +101,19 @@ def test_initial_user_message_enforces_pure_json_output(builder: PromptBuilder) 
     assert any(kw in msg for kw in ["不要", "仅为", "严格"])
 
 
+def test_initial_user_message_caps_no_findings_and_uncertain(builder: PromptBuilder) -> None:
+    """新增性能约束：prompt 必须明示 no_findings ≤ 5 / uncertain ≤ 3，与 schema
+    的 max_length=5/3 一一对应。光靠 schema 硬约束 CLI 会触发反复重生成（实测
+    structured output 不通过会走多次 retry）；prompt 提前说清楚能让模型一次性
+    按上限生成，省 token、省时间。
+    """
+    msg = builder.build_initial_user_message()
+    assert "no_findings" in msg
+    assert "5" in msg  # 至少出现 5
+    assert "uncertain" in msg
+    assert "3" in msg  # 至少出现 3
+
+
 def test_initial_user_message_with_extra_context(builder: PromptBuilder) -> None:
     msg = builder.build_initial_user_message(extra_context="在建主体 5 楼，上海")
     assert "在建主体 5 楼，上海" in msg

@@ -97,12 +97,21 @@ class ReportSummary(BaseModel):
 
 
 class ReportV2Payload(BaseModel):
-    """v2 报告完整体 —— 与 output_schema.md 一一对应。"""
+    """v2 报告完整体 —— 与 output_schema.md 一一对应。
+
+    输出体量约束（性能优化）：
+    - `findings` 不设上限（真隐患不能丢）
+    - `no_findings` ≤ **5**：仅保留"最易被外人质疑漏检"的项，多写没用；
+      旧版 15-30 条占了 30%+ 输出 token、生成耗时严重
+    - `uncertain` ≤ **3**：模型"我不确定"列表对动作驱动价值低，只保留最关键的复核项
+    - structured output 模式下 CLI 把这些 max_length 编译进 json_schema，硬约束
+      模型按上限生成 —— 不像 prompt 里的"建议"那样可能被忽略
+    """
 
     model_config = ConfigDict(extra="forbid")
 
     report_meta: ReportMeta
     findings: list[Finding] = Field(default_factory=list)
-    no_findings: list[NoFinding] = Field(default_factory=list)
-    uncertain: list[Uncertain] = Field(default_factory=list)
+    no_findings: list[NoFinding] = Field(default_factory=list, max_length=5)
+    uncertain: list[Uncertain] = Field(default_factory=list, max_length=3)
     summary: ReportSummary
