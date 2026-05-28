@@ -5,7 +5,10 @@
   之前用 `load_scenario_skill` 工具按需加载是为"防 prompt 膨胀"，但实测延迟代价
   （4 个串行 tool turn + 1 个 ToolSearch 探索）远大于多 17k cached input 的收益。
   Anthropic prompt caching 把后续 cache_read 价压到 0.1×，inline 几乎免费。
-- 通过 `submit_safety_report` 工具提交报告（structured output 切换由后续 commit 做）。
+- 最终输出由 SDK 的 native structured output（output_format=json_schema）强制成
+  合法 ReportV2Payload JSON —— prompt 不再要求"调用 submit_safety_report"，也不
+  鼓励模型在最终 JSON 之外输出任何过程性文字（CoT 走 extended thinking 通道，
+  不计 output_tokens、不可见）。
 - SEPARATOR 用 60 个 `=` 帮 Agent 视觉切分段落，prompt 长度估算 ~22k tokens（含场景）。
 """
 from __future__ import annotations
@@ -39,17 +42,22 @@ class PromptBuilder:
         return self.SEPARATOR.join(f"{title}\n\n{body}" for title, body in sections)
 
     def build_initial_user_message(self, extra_context: str = "") -> str:
-        """每次分析的第一条 user 消息 —— 图片单独以 image block 附带。"""
+        """每次分析的第一条 user 消息 —— 图片单独以 image block 附带。
+
+        Native structured output 模式下，最终回复必须是一段合法的 ReportV2Payload
+        JSON。本提示词配合 output_format + extended thinking：
+        - 推理过程走 thinking 通道，无需也不要在最终回复里"写出来"
+        - 最终回复**只输出 JSON**，不要前缀解释、不要 markdown 围栏、不要尾部寒暄
+        """
         extra_block = f"\n附加信息：{extra_context}\n" if extra_context else ""
         return (
-            "请按以下流程对附带的工地照片进行安全隐患分析：\n\n"
-            "1. 先描述整张图片的整体场景和九宫格分区内容\n"
-            "2. 判断命中的场景（参考 system prompt 的「L2 场景详细清单」）\n"
-            "3. 对照 L1 + 命中场景的 L2 清单逐项核查（清单已全部在 system prompt 里，"
-            "无需调用任何工具加载）\n"
-            "4. 自我审查（重点对照「致命 7 类」）\n"
-            "5. **必须通过调用 submit_safety_report 工具提交最终 JSON 报告**\n"
-            "   不要在普通消息里输出 JSON 文本。"
+            "请对附带的工地照片做安全隐患分析。先用 Read 工具读取图片，然后按 system "
+            "prompt 中的「分析流程」逐项核查（L1 必查 + 命中场景的 L2 清单，均已 inline）。"
             f"{extra_block}\n"
-            "开始分析。"
+            "**输出约束（严格遵守）**：\n"
+            "- 最终回复**仅为**一段合法的 JSON，符合 ReportV2Payload schema\n"
+            "- 不要在 JSON 之前/之后输出任何解释、思路、分析过程、markdown 围栏\n"
+            "- 思考过程走 extended thinking 内部通道，不要在最终回复里复述\n"
+            "- 不确定的项放 uncertain 段；确认无问题的项放 no_findings 段（只写 check_id + "
+            "极简 note，不要展开）；存在隐患的项放 findings 段（描述要可操作，不要赘述）"
         )

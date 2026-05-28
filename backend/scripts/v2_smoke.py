@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
 import logging
 import sys
 import time
@@ -48,12 +47,13 @@ async def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("case", nargs="?", default="1", help="case id or image path")
     parser.add_argument("--timeout", type=int, default=120, help="agent timeout s")
-    parser.add_argument("--trace", action="store_true", help="stream agent events")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     # claude_agent_sdk 的内部日志太啰嗦，压一压
     logging.getLogger("claude_agent_sdk").setLevel(logging.WARNING)
+    # 想看 agent 内部决策的，把这个调成 DEBUG（_drain 里有结构化埋点）
+    logging.getLogger("app.safety_agent").setLevel(logging.INFO)
 
     image_path = _resolve_image(args.case)
     print(f"image: {image_path}")
@@ -66,83 +66,19 @@ async def main() -> None:
     )
     loader = SkillLoader(SKILLS_ROOT)
 
-    if args.trace:
-        # 不走 analyze_image，自己跑 query 把所有 message 打出来
-        from claude_agent_sdk import (
-            AssistantMessage, ClaudeAgentOptions, ResultMessage, TextBlock,
-            ToolUseBlock, UserMessage, create_sdk_mcp_server, query,
+    t0 = time.monotonic()
+    try:
+        report, stats = await analyze_image(
+            image_bytes=image_bytes,
+            settings=settings,
+            skill_loader=loader,
         )
-        from app.safety_agent.prompt import PromptBuilder
-        from app.safety_agent.tools import SAFETY_MCP_SERVER_NAME, build_safety_tools
-        from app.schemas.report_v2 import ReportV2Payload
-        import tempfile
-
-        sink: list[ReportV2Payload] = []
-        tools = build_safety_tools(loader, sink)
-        srv = create_sdk_mcp_server(name=SAFETY_MCP_SERVER_NAME, tools=tools)
-        builder = PromptBuilder(loader)
-        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
-            tmp.write(image_bytes)
-            tmp_path = Path(tmp.name).resolve()
-        prompt = (
-            f"{builder.build_initial_user_message()}\n\n"
-            f"图片路径：{tmp_path}\n"
-            f"请先用 Read 工具读取这张图片，再按上述流程逐步分析。"
-        )
-        opts = ClaudeAgentOptions(
-            system_prompt=builder.build_system_prompt(),
-            model=settings.agent_model,
-            mcp_servers={SAFETY_MCP_SERVER_NAME: srv},
-            allowed_tools=[
-                "Read",
-                f"mcp__{SAFETY_MCP_SERVER_NAME}__load_scenario_skill",
-                f"mcp__{SAFETY_MCP_SERVER_NAME}__submit_safety_report",
-            ],
-            max_turns=settings.agent_max_turns,
-            permission_mode="bypassPermissions",
-        )
-        t0 = time.monotonic()
-        try:
-            async for msg in query(prompt=prompt, options=opts):
-                dt = time.monotonic() - t0
-                if isinstance(msg, AssistantMessage):
-                    for b in msg.content:
-                        if isinstance(b, TextBlock):
-                            snip = b.text.strip().replace("\n", " ")[:140]
-                            print(f"[{dt:6.1f}s] ASSIST text: {snip}")
-                        elif isinstance(b, ToolUseBlock):
-                            args_str = json.dumps(b.input, ensure_ascii=False)[:140]
-                            print(f"[{dt:6.1f}s] ASSIST tool_use: {b.name} {args_str}")
-                elif isinstance(msg, UserMessage):
-                    print(f"[{dt:6.1f}s] USER (tool result back to model)")
-                elif isinstance(msg, ResultMessage):
-                    print(f"[{dt:6.1f}s] RESULT subtype={msg.subtype} is_error={msg.is_error}")
-                else:
-                    print(f"[{dt:6.1f}s] {type(msg).__name__}")
-        finally:
-            tmp_path.unlink(missing_ok=True)
-
-        if not sink:
-            raise SystemExit("[FAIL] sink 空：Agent 未调 submit_safety_report")
-        report = sink[-1]
-        # 没拿到 stats —— 用一个占位
-        from app.safety_agent.agent import AgentRunStats
-        stats = AgentRunStats()
-        stats.elapsed_ms = int((time.monotonic() - t0) * 1000)
-    else:
-        t0 = time.monotonic()
-        try:
-            report, stats = await analyze_image(
-                image_bytes=image_bytes,
-                settings=settings,
-                skill_loader=loader,
-            )
-        except LLMTimeoutError as exc:
-            print(f"[TIMEOUT] {exc}", file=sys.stderr)
-            raise SystemExit(2) from exc
-        except LLMCallError as exc:
-            print(f"[FAIL] {exc}", file=sys.stderr)
-            raise SystemExit(3) from exc
+    except LLMTimeoutError as exc:
+        print(f"[TIMEOUT] {exc}", file=sys.stderr)
+        raise SystemExit(2) from exc
+    except LLMCallError as exc:
+        print(f"[FAIL] {exc}", file=sys.stderr)
+        raise SystemExit(3) from exc
 
     elapsed = time.monotonic() - t0
     print()

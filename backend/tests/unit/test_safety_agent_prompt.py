@@ -3,7 +3,8 @@
 覆盖：
 - system prompt 包含所有段落（含 inline 后的 L2 详细清单段）
 - 场景内容（12 个）全部 inline，不再要求 Agent 调用 load_scenario_skill
-- initial user message 强制要求调用 submit_safety_report
+- initial user message 不再要求"调用 submit_safety_report"
+  （native structured output 取代）；明确禁止过程性文本
 - 长度在合理区间（inline 后 ~22k tokens，约 22000-50000 字符）
 """
 from __future__ import annotations
@@ -79,11 +80,25 @@ def test_system_prompt_length_in_range(builder: PromptBuilder) -> None:
     assert 15000 <= len(sp) <= 60000, f"system prompt 长度异常: {len(sp)} 字符"
 
 
-def test_initial_user_message_forces_submit_tool(builder: PromptBuilder) -> None:
+def test_initial_user_message_drops_both_legacy_tools(builder: PromptBuilder) -> None:
+    """回归保护：两个旧工具名都不应再出现在 user message。
+
+    - load_scenario_skill：场景已 inline 进 system prompt
+    - submit_safety_report：native structured output (output_format=json_schema) 取代
+    """
     msg = builder.build_initial_user_message()
-    assert "submit_safety_report" in msg
-    # load_scenario_skill 已下线，user message 不应再要求调用它
+    assert "submit_safety_report" not in msg
     assert "load_scenario_skill" not in msg
+
+
+def test_initial_user_message_enforces_pure_json_output(builder: PromptBuilder) -> None:
+    """禁过程文本约束：必须告诉模型"最终只回 JSON，不要解释/思路/markdown 围栏"。
+    缺这条约束会让模型回退到"边想边说"，输出 token 暴涨。
+    """
+    msg = builder.build_initial_user_message()
+    assert "JSON" in msg
+    # 至少有一条针对"不要输出过程文本"的明示约束
+    assert any(kw in msg for kw in ["不要", "仅为", "严格"])
 
 
 def test_initial_user_message_with_extra_context(builder: PromptBuilder) -> None:

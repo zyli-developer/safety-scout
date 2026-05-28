@@ -1,18 +1,26 @@
-"""v2 主分析入口 —— 用 Claude Agent SDK 驱动多轮 tool 调用。
+"""v2 主分析入口 —— 用 Claude Agent SDK + native structured output。
 
 实际 SDK 接口（pip 版 0.2.x）：
 - `query(prompt, options)` → AsyncIterator[Message]
-- `ClaudeAgentOptions(system_prompt, model, mcp_servers, allowed_tools, max_turns, ...)`
-- 自定义工具走 `create_sdk_mcp_server` → 工具名暴露为 `mcp__<server>__<tool>`
-- 图片输入沿用 v1 思路：写临时文件 + 允许 Read 工具，让 Agent 自己读
+- `ClaudeAgentOptions(system_prompt, model, allowed_tools, output_format, thinking, ...)`
+- `output_format={"type":"json_schema","schema":...}` —— CLI 强制最终回复符合 schema
+- `thinking={"type":"enabled","budget_tokens":N}` —— extended thinking 走专门通道，
+  推理 tokens 不计 output_tokens、用户不可见
 
-流程（与 plan §2.2 对齐）：
+架构演进：
+- v0：模型自由打印 JSON → 容易跑偏，被 v1 替代
+- v1：通过 `submit_safety_report` 自定义工具提交 → 多 1 个 turn + 工具结果回 +
+  收尾文本 ~14s，由 sink+闭包暴露 payload 给宿主
+- v2（当前）：native structured output —— CLI 让模型最终回复就是 JSON，
+  drain 后从最末条 AssistantMessage 的 TextBlock 直接 parse。省工具、省 turn、
+  省 wrap-up，也少一个错误面。
+
+流程：
 1. 写图片到临时文件
-2. 用 PromptBuilder 拼 system prompt
-3. 构造 SDK MCP server（含 load_scenario_skill / submit_safety_report）
-4. allowed_tools = [Read, mcp__safety__load_scenario_skill, mcp__safety__submit_safety_report]
-5. 跑 `query()`，drain 整个 stream（异常用 SDK 自带的 CLI/Process 错误抽出来）
-6. 从 sink 取报告；sink 为空 → 抛 LLMCallError（Agent 没调 submit）
+2. 用 PromptBuilder 拼 system prompt（含全部 12 个场景的 inline L2 清单）
+3. 跑 `query(options=...)` 含 output_format + thinking
+4. drain 整个 stream：累计 tool 时间戳、token 统计、收集 TextBlock 文本
+5. 取最末条 AssistantMessage 的 TextBlock 作为 JSON，pydantic 校验
 """
 from __future__ import annotations
 
@@ -32,24 +40,22 @@ from claude_agent_sdk import (
     ResultMessage,
     TextBlock,
     ToolUseBlock,
-    create_sdk_mcp_server,
     query,
 )
+from pydantic import ValidationError
 
 from app.config import Settings
 from app.errors import LLMCallError, LLMTimeoutError
 from app.safety_agent.loader import SkillLoader
 from app.safety_agent.prompt import PromptBuilder
-from app.safety_agent.tools import SAFETY_MCP_SERVER_NAME, build_safety_tools
 from app.schemas.report_v2 import ReportV2Payload
 
 logger = logging.getLogger(__name__)
 
-# allowed_tools 必须包含 Read（Agent 用它把临时图片文件读进 context），
-# 以及自定义工具的 mcp__前缀全名（SDK 把工具名 namespace 化为 mcp__<server>__<name>）。
-# `load_scenario_skill` 已下线 —— 12 个场景全部 inline 进 system prompt（PromptBuilder），
-# 省 4 个串行 tool turn 的延迟。
-_SUBMIT_TOOL_FQN = f"mcp__{SAFETY_MCP_SERVER_NAME}__submit_safety_report"
+# allowed_tools 只保留 Read —— Agent 用它把临时图片文件读进 context。
+# submit_safety_report / load_scenario_skill 均已下线（structured output 取代前者，
+# inline skills 取代后者）。
+_READ_TOOL = "Read"
 
 
 class AgentRunStats:
@@ -57,6 +63,8 @@ class AgentRunStats:
 
     def __init__(self) -> None:
         self.tool_calls: int = 0
+        # 历史字段：以前由 load_scenario_skill 工具累计；该工具已下线。
+        # 现在 service 层从 report.report_meta.scene_detected 填回。
         self.scenarios_loaded: list[str] = []
         self.elapsed_ms: int = 0
         self.input_tokens: int = 0
@@ -66,14 +74,17 @@ class AgentRunStats:
         self.cache_read_tokens: int = 0
         self.cache_creation_tokens: int = 0
         self.cost_usd: float = 0.0
-        # 每次 tool dispatch 记一条 {seq,name,scenario_id?,dispatched_ms}。
+        # 每次 tool dispatch 记一条 {seq,name,dispatched_ms}。
         # 同一 AssistantMessage 内的多个 ToolUseBlock 共享 dispatched_ms
         # （SDK 把模型一帧返回的多个 tool 同时 yield，无法细分批内顺序）。
         self.tool_call_timings: list[dict[str, Any]] = []
+        # 最末条 AssistantMessage 里最后一个 TextBlock 的文本 —— structured output
+        # 模式下这就是最终 JSON。流式分析时被 _drain 持续覆盖，最后一次写入即为答案。
+        self.final_text: str = ""
 
 
 def _short_tool_name(fqn: str) -> str:
-    """mcp__safety__load_scenario_skill → load_scenario_skill；Read → Read。"""
+    """mcp__safety__submit_safety_report → submit_safety_report；Read → Read。"""
     return fqn.split("__")[-1] if fqn.startswith("mcp__") else fqn
 
 
@@ -83,7 +94,8 @@ async def _drain(
     *,
     t0: float,
 ) -> None:
-    """消费整个消息流；顺路抽统计 + 记 tool 调用 + 打 dispatched_ms 时间戳。
+    """消费整个消息流；顺路抽统计 + 记 tool 调用 + 打 dispatched_ms 时间戳 +
+    收集最末条 TextBlock（structured output 的最终 JSON 出口）。
 
     t0：调用方 time.monotonic() 起算点；tool 时间戳全部以此为基准。
     """
@@ -94,18 +106,16 @@ async def _drain(
             for block in msg.content:
                 if isinstance(block, ToolUseBlock):
                     stats.tool_calls += 1
-                    entry: dict[str, Any] = {
+                    stats.tool_call_timings.append({
                         "seq": stats.tool_calls,
                         "name": _short_tool_name(block.name),
                         "dispatched_ms": dispatched_ms,
-                    }
-                    # 历史保留 scenario_id 字段：以前 load_scenario_skill 工具会
-                    # 在这里把 scenario_id 摘出来填，已下线；scenarios_loaded
-                    # 现在改由 service 层从 report.report_meta.scene_detected 填。
-                    stats.tool_call_timings.append(entry)
+                    })
                 elif isinstance(block, TextBlock):
-                    # Agent 的自由文本（思考过程 / CoT 痕迹）；不打印，避免噪音
-                    pass
+                    # 持续覆盖：最后一条 AssistantMessage 的最后一个 TextBlock 即为
+                    # structured output 的最终 JSON 输出。中间过程的文本（如有）会被覆盖。
+                    if block.text:
+                        stats.final_text = block.text
         elif isinstance(msg, ResultMessage):
             # ResultMessage 携带 token 统计；字段名跨版本可能漂移，做兜底
             usage: Any = getattr(msg, "usage", None) or {}
@@ -119,6 +129,35 @@ async def _drain(
             stats.cost_usd = float(getattr(msg, "total_cost_usd", 0.0) or 0.0)
 
 
+def _build_options(settings: Settings, system_prompt: str) -> ClaudeAgentOptions:
+    """组装 ClaudeAgentOptions。抽出来方便单测断言（无副作用纯构造）。"""
+    opts_kwargs: dict[str, Any] = dict(
+        system_prompt=system_prompt,
+        model=settings.agent_model,
+        # 生产环境优先复用系统已登录的 Claude CLI，避免 SDK bundled CLI
+        # 在部分版本组合下出现 stream-json 协议异常（error: "success"）。
+        cli_path=settings.claude_cli_path,
+        allowed_tools=[_READ_TOOL],
+        max_turns=settings.agent_max_turns,
+        permission_mode="bypassPermissions",
+    )
+    # Native structured output —— CLI 强制最终回复符合 ReportV2Payload schema。
+    # 当前实现固定开启；config flag 仅作日志标识。
+    if settings.agent_use_native_structured_output:
+        opts_kwargs["output_format"] = {
+            "type": "json_schema",
+            "schema": ReportV2Payload.model_json_schema(),
+        }
+    # Extended thinking —— 推理 tokens 走专门通道，不计 output_tokens、不影响最终
+    # JSON 输出。budget=0 时禁用（便于 A/B 对比"无思考"基线）。
+    if settings.agent_thinking_budget_tokens > 0:
+        opts_kwargs["thinking"] = {
+            "type": "enabled",
+            "budget_tokens": settings.agent_thinking_budget_tokens,
+        }
+    return ClaudeAgentOptions(**opts_kwargs)
+
+
 async def analyze_image(
     image_bytes: bytes,
     settings: Settings,
@@ -128,15 +167,10 @@ async def analyze_image(
     """跑一次 v2 分析。返回 (报告, 统计)。
 
     Raises:
-        LLMTimeoutError: 超过 settings.agent_timeout_seconds 仍未收到 submit
-        LLMCallError: SDK 异常 / Agent 没调 submit / schema 一直校验不过
+        LLMTimeoutError: 超过 settings.agent_timeout_seconds
+        LLMCallError: SDK 异常 / 没收到文本输出 / 最终输出非合法 JSON
     """
     stats = AgentRunStats()
-    sink: list[ReportV2Payload] = []
-    tools = build_safety_tools(skill_loader, sink)
-    mcp_server = create_sdk_mcp_server(
-        name=SAFETY_MCP_SERVER_NAME, version="1.0.0", tools=tools
-    )
 
     builder = PromptBuilder(skill_loader)
     system_prompt = builder.build_system_prompt()
@@ -154,20 +188,10 @@ async def analyze_image(
         composed_prompt = (
             f"{user_intro}\n\n"
             f"图片路径：{tmp_path}\n"
-            f"请先用 Read 工具读取这张图片，再按上述流程逐步分析。"
+            f"请先用 Read 工具读取这张图片，再按上述流程分析。"
         )
 
-        options = ClaudeAgentOptions(
-            system_prompt=system_prompt,
-            model=settings.agent_model,
-            # 生产环境优先复用系统已登录的 Claude CLI，避免 SDK bundled CLI
-            # 在部分版本组合下出现 stream-json 协议异常（error: "success"）。
-            cli_path=settings.claude_cli_path,
-            mcp_servers={SAFETY_MCP_SERVER_NAME: mcp_server},
-            allowed_tools=["Read", _SUBMIT_TOOL_FQN],
-            max_turns=settings.agent_max_turns,
-            permission_mode="bypassPermissions",
-        )
+        options = _build_options(settings, system_prompt)
 
         try:
             await asyncio.wait_for(
@@ -181,20 +205,33 @@ async def analyze_image(
         except ClaudeSDKError as exc:
             raise LLMCallError(f"Claude Agent SDK 调用失败: {exc}") from exc
 
-        if not sink:
+        if not stats.final_text:
             raise LLMCallError(
-                "Agent 结束分析但未调用 submit_safety_report —— 无最终报告。"
+                f"Agent 结束分析但未输出任何文本（structured output 模式期望最终 JSON）。"
                 f" tool_calls={stats.tool_calls}"
             )
 
+        try:
+            report = ReportV2Payload.model_validate_json(stats.final_text)
+        except ValidationError as exc:
+            # native structured output 理论上 CLI 已经强制合法，但保留兜底：
+            # schema 不匹配（API 版本漂移 / 模型偶发越界）时给清晰错误，不静默吞掉
+            errs = exc.errors()[:3]
+            lines = [
+                f"- {'.'.join(str(p) for p in e['loc'])}: {e['msg']}" for e in errs
+            ]
+            raise LLMCallError(
+                "Agent 最终输出未通过 ReportV2Payload 校验：\n"
+                + "\n".join(lines)
+                + f"\n(共 {len(exc.errors())} 处错误；首 200 字符: {stats.final_text[:200]!r})"
+            ) from exc
+
         stats.elapsed_ms = int((time.monotonic() - started) * 1000)
-        report = sink[-1]  # 取最新一次提交，sink 通常只有一项
 
         logger.info(
-            "v2 analysis done: tool_calls=%d scenarios=%s findings=%d elapsed_ms=%d "
-            "tokens=%d/%d cache=r%d/w%d cost=%.4f",
+            "v2 analysis done: tool_calls=%d findings=%d elapsed_ms=%d "
+            "tokens=%d/%d cache=r%d/w%d cost=%.4f model=%s thinking=%d",
             stats.tool_calls,
-            stats.scenarios_loaded,
             len(report.findings),
             stats.elapsed_ms,
             stats.input_tokens,
@@ -202,6 +239,8 @@ async def analyze_image(
             stats.cache_read_tokens,
             stats.cache_creation_tokens,
             stats.cost_usd,
+            settings.agent_model,
+            settings.agent_thinking_budget_tokens,
         )
         return report, stats
     finally:

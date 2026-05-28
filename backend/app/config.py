@@ -57,15 +57,24 @@ class Settings(BaseSettings):
     doubao_timeout_seconds: int = 120
 
     # === Agent SDK (v2) ===
-    # v2 走 claude-opus-4-7：视觉细节捕获 + 多轮推理。
+    # v2 默认走 sonnet-4-6：输出速度 ~200 tok/s（opus-4-7 仅 ~64），3-4× 快；
+    # 重大隐患召回风险由质量追踪 Layer 2 judge 持续监控（accept_rules.recall_no_regression）。
     # 不用 sonnet alias —— 同 v1 教训
-    agent_model: str = "claude-opus-4-7"
-    # Agent 多轮 tool 调用比单次慢；smoke 实测 case_001 ~250s（Read image →
-    # ToolSearch → 场景识别 → 5 次 load_scenario_skill → 思考 80s → 输出 105s）。
-    # 默认放到 360s 留余地；单测用 fake 时显式覆盖为短超时。
+    agent_model: str = "claude-sonnet-4-6"
+    # Agent 多轮 tool 调用比单次慢；优化后（inline skills + structured output +
+    # extended thinking + sonnet）目标 < 60s；保守 timeout 留余地。
     agent_timeout_seconds: int = 360
     # 最大工具调用回合数；防止死循环
     agent_max_turns: int = 15
+    # Extended thinking 预算（tokens）。thinking tokens 走专门通道、不计 output_tokens、
+    # 不发到用户可见的回复里。开启后模型可以"想清楚再说"，但用户看到的输出只有最终 JSON。
+    # 0 = 禁用 extended thinking；建议范围 4000-10000（推理深度 vs 成本平衡）。
+    agent_thinking_budget_tokens: int = 8000
+    # Native structured output：API 直接强制返回符合 JSON schema 的最终回复，
+    # 省掉 submit_safety_report 工具调用那一轮 + 模型 wrap-up 文本（实测可省 ~15s）。
+    # 关闭可回退到 v0 行为（保留 submit 工具），但本仓库当前已删除该工具实现，
+    # 关闭等于跑不通 —— 留 flag 只为方便日志里读出"当前用的什么模式"。
+    agent_use_native_structured_output: bool = True
     # Skill 库根目录；默认 = 仓库根/safety_skills（zip 解压位置）
     safety_skills_root: Path = _REPO_ROOT / "safety_skills"
     # SkillLoader 缓存 TTL（秒）。默认 60s —— 安全工程师 git pull 后下次请求

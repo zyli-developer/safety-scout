@@ -88,7 +88,7 @@ def _build_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[T
     monkeypatch.setenv("SQLITE_PATH", str(tmp_path / "test.db"))
     monkeypatch.setenv("UPLOAD_DIR", str(tmp_path / "uploads"))
     # safety_skills_root 默认指向 repo 根；测试不实跑 LLM，因此 loader 还需要
-    # 真实文件（PromptBuilder 不会被调到，但 build_safety_tools 在 fake 路径上也不跑）。
+    # 真实文件（PromptBuilder 不会被调到，analyze_image 也被 monkeypatch 替换）。
     get_settings.cache_clear()
 
     app = create_app()
