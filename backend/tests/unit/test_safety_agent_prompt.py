@@ -80,14 +80,17 @@ def test_system_prompt_length_in_range(builder: PromptBuilder) -> None:
     assert 15000 <= len(sp) <= 60000, f"system prompt 长度异常: {len(sp)} 字符"
 
 
-def test_initial_user_message_drops_both_legacy_tools(builder: PromptBuilder) -> None:
-    """回归保护：两个旧工具名都不应再出现在 user message。
+def test_initial_user_message_uses_submit_tool_not_legacy_load(
+    builder: PromptBuilder,
+) -> None:
+    """提示词必须引导模型用 submit_safety_report 提交报告，且 load_scenario_skill
+    已下线不应再被提及（场景已 inline 进 system prompt）。
 
-    - load_scenario_skill：场景已 inline 进 system prompt
-    - submit_safety_report：native structured output (output_format=json_schema) 取代
+    历史：曾短暂改为 native structured output（drop submit 工具），但 Sonnet 4.6
+    不会用 CLI 虚拟工具 StructuredOutput，已回退到 submit 工具路径。
     """
     msg = builder.build_initial_user_message()
-    assert "submit_safety_report" not in msg
+    assert "submit_safety_report" in msg
     assert "load_scenario_skill" not in msg
 
 

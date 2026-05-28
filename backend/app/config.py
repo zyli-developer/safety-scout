@@ -57,14 +57,14 @@ class Settings(BaseSettings):
     doubao_timeout_seconds: int = 120
 
     # === Agent SDK (v2) ===
-    # v2 默认 opus-4-7。曾尝试切 sonnet-4-6（理论上输出更快），生产实测翻车：
-    # Sonnet 4.6 不会用 CLI 在 output_format=json_schema 模式下注入的虚拟工具
-    # `StructuredOutput`，连续 5 次产空 keys=[]，CLI 5 次 retry 全失败、
-    # 总耗时 504s 超 timeout（模型 thinking 里自承"I'm having trouble with the
-    # StructuredOutput tool"）。trace 还显示 Sonnet 在此场景输出速率 ~48 tok/s
-    # 实际比 Opus 64 tok/s 还慢，没有"理论速度优势"。
-    # 想切 Sonnet 要先解决 structured output 兼容（要么换回 submit_safety_report
-    # 自定义工具路径，要么等 SDK/CLI 修正 Sonnet 对 StructuredOutput 的引导）。
+    # v2 默认 opus-4-7。曾尝试切 sonnet-4-6 找速度，**两套架构（structured output
+    # 和 submit_safety_report 工具）实测都不可用**：
+    #   - Sonnet + structured output: 不会用 CLI 虚拟工具 StructuredOutput，
+    #     5 次 retry 全空、504s 超时
+    #   - Sonnet + submit 工具: 即使 thinking=0 + 400s timeout 也跑不完单图
+    # "Sonnet 3-4× 快于 Opus"在本场景（36k cached prompt + 多轮 tool + 复杂嵌套
+    # JSON）下不成立 —— 推测 Sonnet 处理超长 cached prompt 的吞吐显著低于宣传值。
+    # 当前 Opus + submit 工具实测 115s 端到端，比 structured output 路径快 ~5s。
     # 不用 sonnet alias —— 同 v1 教训
     agent_model: str = "claude-opus-4-7"
     # Agent 多轮 tool 调用比单次慢；优化后（inline skills + structured output +

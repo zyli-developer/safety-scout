@@ -5,10 +5,11 @@
   之前用 `load_scenario_skill` 工具按需加载是为"防 prompt 膨胀"，但实测延迟代价
   （4 个串行 tool turn + 1 个 ToolSearch 探索）远大于多 17k cached input 的收益。
   Anthropic prompt caching 把后续 cache_read 价压到 0.1×，inline 几乎免费。
-- 最终输出由 SDK 的 native structured output（output_format=json_schema）强制成
-  合法 ReportV2Payload JSON —— prompt 不再要求"调用 submit_safety_report"，也不
-  鼓励模型在最终 JSON 之外输出任何过程性文字（CoT 走 extended thinking 通道，
-  不计 output_tokens、不可见）。
+- 模型通过自定义 MCP 工具 `submit_safety_report` 提交最终 JSON 报告
+  （曾短暂改为 native structured output 但 Sonnet 4.6 不会用 CLI 的虚拟工具，
+  已回退；详见 agent.py 架构演进注释）。
+- 强制约束 Agent 必须通过 submit_safety_report 提交，不允许在普通消息里
+  自由输出 JSON。CoT 推理走 extended thinking 内部通道。
 - SEPARATOR 用 60 个 `=` 帮 Agent 视觉切分段落，prompt 长度估算 ~22k tokens（含场景）。
 """
 from __future__ import annotations
@@ -51,13 +52,14 @@ class PromptBuilder:
         """
         extra_block = f"\n附加信息：{extra_context}\n" if extra_context else ""
         return (
-            "请对附带的工地照片做安全隐患分析。按 system prompt 中的「分析流程」逐项"
-            "核查（L1 必查 + 命中场景的 L2 清单，均已 inline）。"
+            "请对附带的工地照片做安全隐患分析。先用 Read 工具读取图片，然后按 system "
+            "prompt 中的「分析流程」逐项核查（L1 必查 + 命中场景的 L2 清单，均已 inline）。"
             f"{extra_block}\n"
             "**输出约束（严格遵守）**：\n"
-            "- 最终回复**仅为**一段合法的 JSON，符合 ReportV2Payload schema\n"
-            "- 不要在 JSON 之前/之后输出任何解释、思路、分析过程、markdown 围栏\n"
-            "- 思考过程走 extended thinking 内部通道，不要在最终回复里复述\n"
+            "- **必须通过调用 `submit_safety_report` 工具提交最终 JSON 报告**，"
+            "不要在普通消息里输出 JSON 文本\n"
+            "- submit 之前/之后不要输出过程性解释、思路、分析步骤；CoT 推理走 extended "
+            "thinking 内部通道，不要在最终回复里复述\n"
             "- `findings`：存在隐患的项全部列出，描述要可操作、不要赘述\n"
             "- `no_findings` **最多 5 条**：只挑现场最容易被外行质疑漏检的项（如安全帽、"
             "防护栏的常见高发项），其余不必列；每条只写 check_id + 极简 note\n"

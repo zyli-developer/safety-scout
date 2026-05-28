@@ -1,27 +1,35 @@
-"""v2 主分析入口 —— 用 Claude Agent SDK + native structured output。
+"""v2 主分析入口 —— Claude Agent SDK + 自定义 submit_safety_report 工具路径。
 
 实际 SDK 接口（pip 版 0.2.x）：
 - `query(prompt, options)` → AsyncIterator[Message]
-- `ClaudeAgentOptions(system_prompt, model, allowed_tools, output_format, thinking, ...)`
-- `output_format={"type":"json_schema","schema":...}` —— CLI 强制最终回复符合 schema
-- `thinking={"type":"enabled","budget_tokens":N}` —— extended thinking 走专门通道，
-  推理 tokens 不计 output_tokens、用户不可见
+- `ClaudeAgentOptions(system_prompt, model, mcp_servers, allowed_tools, thinking, ...)`
+- 自定义工具走 `create_sdk_mcp_server` → 工具名暴露为 `mcp__<server>__<tool>`
+- `thinking={"type":"enabled","budget_tokens":N}` —— extended thinking 走专门通道
 
 架构演进：
-- v0：模型自由打印 JSON → 容易跑偏，被 v1 替代
+- v0：模型自由打印 JSON → 容易跑偏
 - v1：通过 `submit_safety_report` 自定义工具提交 → 多 1 个 turn + 工具结果回 +
-  收尾文本 ~14s，由 sink+闭包暴露 payload 给宿主
-- v2（当前）：native structured output —— CLI 让模型把最终 JSON 通过虚拟工具
-  `StructuredOutput` 的 ToolUseBlock.input 回传（不是 TextBlock，也不是
-  ResultMessage.result）。省自建工具、省 turn、省 wrap-up。
+  收尾文本 ~14s
+- v2（短暂存在）：native structured output (output_format=json_schema) ——
+  CLI 注入虚拟工具 `StructuredOutput`。**Sonnet 4.6 不会用该虚拟工具**，
+  5 次 retry 全产空 keys=[]、CLI 放弃、整次超时（commit 1db2f31 引入、
+  c7e57de 修过、576bf9a 因 Sonnet 不兼容回退到 Opus 仍 ~120s）。
+- v3（当前）：回到 submit tool 路径。曾期望借 Sonnet 4.6 输出速率压到 1min 内，
+  但实测 Sonnet 在本场景（36k cached system prompt + 多轮 tool + 复杂嵌套 JSON）
+  即使 thinking=0 + 400s timeout 都跑不完单图；推测 Sonnet 处理长 cached prompt
+  的吞吐显著低于宣传值。当前 **Opus + submit 工具实测 115s，比 v2 (structured
+  output + Opus) 还快 ~5s**（少一次 CLI 注入虚拟工具的 round-trip），所以 v3
+  也是 Opus baseline 下的最佳架构。Sonnet 切换留待 Anthropic 修复其长 cached
+  prompt 吞吐之后再试。
 
 流程：
 1. 写图片到临时文件
 2. 用 PromptBuilder 拼 system prompt（含全部 12 个场景的 inline L2 清单），
    写到独立的临时文件 → 走 `--system-prompt-file`（绕 Windows cmd 长度限制）
-3. 跑 `query(options=...)` 含 output_format + thinking
-4. drain 整个 stream：累计 tool 时间戳、token 统计、捕获 StructuredOutput.input
-5. 用 StructuredOutput.input 走 ReportV2Payload.model_validate
+3. 构造 MCP server 含 submit_safety_report 工具
+4. allowed_tools = ["Read", mcp__safety__submit_safety_report]
+5. 跑 `query()` drain 整个 stream：累计 tool 时间戳、token 统计
+6. 从 sink 取报告；sink 为空 → 抛 LLMCallError（Agent 没调 submit）
 """
 from __future__ import annotations
 
@@ -41,27 +49,24 @@ from claude_agent_sdk import (
     ResultMessage,
     TextBlock,
     ToolUseBlock,
+    create_sdk_mcp_server,
     query,
 )
-from pydantic import ValidationError
 
 from app.config import Settings
 from app.errors import LLMCallError, LLMTimeoutError
 from app.safety_agent.loader import SkillLoader
 from app.safety_agent.prompt import PromptBuilder
+from app.safety_agent.tools import SAFETY_MCP_SERVER_NAME, build_safety_tools
 from app.schemas.report_v2 import ReportV2Payload
 
 logger = logging.getLogger(__name__)
 
-# allowed_tools 只保留 Read —— Agent 用它把临时图片文件读进 context。
-# submit_safety_report / load_scenario_skill 均已下线（structured output 取代前者，
-# inline skills 取代后者）。
+# allowed_tools 必须包含 Read（Agent 用它把临时图片文件读进 context），
+# 以及自定义工具的 mcp__前缀全名（SDK 把工具名 namespace 化为 mcp__<server>__<name>）。
+# `load_scenario_skill` 已下线 —— 12 个场景全部 inline 进 system prompt。
 _READ_TOOL = "Read"
-
-# Claude CLI 在 output_format=json_schema 模式下，会用一个内置的"虚拟工具"
-# StructuredOutput 把模型的最终 JSON 当作 ToolUseBlock.input 推回来 —— 不是
-# 走 TextBlock 也不是 ResultMessage.result。命中这个工具调用 = 拿到最终答案。
-_STRUCTURED_OUTPUT_TOOL = "StructuredOutput"
+_SUBMIT_TOOL_FQN = f"mcp__{SAFETY_MCP_SERVER_NAME}__submit_safety_report"
 
 
 class AgentRunStats:
@@ -81,15 +86,8 @@ class AgentRunStats:
         self.cache_creation_tokens: int = 0
         self.cost_usd: float = 0.0
         # 每次 tool dispatch 记一条 {seq,name,dispatched_ms}。
-        # 同一 AssistantMessage 内的多个 ToolUseBlock 共享 dispatched_ms
-        # （SDK 把模型一帧返回的多个 tool 同时 yield，无法细分批内顺序）。
-        # `StructuredOutput` 虚拟工具不计入此列表 —— 它是模型的终态答案，不是
-        # agentic 工具调用，跟它对比 tool_calls 会带来语义混淆。
+        # 同一 AssistantMessage 内的多个 ToolUseBlock 共享 dispatched_ms。
         self.tool_call_timings: list[dict[str, Any]] = []
-        # structured output 终态：CLI 把模型生成的最终 JSON 放在虚拟工具
-        # `StructuredOutput` 的 ToolUseBlock.input 里推回（已是 dict 不需再 parse）。
-        # None = 流结束仍未收到 → 视作 LLMCallError。
-        self.structured_output: dict[str, Any] | None = None
 
 
 def _short_tool_name(fqn: str) -> str:
@@ -103,8 +101,7 @@ async def _drain(
     *,
     t0: float,
 ) -> None:
-    """消费整个消息流；顺路抽统计 + 记 tool 调用 + 打 dispatched_ms 时间戳 +
-    收集最末条 TextBlock（structured output 的最终 JSON 出口）。
+    """消费整个消息流；顺路抽统计 + 记 tool 调用 + 打 dispatched_ms 时间戳。
 
     t0：调用方 time.monotonic() 起算点；tool 时间戳全部以此为基准。
     """
@@ -114,12 +111,6 @@ async def _drain(
             dispatched_ms = int((time.monotonic() - t0) * 1000)
             for block in msg.content:
                 if isinstance(block, ToolUseBlock):
-                    # StructuredOutput 是 CLI 在 json_schema 模式注入的虚拟工具，
-                    # 拿来传最终 JSON —— 不算业务 agentic tool，单独路径处理。
-                    if block.name == _STRUCTURED_OUTPUT_TOOL:
-                        if isinstance(block.input, dict):
-                            stats.structured_output = block.input
-                        continue
                     stats.tool_calls += 1
                     stats.tool_call_timings.append({
                         "seq": stats.tool_calls,
@@ -127,8 +118,7 @@ async def _drain(
                         "dispatched_ms": dispatched_ms,
                     })
                 elif isinstance(block, TextBlock):
-                    # 过程文本不影响最终输出（structured output 走 StructuredOutput 工具）；
-                    # 这里不做任何收集，避免与 structured_output 出现"双源"歧义
+                    # Agent 的自由文本（思考过程 / CoT 痕迹）；不打印，避免噪音
                     pass
         elif isinstance(msg, ResultMessage):
             # ResultMessage 携带 token 统计；字段名跨版本可能漂移，做兜底
@@ -146,6 +136,7 @@ async def _drain(
 def _build_options(
     settings: Settings,
     system_prompt: str | dict[str, Any],
+    mcp_server: Any,
 ) -> ClaudeAgentOptions:
     """组装 ClaudeAgentOptions。抽出来方便单测断言（无副作用纯构造）。
 
@@ -153,7 +144,7 @@ def _build_options(
     - `str` —— 直接 inline 走 `--system-prompt <string>` CLI 参数
     - `{"type":"file","path":...}` —— 走 `--system-prompt-file <path>`，绕开
       Windows CreateProcessW 32,767 字符命令行上限（inline 12 个场景后 prompt
-      达 36k 字符，单条 arg 就超限）。analyze_image 在 Windows 默认走 file 形式。
+      达 36k 字符，单条 arg 就超限）。analyze_image 默认走 file 形式。
     """
     opts_kwargs: dict[str, Any] = dict(
         system_prompt=system_prompt,
@@ -161,18 +152,12 @@ def _build_options(
         # 生产环境优先复用系统已登录的 Claude CLI，避免 SDK bundled CLI
         # 在部分版本组合下出现 stream-json 协议异常（error: "success"）。
         cli_path=settings.claude_cli_path,
-        allowed_tools=[_READ_TOOL],
+        mcp_servers={SAFETY_MCP_SERVER_NAME: mcp_server},
+        allowed_tools=[_READ_TOOL, _SUBMIT_TOOL_FQN],
         max_turns=settings.agent_max_turns,
         permission_mode="bypassPermissions",
     )
-    # Native structured output —— CLI 强制最终回复符合 ReportV2Payload schema。
-    # 当前实现固定开启；config flag 仅作日志标识。
-    if settings.agent_use_native_structured_output:
-        opts_kwargs["output_format"] = {
-            "type": "json_schema",
-            "schema": ReportV2Payload.model_json_schema(),
-        }
-    # Extended thinking —— 推理 tokens 走专门通道，不计 output_tokens、不影响最终
+    # Extended thinking —— 推理 tokens 走专门通道、不计 output_tokens、不影响最终
     # JSON 输出。budget=0 时禁用（便于 A/B 对比"无思考"基线）。
     if settings.agent_thinking_budget_tokens > 0:
         opts_kwargs["thinking"] = {
@@ -192,9 +177,14 @@ async def analyze_image(
 
     Raises:
         LLMTimeoutError: 超过 settings.agent_timeout_seconds
-        LLMCallError: SDK 异常 / 没收到文本输出 / 最终输出非合法 JSON
+        LLMCallError: SDK 异常 / Agent 没调 submit_safety_report
     """
     stats = AgentRunStats()
+    sink: list[ReportV2Payload] = []
+    tools = build_safety_tools(skill_loader, sink)
+    mcp_server = create_sdk_mcp_server(
+        name=SAFETY_MCP_SERVER_NAME, version="1.0.0", tools=tools
+    )
 
     builder = PromptBuilder(skill_loader)
     system_prompt = builder.build_system_prompt()
@@ -229,6 +219,7 @@ async def analyze_image(
         options = _build_options(
             settings,
             {"type": "file", "path": str(tmp_sysprompt)},
+            mcp_server,
         )
 
         try:
@@ -243,29 +234,14 @@ async def analyze_image(
         except ClaudeSDKError as exc:
             raise LLMCallError(f"Claude Agent SDK 调用失败: {exc}") from exc
 
-        if stats.structured_output is None:
+        if not sink:
             raise LLMCallError(
-                f"Agent 结束分析但未收到 StructuredOutput 工具调用（output_format 模式"
-                f" 期望模型通过此虚拟工具回传最终 JSON）。tool_calls={stats.tool_calls}"
+                "Agent 结束分析但未调用 submit_safety_report —— 无最终报告。"
+                f" tool_calls={stats.tool_calls}"
             )
 
-        try:
-            report = ReportV2Payload.model_validate(stats.structured_output)
-        except ValidationError as exc:
-            # native structured output 理论上 CLI 已经强制合法，但保留兜底：
-            # schema 不匹配（API 版本漂移 / 模型偶发越界）时给清晰错误，不静默吞掉
-            errs = exc.errors()[:3]
-            lines = [
-                f"- {'.'.join(str(p) for p in e['loc'])}: {e['msg']}" for e in errs
-            ]
-            raise LLMCallError(
-                "Agent 最终输出未通过 ReportV2Payload 校验：\n"
-                + "\n".join(lines)
-                + f"\n(共 {len(exc.errors())} 处错误；顶层 keys: "
-                + f"{list(stats.structured_output.keys()) if isinstance(stats.structured_output, dict) else 'N/A'})"
-            ) from exc
-
         stats.elapsed_ms = int((time.monotonic() - started) * 1000)
+        report = sink[-1]  # 取最新一次提交，sink 通常只有一项
 
         logger.info(
             "v2 analysis done: tool_calls=%d findings=%d elapsed_ms=%d "
