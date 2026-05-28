@@ -1,7 +1,6 @@
-"""v2 Agent 的两个 in-process MCP tool。
+"""v2 Agent 的 in-process MCP tool。
 
-工厂 `build_safety_tools(loader, sink)` 返回一对 SdkMcpTool：
-- `load_scenario_skill(scenario_id)` —— Agent 主动加载命中场景的 L2 清单
+工厂 `build_safety_tools(loader, sink)` 当前只返回一个 SdkMcpTool：
 - `submit_safety_report(report_json)` —— Agent 提交最终结构化报告
 
 `sink` 是一个调用方持有的列表（容量 0/1）：submit 校验通过后把 ReportV2Payload
@@ -12,9 +11,13 @@
 3. 多次 submit 由工具方"拒收第二次"或宿主清空 sink 控制（这里取后者：宿主每次
    分析新建 session）。
 
+历史：原本还有 `load_scenario_skill` 工具供 Agent 按需拉 L2 清单，已下线 ——
+12 个场景的 L2 内容现在全部 inline 进 system prompt（PromptBuilder），省 4 个
+串行 tool turn 的延迟。`loader` 参数当前未使用但保留，便于将来再加新工具不
+破坏调用方签名。
+
 错误处理原则（plan §4.3）：
 - JSON 解析失败、schema 校验失败：返 `is_error=True` + 可读修复提示，让 Agent 重提交
-- ID 不存在：返可用 ID 列表，让 Agent 自纠
 - 不要 raise —— SDK 会把异常转成 error message，但消息文本不可控
 """
 from __future__ import annotations
@@ -45,51 +48,10 @@ def _text_result(text: str, is_error: bool = False) -> dict[str, Any]:
 
 
 def build_safety_tools(
-    loader: SkillLoader,
+    loader: SkillLoader,  # noqa: ARG001 —— 保留参数签名以兼容调用方
     report_sink: list[ReportV2Payload],
 ) -> list[SdkMcpTool[Any]]:
-    """构造 v2 Agent 用的两个 MCP tool。`report_sink` 必须是调用方传入的可变 list。"""
-
-    @tool(
-        name="load_scenario_skill",
-        description=(
-            "加载指定场景 ID 的 L2 详细检查清单（Markdown）。"
-            "在 Step 2 场景识别完成后，对每个命中场景调用一次。"
-            "若 scenario_id 不存在，返回错误及可用 ID 列表。"
-        ),
-        input_schema={"scenario_id": str},
-    )
-    async def load_scenario_skill(args: dict[str, Any]) -> dict[str, Any]:
-        scenario_id = (args.get("scenario_id") or "").strip()
-        content = loader.get_scenario(scenario_id) if scenario_id else None
-        if content is None:
-            available = [s["id"] for s in loader.list_scenarios()]
-            # plan §3.3：场景识别错误率埋点 —— Agent 报错的 scenario_id 通常意味着
-            # prompt 里场景目录列得不够清楚，或模型在编造 ID。
-            logger.warning(
-                "v2 load_scenario_skill unknown id",
-                extra={
-                    "metric": "v2.tool.load_scenario.unknown_id",
-                    "scenario_id": scenario_id,
-                },
-            )
-            return _text_result(
-                f"场景 ID {scenario_id!r} 不存在。可用场景: {available}",
-                is_error=True,
-            )
-        meta = loader.get_scenario_metadata(scenario_id)
-        assert meta is not None  # get_scenario 已 None-check
-        logger.info(
-            "v2 load_scenario_skill hit",
-            extra={
-                "metric": "v2.tool.load_scenario.hit",
-                "scenario_id": scenario_id,
-                "scenario_name": meta["name"],
-            },
-        )
-        return _text_result(
-            f"# 已加载场景 {scenario_id} - {meta['name']}\n\n{content}"
-        )
+    """构造 v2 Agent 用的 MCP tool。`report_sink` 必须是调用方传入的可变 list。"""
 
     @tool(
         name="submit_safety_report",
@@ -171,4 +133,4 @@ def build_safety_tools(
             f"{len(payload.uncertain)} 项待复核。分析结束。"
         )
 
-    return [load_scenario_skill, submit_safety_report]
+    return [submit_safety_report]

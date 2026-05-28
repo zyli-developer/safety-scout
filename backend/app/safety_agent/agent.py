@@ -46,8 +46,9 @@ from app.schemas.report_v2 import ReportV2Payload
 logger = logging.getLogger(__name__)
 
 # allowed_tools 必须包含 Read（Agent 用它把临时图片文件读进 context），
-# 以及两个自定义工具的 mcp__前缀全名（SDK 把工具名 namespace 化为 mcp__<server>__<name>）。
-_LOAD_TOOL_FQN = f"mcp__{SAFETY_MCP_SERVER_NAME}__load_scenario_skill"
+# 以及自定义工具的 mcp__前缀全名（SDK 把工具名 namespace 化为 mcp__<server>__<name>）。
+# `load_scenario_skill` 已下线 —— 12 个场景全部 inline 进 system prompt（PromptBuilder），
+# 省 4 个串行 tool turn 的延迟。
 _SUBMIT_TOOL_FQN = f"mcp__{SAFETY_MCP_SERVER_NAME}__submit_safety_report"
 
 
@@ -98,11 +99,9 @@ async def _drain(
                         "name": _short_tool_name(block.name),
                         "dispatched_ms": dispatched_ms,
                     }
-                    if block.name == _LOAD_TOOL_FQN:
-                        sid = (block.input or {}).get("scenario_id", "")
-                        if sid:
-                            stats.scenarios_loaded.append(sid)
-                            entry["scenario_id"] = sid
+                    # 历史保留 scenario_id 字段：以前 load_scenario_skill 工具会
+                    # 在这里把 scenario_id 摘出来填，已下线；scenarios_loaded
+                    # 现在改由 service 层从 report.report_meta.scene_detected 填。
                     stats.tool_call_timings.append(entry)
                 elif isinstance(block, TextBlock):
                     # Agent 的自由文本（思考过程 / CoT 痕迹）；不打印，避免噪音
@@ -165,7 +164,7 @@ async def analyze_image(
             # 在部分版本组合下出现 stream-json 协议异常（error: "success"）。
             cli_path=settings.claude_cli_path,
             mcp_servers={SAFETY_MCP_SERVER_NAME: mcp_server},
-            allowed_tools=["Read", _LOAD_TOOL_FQN, _SUBMIT_TOOL_FQN],
+            allowed_tools=["Read", _SUBMIT_TOOL_FQN],
             max_turns=settings.agent_max_turns,
             permission_mode="bypassPermissions",
         )

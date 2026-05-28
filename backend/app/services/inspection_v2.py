@@ -72,13 +72,19 @@ async def run_inspection_v2(
                 skill_loader=skill_loader,
             )
 
+        # scenarios_loaded：以前从 load_scenario_skill 工具调用累计；该工具已下线
+        # （场景内容全部 inline 进 system prompt）。改用 report.report_meta.scene_detected
+        # —— 这是模型经过分析后判定"图片实际命中"的场景 ID 列表，语义比"模型加载了
+        # 哪些清单"更准（旧字段其实就是模型自己挑的命中场景，差别仅在采集时机）。
+        scene_detected = list(report.report_meta.scene_detected or [])
+
         meta_json = json.dumps(
             {
                 "provider": "claude_agent_sdk",
                 "model": settings.agent_model,
                 "elapsed_ms": stats.elapsed_ms,
                 "tool_calls": stats.tool_calls,
-                "scenarios_loaded": stats.scenarios_loaded,
+                "scenarios_loaded": scene_detected,
                 "input_tokens": stats.input_tokens,
                 "output_tokens": stats.output_tokens,
                 "cache_read_tokens": stats.cache_read_tokens,
@@ -104,7 +110,7 @@ async def run_inspection_v2(
                 cache_creation_tokens=stats.cache_creation_tokens,
                 cost_usd=stats.cost_usd,
                 tool_calls=stats.tool_calls,
-                scenarios_loaded=stats.scenarios_loaded,
+                scenarios_loaded=scene_detected,
                 tool_call_timings=stats.tool_call_timings,
             ),
             report=report,

@@ -1,11 +1,12 @@
 """PromptBuilder —— 把 SkillLoader 的内容拼成 v2 Agent 的 system prompt。
 
 设计要点：
-- 只组装"每次都需要"的部分（角色 / CoT / L1 / 致命强化 / 输出 schema / 场景目录）；
-  L2 详细清单走 tool `load_scenario_skill` 按命中场景按需注入，避免 system prompt 膨胀。
-- 强制约束 Agent 必须通过 `submit_safety_report` tool 提交报告（不要让它自由打印 JSON）；
-  initial user message 里再次强调这一点。
-- SEPARATOR 用 60 个 `=` 帮 Agent 视觉切分段落，prompt 长度估算 ~4000-6000 tokens。
+- 全部 L2 场景清单一次性 inline 进 system prompt（当前 12 个场景 × ~1.5k tokens = 17k）。
+  之前用 `load_scenario_skill` 工具按需加载是为"防 prompt 膨胀"，但实测延迟代价
+  （4 个串行 tool turn + 1 个 ToolSearch 探索）远大于多 17k cached input 的收益。
+  Anthropic prompt caching 把后续 cache_read 价压到 0.1×，inline 几乎免费。
+- 通过 `submit_safety_report` 工具提交报告（structured output 切换由后续 commit 做）。
+- SEPARATOR 用 60 个 `=` 帮 Agent 视觉切分段落，prompt 长度估算 ~22k tokens（含场景）。
 """
 from __future__ import annotations
 
@@ -21,7 +22,7 @@ class PromptBuilder:
         self.loader = skill_loader
 
     def build_system_prompt(self) -> str:
-        """启动时的 system prompt（不含 L2 详细清单）。"""
+        """启动时的 system prompt（含全部 12 个场景的 L2 清单 inline）。"""
         sections: list[tuple[str, str]] = [
             ("# 角色定义", self.loader.get_shared("role_definition")),
             ("# 分析流程", self.loader.get_shared("cot_instructions")),
@@ -32,7 +33,8 @@ class PromptBuilder:
                 self.loader.get_shared("major_hazard_judgment"),
             ),
             ("# 输出格式规范", self.loader.get_shared("output_schema")),
-            ("# 可用场景列表", self._build_scenario_list()),
+            ("# L2 场景详细清单（全部 12 个，按命中情况对照核查）",
+             self.loader.get_all_scenarios_inline()),
         ]
         return self.SEPARATOR.join(f"{title}\n\n{body}" for title, body in sections)
 
@@ -42,28 +44,12 @@ class PromptBuilder:
         return (
             "请按以下流程对附带的工地照片进行安全隐患分析：\n\n"
             "1. 先描述整张图片的整体场景和九宫格分区内容\n"
-            "2. 判断命中的场景（参考可用场景列表）\n"
-            "3. **必须调用 load_scenario_skill 工具加载命中场景的 L2 清单**\n"
-            "4. 对照 L1 + L2 清单逐项核查\n"
-            "5. 自我审查（重点对照「致命 7 类」）\n"
-            "6. **必须通过调用 submit_safety_report 工具提交最终 JSON 报告**\n"
+            "2. 判断命中的场景（参考 system prompt 的「L2 场景详细清单」）\n"
+            "3. 对照 L1 + 命中场景的 L2 清单逐项核查（清单已全部在 system prompt 里，"
+            "无需调用任何工具加载）\n"
+            "4. 自我审查（重点对照「致命 7 类」）\n"
+            "5. **必须通过调用 submit_safety_report 工具提交最终 JSON 报告**\n"
             "   不要在普通消息里输出 JSON 文本。"
             f"{extra_block}\n"
             "开始分析。"
         )
-
-    def _build_scenario_list(self) -> str:
-        scenarios = self.loader.list_scenarios()
-        lines = [
-            "你可以通过调用 `load_scenario_skill(scenario_id)` 工具加载以下场景的详细清单：",
-            "",
-        ]
-        for s in scenarios:
-            features = "、".join(s["trigger_features"][:4])
-            lines.append(f"- **{s['id']}** {s['name']}（特征：{features}）")
-        lines.append("")
-        lines.append(
-            "**重要**：在 Step 2 场景识别完成后，必须主动调用此工具加载命中场景的清单，"
-            "再进入 Step 3 核查。"
-        )
-        return "\n".join(lines)

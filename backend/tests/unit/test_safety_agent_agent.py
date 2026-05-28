@@ -230,29 +230,42 @@ async def test_cli_path_forwarded_to_options(
     assert opts.model == custom_settings.agent_model
 
 
-async def test_scenarios_loaded_recorded(
+async def test_load_scenario_skill_no_longer_in_allowed_tools(
     monkeypatch, settings, skill_loader, spy_build_tools
 ) -> None:
-    """模拟 Agent 调 load_scenario_skill 两次，stats 记录场景 ID。"""
-    # 用 AssistantMessage + ToolUseBlock 模拟 Agent 工具调用流
-    from claude_agent_sdk import AssistantMessage, ToolUseBlock
+    """回归保护：load_scenario_skill 工具已下线（12 个场景全部 inline 进 system
+    prompt）。allowed_tools 里不应再出现这个 FQN，否则模型可能误以为还能调它。
+    """
+    captured: dict[str, Any] = {}
 
     async def fake_query(*, prompt, options, transport=None):
-        yield AssistantMessage(
-            content=[
-                ToolUseBlock(
-                    id="t1",
-                    name="mcp__safety__load_scenario_skill",
-                    input={"scenario_id": "S03"},
-                ),
-                ToolUseBlock(
-                    id="t2",
-                    name="mcp__safety__load_scenario_skill",
-                    input={"scenario_id": "S05"},
-                ),
-            ],
-            model="claude-opus-4-7",
-        )
+        captured["options"] = options
+        submit = spy_build_tools["by_name"]["submit_safety_report"]
+        await submit.handler({"report_json": json.dumps(VALID_REPORT, ensure_ascii=False)})
+        yield _make_result_message()
+
+    monkeypatch.setattr(agent_mod, "query", fake_query)
+
+    await agent_mod.analyze_image(
+        image_bytes=b"x", settings=settings, skill_loader=skill_loader
+    )
+
+    allowed = captured["options"].allowed_tools
+    assert "Read" in allowed
+    assert any(t.endswith("submit_safety_report") for t in allowed)
+    assert not any("load_scenario_skill" in t for t in allowed), (
+        f"load_scenario_skill 应已从 allowed_tools 移除，但发现: {allowed}"
+    )
+
+
+async def test_scenarios_loaded_no_longer_tracked_via_tool(
+    monkeypatch, settings, skill_loader, spy_build_tools
+) -> None:
+    """load_scenario_skill 下线后，AgentRunStats.scenarios_loaded 保持空。
+    场景命中信息改由 service 层从 report.report_meta.scene_detected 取，
+    不再由 agent 在 _drain 里累计。
+    """
+    async def fake_query(*, prompt, options, transport=None):
         submit = spy_build_tools["by_name"]["submit_safety_report"]
         await submit.handler({"report_json": json.dumps(VALID_REPORT, ensure_ascii=False)})
         yield _make_result_message()
@@ -262,8 +275,8 @@ async def test_scenarios_loaded_recorded(
     _, stats = await agent_mod.analyze_image(
         image_bytes=b"x", settings=settings, skill_loader=skill_loader
     )
-    assert stats.scenarios_loaded == ["S03", "S05"]
-    assert stats.tool_calls == 2  # 两个 load；submit 是 spy 直接调的，不经过 stream
+    assert stats.scenarios_loaded == []  # agent 不再从 tool 调用累计场景
+    assert stats.tool_calls == 0  # submit 是 spy 直接调的，不经过 stream
 
 
 async def test_cache_tokens_captured_from_usage(
@@ -306,35 +319,33 @@ async def test_tool_call_timings_capture_dispatched_ms_per_tool(
     - 序号 seq 与 stats.tool_calls 累计严格对齐
     - 同一 AssistantMessage 内的多个 tool 共享 dispatched_ms（SDK 一帧批发）
     - 后续 AssistantMessage 的 tool 拿到的 dispatched_ms 严格更大
-    - load_scenario_skill 的 entry 额外带 scenario_id；非 load 工具不带
     - 工具名做短名化（去掉 mcp__safety__ 前缀）
+    - load_scenario_skill 已下线，scenario_id 字段也已下线（一并验证不再注入）
     """
     import asyncio as _asyncio
 
     from claude_agent_sdk import AssistantMessage, ToolUseBlock
 
     async def fake_query(*, prompt, options, transport=None):
-        # 第一帧：同时 dispatch 两个 load_scenario_skill
+        # 第一帧：同时 dispatch 两个 Read（构造同帧批发场景）
         yield AssistantMessage(
             content=[
-                ToolUseBlock(
-                    id="t1",
-                    name="mcp__safety__load_scenario_skill",
-                    input={"scenario_id": "S05"},
-                ),
-                ToolUseBlock(
-                    id="t2",
-                    name="mcp__safety__load_scenario_skill",
-                    input={"scenario_id": "S03"},
-                ),
+                ToolUseBlock(id="t1", name="Read", input={"file_path": "/tmp/a.jpg"}),
+                ToolUseBlock(id="t2", name="Read", input={"file_path": "/tmp/b.jpg"}),
             ],
             model="claude-opus-4-7",
         )
         # 让壁钟前进，确保下一帧的 dispatched_ms 严格大于上一帧
         await _asyncio.sleep(0.05)
-        # 第二帧：单个 Read
+        # 第二帧：单个 submit
         yield AssistantMessage(
-            content=[ToolUseBlock(id="t3", name="Read", input={"file_path": "/tmp/x.jpg"})],
+            content=[
+                ToolUseBlock(
+                    id="t3",
+                    name="mcp__safety__submit_safety_report",
+                    input={"report_json": "{}"},
+                )
+            ],
             model="claude-opus-4-7",
         )
         # submit 走 spy（不经过 stream，所以不进 timings）
@@ -348,22 +359,21 @@ async def test_tool_call_timings_capture_dispatched_ms_per_tool(
         image_bytes=b"x", settings=settings, skill_loader=skill_loader
     )
 
-    assert stats.tool_calls == 3  # 2 load + 1 Read（submit 走 spy 不计）
+    assert stats.tool_calls == 3  # 2 Read + 1 submit-via-stream（spy 那次不计）
     assert len(stats.tool_call_timings) == 3
 
     t = stats.tool_call_timings
     # seq 严格 1..N
     assert [e["seq"] for e in t] == [1, 2, 3]
     # 名字短化
-    assert t[0]["name"] == "load_scenario_skill"
-    assert t[1]["name"] == "load_scenario_skill"
-    assert t[2]["name"] == "Read"
+    assert t[0]["name"] == "Read"
+    assert t[1]["name"] == "Read"
+    assert t[2]["name"] == "submit_safety_report"  # mcp__safety__ 前缀已剥
     # 同一帧两个 tool 共享 dispatched_ms
     assert t[0]["dispatched_ms"] == t[1]["dispatched_ms"]
     # 下一帧严格更大（>= sleep 的 50ms）
     assert t[2]["dispatched_ms"] > t[0]["dispatched_ms"]
     assert t[2]["dispatched_ms"] - t[0]["dispatched_ms"] >= 40  # 留 10ms 余量
-    # scenario_id 只附在 load 上
-    assert t[0]["scenario_id"] == "S05"
-    assert t[1]["scenario_id"] == "S03"
-    assert "scenario_id" not in t[2]
+    # scenario_id 字段已下线，不再附在任何工具上
+    for entry in t:
+        assert "scenario_id" not in entry

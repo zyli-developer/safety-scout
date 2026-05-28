@@ -35,7 +35,7 @@ load_strategy: always
 - S11 消防安全
 - S12 人员行为
 
-记录命中的场景列表。如果命中场景的详细 L2 清单未加载，**调用 `load_scenario_skill(scenario_id)` 工具加载对应清单**。
+记录命中的场景列表。全部 12 个场景的 L2 详细清单已 inline 进 system prompt，直接对照核查即可（无需调用任何加载工具）。
 
 ## Step 3：清单核查（内部思考）
 

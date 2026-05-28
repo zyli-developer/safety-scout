@@ -82,6 +82,24 @@ class SkillLoader:
             return None
         return self._read_file(meta["file"])
 
+    def get_all_scenarios_inline(self) -> str:
+        """全部 L2 场景清单拼成单段 markdown —— 给"inline skills"的 system prompt 用。
+
+        当场景库较小（当前 12 个 × ~1.5k tokens = 17k tokens）时，整体 inline 进 prompt
+        比"按需 load_scenario_skill"更快：省 4 个 tool turn + 1 个 ToolSearch 探索
+        turn。配合 prompt caching，后续每次只付 cache_read（0.1×）成本。
+
+        如果场景数膨胀到 30+ 或单场景 > 5k tokens，需要重估这个决策。
+        """
+        parts: list[str] = []
+        for s in self.index["scenarios"]:
+            content = self._read_file(s["file"])
+            parts.append(
+                f"## {s['id']} {s['name']}（特征：{'、'.join(s['trigger_features'][:4])}）\n\n"
+                f"{content}"
+            )
+        return "\n\n---\n\n".join(parts)
+
     def list_scenarios(self) -> list[dict]:
         """列出全部场景元数据 —— 供 Agent 做场景识别。"""
         return [

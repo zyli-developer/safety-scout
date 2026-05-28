@@ -1,10 +1,10 @@
 """PromptBuilder 单元测试。
 
 覆盖：
-- system prompt 包含所有 6 个段落
-- 场景列表 12 条全部列出 + Agent 知道用哪个 tool 加载
+- system prompt 包含所有段落（含 inline 后的 L2 详细清单段）
+- 场景内容（12 个）全部 inline，不再要求 Agent 调用 load_scenario_skill
 - initial user message 强制要求调用 submit_safety_report
-- 长度在合理区间（~4000-6000 tokens，约 8000-12000 字符）
+- 长度在合理区间（inline 后 ~22k tokens，约 22000-50000 字符）
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def test_system_prompt_has_all_sections(builder: PromptBuilder) -> None:
         "# 致命隐患强化",
         "# 重大事故隐患判定（建质规〔2024〕5号）",
         "# 输出格式规范",
-        "# 可用场景列表",
+        "# L2 场景详细清单",  # inline 化后的新段标题
     ):
         assert title in sp, f"system prompt 缺段落: {title}"
 
@@ -55,22 +55,35 @@ def test_system_prompt_lists_all_scenarios(builder: PromptBuilder) -> None:
         assert sid in sp, f"system prompt 漏场景 {sid}"
 
 
-def test_system_prompt_mentions_load_tool(builder: PromptBuilder) -> None:
+def test_system_prompt_does_not_mention_load_tool(builder: PromptBuilder) -> None:
+    """回归保护：load_scenario_skill 已下线，prompt 里不应再出现这个工具名
+    （否则模型会去找一个不存在的工具，触发 ToolSearch 或报错）。"""
     sp = builder.build_system_prompt()
-    assert "load_scenario_skill" in sp
+    assert "load_scenario_skill" not in sp
+
+
+def test_system_prompt_inlines_real_scenario_content(builder: PromptBuilder) -> None:
+    """inline 必须把真实的 L2 内容拼进来（而不是只给个标题）—— 否则模型拿不到清单细节。"""
+    sp = builder.build_system_prompt()
+    # 任选一个场景：S03 落地式钢管脚手架，其 .md 文件里必然出现的特征关键词
+    assert "S03" in sp
+    assert "脚手架" in sp
+    # L2 内容比纯元数据多，长度应远超 5k 字符（光元数据列表只占几百字符）
+    assert len(sp) > 15000, f"inline 后 system prompt 仍偏短，怀疑没真正注入 L2 内容：{len(sp)}"
 
 
 def test_system_prompt_length_in_range(builder: PromptBuilder) -> None:
     sp = builder.build_system_prompt()
-    # 中文 2 字符 ≈ 1 token；目标 4000-7500 tokens（v2 新增重大隐患判定段后略涨），
-    # 对应 ~8000-15000 字符。留一点缓冲：[5000, 20000]
-    assert 5000 <= len(sp) <= 20000, f"system prompt 长度异常: {len(sp)} 字符"
+    # inline 12 个场景后预期 ~22k tokens ≈ 22000-50000 字符（中文 2 字符 ≈ 1 token）。
+    # 留缓冲：[15000, 60000]
+    assert 15000 <= len(sp) <= 60000, f"system prompt 长度异常: {len(sp)} 字符"
 
 
 def test_initial_user_message_forces_submit_tool(builder: PromptBuilder) -> None:
     msg = builder.build_initial_user_message()
     assert "submit_safety_report" in msg
-    assert "load_scenario_skill" in msg
+    # load_scenario_skill 已下线，user message 不应再要求调用它
+    assert "load_scenario_skill" not in msg
 
 
 def test_initial_user_message_with_extra_context(builder: PromptBuilder) -> None:

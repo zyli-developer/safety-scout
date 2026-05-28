@@ -92,18 +92,19 @@ def _make_v2_report() -> ReportV2Payload:
 def _make_stats() -> AgentRunStats:
     s = AgentRunStats()
     s.elapsed_ms = 231000
-    s.tool_calls = 7
-    s.scenarios_loaded = ["S03", "S05"]
+    s.tool_calls = 2
+    # scenarios_loaded 已不再由 agent 累计（load_scenario_skill 工具已下线）。
+    # service 层会改从 report.report_meta.scene_detected 取 —— 见 _make_v2_report()
+    # 里 scene_detected=["S03"]，所以下面 row["scenarios_loaded"] 期望是 ["S03"]。
+    s.scenarios_loaded = []
     s.input_tokens = 19
     s.output_tokens = 12000
     s.cache_read_tokens = 8500
     s.cache_creation_tokens = 1200
     s.cost_usd = 0.5569
     s.tool_call_timings = [
-        {"seq": 1, "name": "load_scenario_skill", "scenario_id": "S03", "dispatched_ms": 1500},
-        {"seq": 2, "name": "load_scenario_skill", "scenario_id": "S05", "dispatched_ms": 1500},
-        {"seq": 3, "name": "Read", "dispatched_ms": 9000},
-        {"seq": 4, "name": "submit_safety_report", "dispatched_ms": 220000},
+        {"seq": 1, "name": "Read", "dispatched_ms": 9000},
+        {"seq": 2, "name": "submit_safety_report", "dispatched_ms": 220000},
     ]
     return s
 
@@ -135,15 +136,17 @@ async def test_v2_success_writes_metrics_row(
     assert row["input_tokens"] == 19
     assert row["output_tokens"] == 12000
     assert row["cost_usd"] == pytest.approx(0.5569)
-    assert row["tool_calls"] == 7
+    assert row["tool_calls"] == 2
     # cache token + tool timing 必须从 stats 透传到 metrics 行
     assert row["cache_read_tokens"] == 8500
     assert row["cache_creation_tokens"] == 1200
     import json as _json
     timings = _json.loads(row["tool_call_timings_json"])
-    assert len(timings) == 4
-    assert timings[0]["scenario_id"] == "S03"
+    assert len(timings) == 2
+    assert timings[0]["name"] == "Read"
     assert timings[-1]["name"] == "submit_safety_report"
+    # scenarios_loaded 改由 service 从 report.report_meta.scene_detected 取，而非 stats
+    assert _json.loads(row["scenarios_loaded"]) == ["S03"]  # _make_v2_report 里 scene_detected=["S03"]
     # image_sha256 准确
     expected_sha = hashlib.sha256(b"img-bytes").hexdigest()
     assert row["image_sha256"] == expected_sha
@@ -154,7 +157,7 @@ async def test_v2_success_writes_metrics_row(
     )
     assert meta["cache_read_tokens"] == 8500
     assert meta["cache_creation_tokens"] == 1200
-    assert meta["tool_call_timings"][0]["scenario_id"] == "S03"
+    assert meta["scenarios_loaded"] == ["S03"]  # 同样从 report.report_meta.scene_detected 取
 
 
 # === 失败：LLMCallError ===

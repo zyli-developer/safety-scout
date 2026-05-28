@@ -1,10 +1,12 @@
 """build_safety_tools 工具行为测试。
 
 覆盖：
-- load_scenario_skill：合法 ID → 返回 markdown；非法 ID → is_error + 可用列表
 - submit_safety_report：合法 JSON → 写入 sink；JSON 解析失败 → is_error；
   schema 校验失败 → is_error + 第一条错误清晰
 - sink 累加：连续 submit 都会追加（agent 一般只取最新 / 报错复跑）
+
+`load_scenario_skill` 已下线（12 个场景全部 inline 进 system prompt），相关测试
+亦同步移除。
 """
 from __future__ import annotations
 
@@ -71,28 +73,10 @@ def tools_and_sink(loader: SkillLoader):
     return by_name, sink
 
 
-async def test_load_scenario_known(tools_and_sink) -> None:
+def test_build_safety_tools_only_returns_submit(tools_and_sink) -> None:
+    """回归保护：当前只返回 submit_safety_report 一个工具。load_scenario_skill 已下线。"""
     by_name, _ = tools_and_sink
-    result = await by_name["load_scenario_skill"].handler({"scenario_id": "S03"})
-    assert "is_error" not in result
-    text = result["content"][0]["text"]
-    assert "S03" in text
-    assert "脚手架" in text
-
-
-async def test_load_scenario_unknown(tools_and_sink) -> None:
-    by_name, _ = tools_and_sink
-    result = await by_name["load_scenario_skill"].handler({"scenario_id": "S99"})
-    assert result.get("is_error") is True
-    text = result["content"][0]["text"]
-    assert "S99" in text
-    assert "S03" in text  # 可用列表至少包含 S03
-
-
-async def test_load_scenario_empty_id(tools_and_sink) -> None:
-    by_name, _ = tools_and_sink
-    result = await by_name["load_scenario_skill"].handler({"scenario_id": ""})
-    assert result.get("is_error") is True
+    assert set(by_name.keys()) == {"submit_safety_report"}
 
 
 async def test_submit_valid_report_writes_sink(tools_and_sink) -> None:
@@ -143,26 +127,6 @@ async def test_two_valid_submits_both_appended(tools_and_sink) -> None:
 
 
 # ---------- plan §3.3 日志埋点：metric 标签覆盖 ----------
-
-
-async def test_metric_log_on_load_hit(tools_and_sink, caplog) -> None:
-    by_name, _ = tools_and_sink
-    with caplog.at_level("INFO", logger="app.safety_agent.tools"):
-        await by_name["load_scenario_skill"].handler({"scenario_id": "S03"})
-    metrics = [r for r in caplog.records if getattr(r, "metric", "") == "v2.tool.load_scenario.hit"]
-    assert metrics, "load hit 应埋 v2.tool.load_scenario.hit"
-    assert metrics[0].scenario_id == "S03"
-
-
-async def test_metric_log_on_load_unknown(tools_and_sink, caplog) -> None:
-    by_name, _ = tools_and_sink
-    with caplog.at_level("WARNING", logger="app.safety_agent.tools"):
-        await by_name["load_scenario_skill"].handler({"scenario_id": "S99"})
-    metrics = [
-        r for r in caplog.records if getattr(r, "metric", "") == "v2.tool.load_scenario.unknown_id"
-    ]
-    assert metrics, "unknown_id 应埋 v2.tool.load_scenario.unknown_id"
-    assert metrics[0].scenario_id == "S99"
 
 
 async def test_metric_log_on_submit_accepted(tools_and_sink, caplog) -> None:
