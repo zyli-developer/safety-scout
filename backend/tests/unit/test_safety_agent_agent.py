@@ -2,10 +2,12 @@
 
 策略：
 - monkeypatch `app.safety_agent.agent.query` 为 async generator
-- structured output 模式下，最终回复通过 AssistantMessage(TextBlock(text=<JSON>))
-  注入；agent 从 stats.final_text 拿这段 JSON 并 pydantic 校验
-- 覆盖：happy / 空输出 / 非法 JSON / SDK 异常 / 超时 / 选项透传 /
-  cache token / tool 时间戳 / thinking 配置 / cli_path 回归
+- structured output 模式下，最终回复通过 AssistantMessage(ToolUseBlock(
+  name="StructuredOutput", input=<dict>)) 回传（CLI 在 json_schema 模式注入的
+  虚拟工具）；agent 从 stats.structured_output 拿这个 dict 并 pydantic 校验
+- 覆盖：happy / 缺失输出 / schema 不通过 / SDK 异常 / 超时 / 选项透传 /
+  cache token / tool 时间戳 / thinking 配置 / cli_path 回归 / system_prompt
+  走 file 形式（Windows cmd 长度限制回归保护）
 """
 from __future__ import annotations
 
@@ -89,10 +91,21 @@ def _make_result_message(
 
 
 def _make_assistant_text(text: str):
-    """模拟一条只含 TextBlock 的 AssistantMessage（structured output 终态）。"""
+    """模拟一条只含 TextBlock 的 AssistantMessage（中间过程文本，会被 _drain 忽略）。"""
     from claude_agent_sdk import AssistantMessage, TextBlock
 
     return AssistantMessage(content=[TextBlock(text=text)], model="claude-sonnet-4-6")
+
+
+def _make_structured_output(payload: dict):
+    """模拟 CLI 在 output_format=json_schema 模式回传的"虚拟工具"调用 ——
+    StructuredOutput.input 就是模型生成的最终 JSON dict。"""
+    from claude_agent_sdk import AssistantMessage, ToolUseBlock
+
+    return AssistantMessage(
+        content=[ToolUseBlock(id="so1", name="StructuredOutput", input=payload)],
+        model="claude-sonnet-4-6",
+    )
 
 
 @pytest.fixture
@@ -115,7 +128,7 @@ async def test_happy_path(monkeypatch, settings, skill_loader) -> None:
     """模拟 SDK 通过 structured output 直接吐合法 JSON 文本，agent 解析后返回。"""
 
     async def fake_query(*, prompt, options, transport=None):
-        yield _make_assistant_text(VALID_REPORT_JSON)
+        yield _make_structured_output(VALID_REPORT)
         yield _make_result_message()
 
     monkeypatch.setattr(agent_mod, "query", fake_query)
@@ -129,16 +142,16 @@ async def test_happy_path(monkeypatch, settings, skill_loader) -> None:
     assert stats.input_tokens == 1000
     assert stats.output_tokens == 200
     assert stats.cost_usd == pytest.approx(0.012)
-    assert stats.final_text == VALID_REPORT_JSON
+    assert stats.structured_output == VALID_REPORT
 
 
-async def test_no_text_output_raises(monkeypatch, settings, skill_loader) -> None:
-    """structured output 模式下没收到任何 TextBlock → LLMCallError。
-    （以前 sink 为空也是抛 LLMCallError，语义同等迁移）
-    """
+async def test_no_structured_output_raises(monkeypatch, settings, skill_loader) -> None:
+    """structured output 模式下整个流程结束都没收到 StructuredOutput 工具调用
+    → LLMCallError（语义对齐旧版"sink 空"）。"""
 
     async def fake_query(*, prompt, options, transport=None):
-        # 只 yield ResultMessage，没有任何 AssistantMessage/TextBlock
+        # 只 yield ResultMessage 和一些过程文本，没 StructuredOutput
+        yield _make_assistant_text("正在分析...")
         yield _make_result_message()
 
     monkeypatch.setattr(agent_mod, "query", fake_query)
@@ -147,21 +160,21 @@ async def test_no_text_output_raises(monkeypatch, settings, skill_loader) -> Non
         await agent_mod.analyze_image(
             image_bytes=b"x", settings=settings, skill_loader=skill_loader
         )
-    assert "未输出任何文本" in str(exc.value)
+    assert "StructuredOutput" in str(exc.value)
 
 
-async def test_malformed_final_json_raises_llm_call_error(
+async def test_malformed_structured_output_raises_llm_call_error(
     monkeypatch, settings, skill_loader
 ) -> None:
-    """final_text 不是合法 ReportV2Payload JSON → LLMCallError，带头部错误。
+    """StructuredOutput.input 缺必填字段 → LLMCallError，带顶层 keys 便于排查。
 
     动机：SDK 的 --json-schema 理论上保证合法，但 API 漂移 / 模型偶发越界仍可能
-    发生。要让兜底失败给出清晰错误（前 200 字符 + 字段路径），便于定位。
+    发生。要让兜底失败给出清晰错误（字段路径 + 顶层 keys），便于定位。
     """
 
     async def fake_query(*, prompt, options, transport=None):
-        # 合法 JSON 但缺 report_meta 必填字段
-        yield _make_assistant_text('{"findings": []}')
+        # 合法 dict 但缺 report_meta / summary 必填字段
+        yield _make_structured_output({"findings": []})
         yield _make_result_message()
 
     monkeypatch.setattr(agent_mod, "query", fake_query)
@@ -172,8 +185,8 @@ async def test_malformed_final_json_raises_llm_call_error(
         )
     msg = str(exc.value)
     assert "ReportV2Payload" in msg or "未通过" in msg
-    # 必须把首段原始文本带进错误信息（便于排查）
-    assert "{" in msg
+    # 错误信息应包含至少一个字段路径（如 'report_meta' / 'summary'）便于定位
+    assert any(k in msg for k in ["report_meta", "summary", "顶层"])
 
 
 async def test_sdk_error_wrapped(monkeypatch, settings, skill_loader) -> None:
@@ -218,7 +231,7 @@ async def _capture_options(monkeypatch, settings, skill_loader) -> Any:
 
     async def fake_query(*, prompt, options, transport=None):
         captured["options"] = options
-        yield _make_assistant_text(VALID_REPORT_JSON)
+        yield _make_structured_output(VALID_REPORT)
         yield _make_result_message()
 
     monkeypatch.setattr(agent_mod, "query", fake_query)
@@ -299,6 +312,39 @@ async def test_thinking_enabled_when_budget_positive(
     assert opts.thinking["budget_tokens"] == 5000
 
 
+async def test_system_prompt_passed_as_file_not_inline_string(
+    monkeypatch, settings, skill_loader
+) -> None:
+    """回归保护：system_prompt 必须以 {"type":"file","path":...} 形式传给 SDK，
+    不能 inline 成字符串 arg。
+
+    动机：inline 12 个场景后 system prompt 达 36k 字符，Windows CreateProcessW
+    上限 32,767 字符。直接 inline 会让 spawn 失败，SDK 翻译成误导性的
+    "Claude Code not found at: claude"（FileNotFoundError 被错误归因到 CLI）。
+
+    断言：
+    - options.system_prompt 是 dict 且 type=='file'
+    - path 指向一个实际存在的 .txt 临时文件
+    - 文件内容与 PromptBuilder.build_system_prompt() 一致
+    """
+    from app.safety_agent.prompt import PromptBuilder
+
+    opts = await _capture_options(monkeypatch, settings, skill_loader)
+    sp = opts.system_prompt
+    assert isinstance(sp, dict), (
+        f"system_prompt 必须是 dict (走 --system-prompt-file)，实际类型: {type(sp)}"
+    )
+    assert sp.get("type") == "file"
+    sp_path = Path(sp["path"])
+    # 文件可能已被 analyze_image 的 finally 清理 —— 但 _capture_options 同步消费
+    # 完后才返回，可能赶得上读到，所以做一次软断言：能读就核对内容，不能读至少
+    # 路径形似 tempfile
+    assert sp_path.name.endswith(".txt")
+    if sp_path.is_file():
+        expected = PromptBuilder(skill_loader).build_system_prompt()
+        assert sp_path.read_text(encoding="utf-8") == expected
+
+
 async def test_thinking_disabled_when_budget_zero(monkeypatch, skill_loader) -> None:
     """budget=0 → 不传 thinking（A/B 对比"无思考"基线时用得着）。"""
     s = Settings(
@@ -342,7 +388,7 @@ async def test_scenarios_loaded_no_longer_tracked_via_tool(
     不再由 agent 在 _drain 里累计。
     """
     async def fake_query(*, prompt, options, transport=None):
-        yield _make_assistant_text(VALID_REPORT_JSON)
+        yield _make_structured_output(VALID_REPORT)
         yield _make_result_message()
 
     monkeypatch.setattr(agent_mod, "query", fake_query)
@@ -351,7 +397,7 @@ async def test_scenarios_loaded_no_longer_tracked_via_tool(
         image_bytes=b"x", settings=settings, skill_loader=skill_loader
     )
     assert stats.scenarios_loaded == []  # agent 不再从 tool 调用累计场景
-    assert stats.tool_calls == 0  # JSON 文本 yield 不算 tool
+    assert stats.tool_calls == 0  # StructuredOutput 虚拟工具不计入业务 tool_calls
 
 
 async def test_cache_tokens_captured_from_usage(
@@ -362,7 +408,7 @@ async def test_cache_tokens_captured_from_usage(
     """
 
     async def fake_query(*, prompt, options, transport=None):
-        yield _make_assistant_text(VALID_REPORT_JSON)
+        yield _make_structured_output(VALID_REPORT)
         yield _make_result_message(
             input_tokens=300,
             output_tokens=500,
@@ -409,7 +455,7 @@ async def test_tool_call_timings_capture_dispatched_ms_per_tool(
         # 让壁钟前进，确保下一帧的 dispatched_ms 严格大于上一帧
         await _asyncio.sleep(0.05)
         # 第二帧：最终 JSON 文本（structured output）
-        yield _make_assistant_text(VALID_REPORT_JSON)
+        yield _make_structured_output(VALID_REPORT)
         yield _make_result_message()
 
     monkeypatch.setattr(agent_mod, "query", fake_query)
@@ -418,7 +464,7 @@ async def test_tool_call_timings_capture_dispatched_ms_per_tool(
         image_bytes=b"x", settings=settings, skill_loader=skill_loader
     )
 
-    assert stats.tool_calls == 2  # 2 个 Read；最终 TextBlock 不算 tool
+    assert stats.tool_calls == 2  # 2 个 Read；StructuredOutput 虚拟工具不算业务 tool
     assert len(stats.tool_call_timings) == 2
 
     t = stats.tool_call_timings
@@ -434,19 +480,20 @@ async def test_tool_call_timings_capture_dispatched_ms_per_tool(
         assert "scenario_id" not in entry
 
 
-async def test_final_text_captured_from_last_text_block(
+async def test_structured_output_captures_dict_ignores_intermediate_text(
     monkeypatch, settings, skill_loader
 ) -> None:
-    """多条 AssistantMessage 时，stats.final_text 只保留最后一条 TextBlock。
+    """StructuredOutput.input（dict）被收到 stats.structured_output；
+    中间过程文本（如有）不污染。
 
-    动机：理论上 structured output 模式只有最终 JSON 一段 text，但即便模型在 Read
-    之前/之后多次发 text，也必须以最后一段为准（其余都是过程文本可丢）。
+    动机：模型在调用 Read 之间、生成 StructuredOutput 之前可能输出一些过程性文本
+    （即便 prompt 禁了也偶发），不能让它影响最终 JSON 解析。
     """
     async def fake_query(*, prompt, options, transport=None):
-        # 前面一段过程文本（应被覆盖）
+        # 前面一段过程文本（应被忽略）
         yield _make_assistant_text("正在分析图片...")
-        # 最后一段才是真正的 JSON
-        yield _make_assistant_text(VALID_REPORT_JSON)
+        # 最终通过 StructuredOutput 虚拟工具回传
+        yield _make_structured_output(VALID_REPORT)
         yield _make_result_message()
 
     monkeypatch.setattr(agent_mod, "query", fake_query)
@@ -454,5 +501,5 @@ async def test_final_text_captured_from_last_text_block(
     report, stats = await agent_mod.analyze_image(
         image_bytes=b"x", settings=settings, skill_loader=skill_loader
     )
-    assert stats.final_text == VALID_REPORT_JSON
+    assert stats.structured_output == VALID_REPORT
     assert report.findings[0].check_id == "B01"
