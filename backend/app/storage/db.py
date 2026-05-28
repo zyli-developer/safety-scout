@@ -93,6 +93,8 @@ def init_schema(conn: sqlite3.Connection) -> None:
             cost_usd                 REAL,
             tool_calls               INTEGER DEFAULT 0,
             scenarios_loaded         TEXT,              -- JSON array，v1 为空数组
+            cache_creation_tokens    INTEGER DEFAULT 0, -- prompt cache 写入 token；对称 cache_read_tokens
+            tool_call_timings_json   TEXT,              -- JSON array，每 tool dispatch 的 ms-since-start 序列
             -- 结果形状（从 report_json 预提，避免每次 query 重新 parse 12k 字符）
             finding_count            INTEGER DEFAULT 0,
             no_finding_count         INTEGER DEFAULT 0,
@@ -145,5 +147,16 @@ def init_schema(conn: sqlite3.Connection) -> None:
     if "schema_version" not in existing_cols:
         conn.execute(
             "ALTER TABLE inspections ADD COLUMN schema_version TEXT NOT NULL DEFAULT 'v1'"
+        )
+
+    # inspection_metrics 增量列（旧 DB 已无 CREATE TABLE 触发 → 走 ALTER）。
+    metric_cols = {row["name"] for row in conn.execute("PRAGMA table_info(inspection_metrics)")}
+    if "cache_creation_tokens" not in metric_cols:
+        conn.execute(
+            "ALTER TABLE inspection_metrics ADD COLUMN cache_creation_tokens INTEGER DEFAULT 0"
+        )
+    if "tool_call_timings_json" not in metric_cols:
+        conn.execute(
+            "ALTER TABLE inspection_metrics ADD COLUMN tool_call_timings_json TEXT"
         )
     conn.commit()

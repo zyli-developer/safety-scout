@@ -51,9 +51,11 @@ COLUMNS = [
     "input_tokens",
     "output_tokens",
     "cache_read_tokens",
+    "cache_creation_tokens",
     "cost_usd",
     "tool_calls",
     "scenarios_loaded",
+    "tool_call_timings_json",
     # 结果形状（含 derived）
     "finding_count",
     "no_finding_count",

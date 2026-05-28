@@ -96,7 +96,15 @@ def _make_stats() -> AgentRunStats:
     s.scenarios_loaded = ["S03", "S05"]
     s.input_tokens = 19
     s.output_tokens = 12000
+    s.cache_read_tokens = 8500
+    s.cache_creation_tokens = 1200
     s.cost_usd = 0.5569
+    s.tool_call_timings = [
+        {"seq": 1, "name": "load_scenario_skill", "scenario_id": "S03", "dispatched_ms": 1500},
+        {"seq": 2, "name": "load_scenario_skill", "scenario_id": "S05", "dispatched_ms": 1500},
+        {"seq": 3, "name": "Read", "dispatched_ms": 9000},
+        {"seq": 4, "name": "submit_safety_report", "dispatched_ms": 220000},
+    ]
     return s
 
 
@@ -128,9 +136,25 @@ async def test_v2_success_writes_metrics_row(
     assert row["output_tokens"] == 12000
     assert row["cost_usd"] == pytest.approx(0.5569)
     assert row["tool_calls"] == 7
+    # cache token + tool timing 必须从 stats 透传到 metrics 行
+    assert row["cache_read_tokens"] == 8500
+    assert row["cache_creation_tokens"] == 1200
+    import json as _json
+    timings = _json.loads(row["tool_call_timings_json"])
+    assert len(timings) == 4
+    assert timings[0]["scenario_id"] == "S03"
+    assert timings[-1]["name"] == "submit_safety_report"
     # image_sha256 准确
     expected_sha = hashlib.sha256(b"img-bytes").hexdigest()
     assert row["image_sha256"] == expected_sha
+    # model_meta_json 也要带这些字段（供前端 / 调试直接展示）
+    import json as _json2
+    meta = _json2.loads(
+        conn.execute("SELECT model_meta_json FROM inspections WHERE id=?", (iid,)).fetchone()[0]
+    )
+    assert meta["cache_read_tokens"] == 8500
+    assert meta["cache_creation_tokens"] == 1200
+    assert meta["tool_call_timings"][0]["scenario_id"] == "S03"
 
 
 # === 失败：LLMCallError ===

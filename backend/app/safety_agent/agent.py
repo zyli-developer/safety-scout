@@ -60,23 +60,50 @@ class AgentRunStats:
         self.elapsed_ms: int = 0
         self.input_tokens: int = 0
         self.output_tokens: int = 0
+        # prompt caching 流量 —— 字段名对齐 Anthropic API usage
+        # （SDK 把 API 原样的 usage dict 透传到 ResultMessage.usage）。
+        self.cache_read_tokens: int = 0
+        self.cache_creation_tokens: int = 0
         self.cost_usd: float = 0.0
+        # 每次 tool dispatch 记一条 {seq,name,scenario_id?,dispatched_ms}。
+        # 同一 AssistantMessage 内的多个 ToolUseBlock 共享 dispatched_ms
+        # （SDK 把模型一帧返回的多个 tool 同时 yield，无法细分批内顺序）。
+        self.tool_call_timings: list[dict[str, Any]] = []
+
+
+def _short_tool_name(fqn: str) -> str:
+    """mcp__safety__load_scenario_skill → load_scenario_skill；Read → Read。"""
+    return fqn.split("__")[-1] if fqn.startswith("mcp__") else fqn
 
 
 async def _drain(
     stream: AsyncIterator[Message],
     stats: AgentRunStats,
+    *,
+    t0: float,
 ) -> None:
-    """消费整个消息流；顺路抽统计 + 记 tool 调用。"""
+    """消费整个消息流；顺路抽统计 + 记 tool 调用 + 打 dispatched_ms 时间戳。
+
+    t0：调用方 time.monotonic() 起算点；tool 时间戳全部以此为基准。
+    """
     async for msg in stream:
         if isinstance(msg, AssistantMessage):
+            # 整条消息共享一个 dispatched_ms —— 模型一帧批发，SDK 无法再细分
+            dispatched_ms = int((time.monotonic() - t0) * 1000)
             for block in msg.content:
                 if isinstance(block, ToolUseBlock):
                     stats.tool_calls += 1
+                    entry: dict[str, Any] = {
+                        "seq": stats.tool_calls,
+                        "name": _short_tool_name(block.name),
+                        "dispatched_ms": dispatched_ms,
+                    }
                     if block.name == _LOAD_TOOL_FQN:
                         sid = (block.input or {}).get("scenario_id", "")
                         if sid:
                             stats.scenarios_loaded.append(sid)
+                            entry["scenario_id"] = sid
+                    stats.tool_call_timings.append(entry)
                 elif isinstance(block, TextBlock):
                     # Agent 的自由文本（思考过程 / CoT 痕迹）；不打印，避免噪音
                     pass
@@ -85,6 +112,11 @@ async def _drain(
             usage: Any = getattr(msg, "usage", None) or {}
             stats.input_tokens = int(usage.get("input_tokens", 0) or 0)
             stats.output_tokens = int(usage.get("output_tokens", 0) or 0)
+            # Anthropic prompt caching 字段（未开 cache 时这两个都是 0/缺失）
+            stats.cache_read_tokens = int(usage.get("cache_read_input_tokens", 0) or 0)
+            stats.cache_creation_tokens = int(
+                usage.get("cache_creation_input_tokens", 0) or 0
+            )
             stats.cost_usd = float(getattr(msg, "total_cost_usd", 0.0) or 0.0)
 
 
@@ -140,7 +172,7 @@ async def analyze_image(
 
         try:
             await asyncio.wait_for(
-                _drain(query(prompt=composed_prompt, options=options), stats),
+                _drain(query(prompt=composed_prompt, options=options), stats, t0=started),
                 timeout=settings.agent_timeout_seconds,
             )
         except TimeoutError as exc:
@@ -161,13 +193,15 @@ async def analyze_image(
 
         logger.info(
             "v2 analysis done: tool_calls=%d scenarios=%s findings=%d elapsed_ms=%d "
-            "tokens=%d/%d cost=%.4f",
+            "tokens=%d/%d cache=r%d/w%d cost=%.4f",
             stats.tool_calls,
             stats.scenarios_loaded,
             len(report.findings),
             stats.elapsed_ms,
             stats.input_tokens,
             stats.output_tokens,
+            stats.cache_read_tokens,
+            stats.cache_creation_tokens,
             stats.cost_usd,
         )
         return report, stats

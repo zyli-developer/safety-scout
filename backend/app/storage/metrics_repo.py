@@ -37,9 +37,15 @@ class RuntimeMetrics:
     input_tokens: int = 0
     output_tokens: int = 0
     cache_read_tokens: int = 0
+    cache_creation_tokens: int = 0
     cost_usd: float = 0.0
     tool_calls: int = 0
     scenarios_loaded: list[str] | None = None
+    # 每次 tool dispatch 的轻量轨迹（agent 层填）：
+    #   [{"seq":1,"name":"load_scenario_skill","scenario_id":"S05","dispatched_ms":1500}, ...]
+    # 同一 AssistantMessage 内的多个 ToolUseBlock 共享 dispatched_ms（SDK 一帧批发）。
+    # 事后 duration_ms = 下一条 dispatched_ms - 当前；最后一条 = total_elapsed_ms - 当前。
+    tool_call_timings: list[dict[str, Any]] | None = None
 
 
 @dataclass(frozen=True)
@@ -199,21 +205,26 @@ def _insert(
         if runtime.scenarios_loaded is not None
         else "[]"
     )
+    timings_json = (
+        json.dumps(runtime.tool_call_timings, ensure_ascii=False)
+        if runtime.tool_call_timings
+        else None
+    )
     conn.execute(
         """
         INSERT INTO inspection_metrics (
             inspection_id, api_version, prompt_version, skill_index_version, model,
             image_sha256, image_bytes, run_group_id,
-            total_elapsed_ms, input_tokens, output_tokens, cache_read_tokens, cost_usd,
-            tool_calls, scenarios_loaded,
+            total_elapsed_ms, input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens, cost_usd,
+            tool_calls, scenarios_loaded, tool_call_timings_json,
             finding_count, no_finding_count, uncertain_count, severity_dist_json,
             is_major_count, major_basis_filled_count, reg_coverage,
             status, error_code, recorded_at
         ) VALUES (
             ?, ?, ?, ?, ?,
             ?, ?, ?,
-            ?, ?, ?, ?, ?,
-            ?, ?,
+            ?, ?, ?, ?, ?, ?,
+            ?, ?, ?,
             ?, ?, ?, ?,
             ?, ?, ?,
             ?, ?, ?
@@ -232,9 +243,11 @@ def _insert(
             runtime.input_tokens,
             runtime.output_tokens,
             runtime.cache_read_tokens,
+            runtime.cache_creation_tokens,
             runtime.cost_usd,
             runtime.tool_calls,
             scenarios_json,
+            timings_json,
             derived["finding_count"],
             derived["no_finding_count"],
             derived["uncertain_count"],

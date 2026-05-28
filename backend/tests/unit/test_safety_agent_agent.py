@@ -60,7 +60,12 @@ VALID_REPORT = {
 }
 
 
-def _make_result_message(input_tokens: int = 1000, output_tokens: int = 200):
+def _make_result_message(
+    input_tokens: int = 1000,
+    output_tokens: int = 200,
+    cache_read_input_tokens: int = 0,
+    cache_creation_input_tokens: int = 0,
+):
     """构造一个最小可用的 ResultMessage（字段跟 SDK 0.2.83 对齐）。"""
     from claude_agent_sdk import ResultMessage
 
@@ -72,7 +77,12 @@ def _make_result_message(input_tokens: int = 1000, output_tokens: int = 200):
         num_turns=3,
         session_id="test-session",
         total_cost_usd=0.012,
-        usage={"input_tokens": input_tokens, "output_tokens": output_tokens},
+        usage={
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "cache_read_input_tokens": cache_read_input_tokens,
+            "cache_creation_input_tokens": cache_creation_input_tokens,
+        },
     )
 
 
@@ -254,3 +264,106 @@ async def test_scenarios_loaded_recorded(
     )
     assert stats.scenarios_loaded == ["S03", "S05"]
     assert stats.tool_calls == 2  # 两个 load；submit 是 spy 直接调的，不经过 stream
+
+
+async def test_cache_tokens_captured_from_usage(
+    monkeypatch, settings, skill_loader, spy_build_tools
+) -> None:
+    """ResultMessage.usage 含 cache_read_input_tokens / cache_creation_input_tokens
+    时，AgentRunStats 必须分别落到 cache_read_tokens / cache_creation_tokens。
+
+    动机：prompt caching 开启后，要靠这两个字段独立衡量"省了多少 input cost / 多少
+    被重新写入"。只看 total_cost_usd 看不出来。
+    """
+
+    async def fake_query(*, prompt, options, transport=None):
+        submit = spy_build_tools["by_name"]["submit_safety_report"]
+        await submit.handler({"report_json": json.dumps(VALID_REPORT, ensure_ascii=False)})
+        yield _make_result_message(
+            input_tokens=300,
+            output_tokens=500,
+            cache_read_input_tokens=8500,
+            cache_creation_input_tokens=1200,
+        )
+
+    monkeypatch.setattr(agent_mod, "query", fake_query)
+
+    _, stats = await agent_mod.analyze_image(
+        image_bytes=b"x", settings=settings, skill_loader=skill_loader
+    )
+    assert stats.input_tokens == 300
+    assert stats.output_tokens == 500
+    assert stats.cache_read_tokens == 8500
+    assert stats.cache_creation_tokens == 1200
+
+
+async def test_tool_call_timings_capture_dispatched_ms_per_tool(
+    monkeypatch, settings, skill_loader, spy_build_tools
+) -> None:
+    """tool_call_timings 必须为每个 ToolUseBlock 记一条 {seq,name,dispatched_ms}。
+
+    断言：
+    - 序号 seq 与 stats.tool_calls 累计严格对齐
+    - 同一 AssistantMessage 内的多个 tool 共享 dispatched_ms（SDK 一帧批发）
+    - 后续 AssistantMessage 的 tool 拿到的 dispatched_ms 严格更大
+    - load_scenario_skill 的 entry 额外带 scenario_id；非 load 工具不带
+    - 工具名做短名化（去掉 mcp__safety__ 前缀）
+    """
+    import asyncio as _asyncio
+
+    from claude_agent_sdk import AssistantMessage, ToolUseBlock
+
+    async def fake_query(*, prompt, options, transport=None):
+        # 第一帧：同时 dispatch 两个 load_scenario_skill
+        yield AssistantMessage(
+            content=[
+                ToolUseBlock(
+                    id="t1",
+                    name="mcp__safety__load_scenario_skill",
+                    input={"scenario_id": "S05"},
+                ),
+                ToolUseBlock(
+                    id="t2",
+                    name="mcp__safety__load_scenario_skill",
+                    input={"scenario_id": "S03"},
+                ),
+            ],
+            model="claude-opus-4-7",
+        )
+        # 让壁钟前进，确保下一帧的 dispatched_ms 严格大于上一帧
+        await _asyncio.sleep(0.05)
+        # 第二帧：单个 Read
+        yield AssistantMessage(
+            content=[ToolUseBlock(id="t3", name="Read", input={"file_path": "/tmp/x.jpg"})],
+            model="claude-opus-4-7",
+        )
+        # submit 走 spy（不经过 stream，所以不进 timings）
+        submit = spy_build_tools["by_name"]["submit_safety_report"]
+        await submit.handler({"report_json": json.dumps(VALID_REPORT, ensure_ascii=False)})
+        yield _make_result_message()
+
+    monkeypatch.setattr(agent_mod, "query", fake_query)
+
+    _, stats = await agent_mod.analyze_image(
+        image_bytes=b"x", settings=settings, skill_loader=skill_loader
+    )
+
+    assert stats.tool_calls == 3  # 2 load + 1 Read（submit 走 spy 不计）
+    assert len(stats.tool_call_timings) == 3
+
+    t = stats.tool_call_timings
+    # seq 严格 1..N
+    assert [e["seq"] for e in t] == [1, 2, 3]
+    # 名字短化
+    assert t[0]["name"] == "load_scenario_skill"
+    assert t[1]["name"] == "load_scenario_skill"
+    assert t[2]["name"] == "Read"
+    # 同一帧两个 tool 共享 dispatched_ms
+    assert t[0]["dispatched_ms"] == t[1]["dispatched_ms"]
+    # 下一帧严格更大（>= sleep 的 50ms）
+    assert t[2]["dispatched_ms"] > t[0]["dispatched_ms"]
+    assert t[2]["dispatched_ms"] - t[0]["dispatched_ms"] >= 40  # 留 10ms 余量
+    # scenario_id 只附在 load 上
+    assert t[0]["scenario_id"] == "S05"
+    assert t[1]["scenario_id"] == "S03"
+    assert "scenario_id" not in t[2]

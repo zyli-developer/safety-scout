@@ -233,6 +233,82 @@ def test_record_v2_report_derives_correct_summary(conn: sqlite3.Connection) -> N
     assert row["output_tokens"] == 12000
     assert row["tool_calls"] == 7
     assert json.loads(row["scenarios_loaded"]) == ["S03", "S05", "S07"]
+    # 未传 cache / timings → 默认 0 / NULL
+    assert row["cache_read_tokens"] == 0
+    assert row["cache_creation_tokens"] == 0
+    assert row["tool_call_timings_json"] is None
+
+
+def test_record_persists_cache_tokens_and_tool_timings(conn: sqlite3.Connection) -> None:
+    """新增字段：cache_creation_tokens 单独写、tool_call_timings_json 原样 round-trip。
+
+    覆盖：
+    - cache_read / cache_creation 两列独立写、独立读
+    - tool_call_timings 序列化为 JSON 列、反序列化结构完整（含可选 scenario_id 字段）
+    """
+    iid = _create_inspection(conn, schema_version="v2")
+    timings = [
+        {"seq": 1, "name": "load_scenario_skill", "scenario_id": "S05", "dispatched_ms": 1500},
+        {"seq": 2, "name": "load_scenario_skill", "scenario_id": "S03", "dispatched_ms": 1500},
+        {"seq": 3, "name": "Read", "dispatched_ms": 18200},
+        {"seq": 4, "name": "submit_safety_report", "dispatched_ms": 290000},
+    ]
+    metrics_repo.record_from_report(
+        conn,
+        iid,
+        version=VersionFingerprint(api_version="v2", prompt_version="1.0.0", model="opus-4-7"),
+        inp=InputFingerprint(image_sha256="d" * 64, image_bytes=1024),
+        runtime=RuntimeMetrics(
+            total_elapsed_ms=357000,
+            input_tokens=21,
+            output_tokens=22000,
+            cache_read_tokens=9000,
+            cache_creation_tokens=2500,
+            cost_usd=1.28,
+            tool_calls=4,
+            scenarios_loaded=["S05", "S03"],
+            tool_call_timings=timings,
+        ),
+        report=_make_v2_report(),
+        status="succeeded",
+    )
+
+    row = metrics_repo.get(conn, iid)
+    assert row is not None
+    assert row["cache_read_tokens"] == 9000
+    assert row["cache_creation_tokens"] == 2500
+    parsed = json.loads(row["tool_call_timings_json"])
+    assert parsed == timings  # 包括可选 scenario_id 字段全保真
+    assert len(parsed) == 4
+    assert parsed[0]["scenario_id"] == "S05"
+    assert "scenario_id" not in parsed[2]  # Read 没 scenario_id 字段不应被注入
+
+
+def test_record_failure_can_carry_partial_cache_tokens(conn: sqlite3.Connection) -> None:
+    """超时路径也可能已经发生 cache write（如模型卡在最后一轮）—— 失败行也要能写。"""
+    iid = _create_inspection(conn)
+    metrics_repo.record_failure(
+        conn,
+        iid,
+        version=VersionFingerprint(api_version="v2", prompt_version="1.0.0", model="opus-4-7"),
+        inp=InputFingerprint(image_sha256="e" * 64, image_bytes=1),
+        runtime=RuntimeMetrics(
+            total_elapsed_ms=300000,
+            cache_read_tokens=5000,
+            cache_creation_tokens=1000,
+            tool_call_timings=[{"seq": 1, "name": "Read", "dispatched_ms": 800}],
+        ),
+        status="timeout",
+        error_code="LLM_TIMEOUT",
+    )
+
+    row = metrics_repo.get(conn, iid)
+    assert row is not None
+    assert row["status"] == "timeout"
+    assert row["cache_read_tokens"] == 5000
+    assert row["cache_creation_tokens"] == 1000
+    parsed = json.loads(row["tool_call_timings_json"])
+    assert parsed == [{"seq": 1, "name": "Read", "dispatched_ms": 800}]
 
 
 # === record_failure ===
